@@ -2,55 +2,55 @@
 
 ### Setup & Structure
 
-- [ ] Express app with Helmet, CORS, Morgan
-- [ ] Config loader with zod validation (`env.ts`)
-- [ ] Firestore connection (`firestore.ts`)
-- [ ] Error handler middleware
+- [x] Express app with Helmet, CORS, Morgan (`server/src/app.ts`)
+- [x] Config loader with zod validation (`server/src/config/env.ts`)
+- [x] Firestore connection (`server/src/config/firestore.ts`)
+- [x] Error handler middleware (`server/src/api/middleware/error.ts`)
 
 ### Routes
 
-- [ ] `/auth/register` (POST)
-- [ ] `/auth/login` (POST)
-- [ ] `/products` (GET list)
-- [ ] `/products/:id` (GET by ID)
-- [ ] `/products` (POST create, requires auth)
-- [ ] `/products/:id` (PUT update, requires auth)
-- [ ] `/products/:id` (DELETE, requires admin)
-- [ ] `/products/admin/stats` (secured admin-only route)
+- [x] `/auth/register` (POST)
+- [x] `/auth/login` (POST)
+- [x] `/products` (GET list)
+- [x] `/products/:id` (GET by ID)
+- [x] `/products` (POST create, requires auth)
+- [x] `/products/:id` (PUT update, requires auth)
+- [x] `/products/:id` (DELETE, requires admin)
+- [x] `/products/admin/stats` (secured admin-only route)
 
 ### Auth & Security
 
-- [ ] JWT issue with TTL (e.g., 15m)
-- [ ] Refresh flow or manual re-login documented
-- [ ] `requireAuth` middleware validates token
-- [ ] `requireRole('admin')` middleware restricts admin endpoints
-- [ ] Secrets managed via `.env` only
+- [x] JWT issue with TTL (15m in `auth.service.ts`)
+- [ ] Refresh flow or manual re-login documented (README note)
+- [x] `requireAuth` middleware validates token (`server/src/api/middleware/auth.ts`)
+- [x] `requireRole('admin')` middleware (`server/src/api/middleware/auth.ts`)
+- [x] Secrets managed via `.env` only (`.env.example`, `env.ts`)
 
 ### Validation
 
-- [ ] Joi schemas for auth (register, login)
-- [ ] Joi schemas for products (create, update)
-- [ ] `validate.ts` middleware rejects bad payloads with 400
+- [x] Joi schemas for auth (register, login) (`server/src/api/validators/auth.schema.ts`)
+- [x] Joi schemas for products (create, update) (`server/src/api/validators/products.schema.ts`)
+- [x] `validate.ts` middleware rejects bad payloads (`server/src/api/middleware/validate.ts`)
 
 ### Data Layer
 
-- [ ] `domain/` types for Product & User
-- [ ] Repository interface (`ProductsRepo`)
-- [ ] Firestore implementation (`products.repo.fs.ts`)
-- [ ] In-memory implementation (`products.repo.mem.ts`)
-- [ ] Service layer for products + auth
+- [x] `domain/` types for Product & User (`server/src/domain/*.ts`)
+- [x] Repository interface (`server/src/data/ports/products.repo.ts`)
+- [x] Firestore implementation (`server/src/data/firestore/products.repo.fs.ts`)
+- [x] In-memory implementation (`server/src/data/memory/products.repo.mem.ts`)
+- [x] Service layer for products + auth (`server/src/services/*.ts`)
 
 ### Firestore Features
 
-- [ ] Products collection with at least 3+ data types (string, number, timestamp)
-- [ ] Partition: products vs images (separate collection)
-- [ ] Sort key: `orderBy(price)` (or similar)
-- [ ] 2 composite indexes defined in Firestore console (e.g., category+price, createdAt+rating)
-- [ ] Document query throughput optimisations (e.g., `.select()`, pagination, denormalisation)
+- [x] Products collection has string/number/timestamp (`products.repo.fs.ts` writes `createdAt`)
+- [ ] Partition: products vs images (note in docs/design)
+- [x] Sort key: `orderBy(price)` supported via `list(params.sort)`
+- [ ] Composite indexes: create in console (document in screenshots)
+- [ ] Query throughput optimisations (document in README/design)
 
 ### Testing & Evidence
 
-- [ ] Postman collection for all CRUD + auth routes
+- [x] Postman collection for all CRUD + auth routes (`docs/postman_collection.json`)
 - [ ] Screenshot: Morgan log of GET
 - [ ] Screenshot: Morgan log of POST
 - [ ] Screenshot: Composite index definition in Firestore console
