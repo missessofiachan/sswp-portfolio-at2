@@ -1,4 +1,4 @@
-// Shared TypeScript options for all packages (extend this in package-level tsconfigs)
+// Shared TypeScript options for all packages extends  in to package-level tsconfigs
 {
   "compilerOptions": {
     "target": "ES2022",

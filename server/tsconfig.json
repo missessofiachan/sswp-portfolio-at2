@@ -1,8 +1,13 @@
 {
+  "files": [],
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "module": "ESNext"
+    "module": "ESNext",
+    "paths": {
+      "@Server/*": ["src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts", "**/*.test.ts"]
 }
