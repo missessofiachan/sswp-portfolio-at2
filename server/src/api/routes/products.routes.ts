@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, type Router as ExpressRouter } from 'express';
 import * as ctrl from '../controllers/products.controller';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { productCreateSchema, productUpdateSchema } from '../validators/products.schema';
 import { getDb } from '../../config/firestore';
 
-export const router = Router();
+export const router: ExpressRouter = Router();
 
 router.get('/', ctrl.list);
 router.get('/:id', ctrl.getById);

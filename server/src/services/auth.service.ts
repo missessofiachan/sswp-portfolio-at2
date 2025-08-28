@@ -1,15 +1,29 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import { loadEnv } from '../config/env';
 
+/**
+ * In-memory user store for demo/testing only.
+ * NOTE: Data is ephemeral and will reset on process restart.
+ */
 const users = new Map<
   string,
   { id: string; email: string; passwordHash: string; role: 'user' | 'admin' }
 >();
 
 export const authService = {
+  /**
+   * Register a new user.
+   * - The very first registered user becomes an admin (for demo/testing).
+   * - Stores only a bcrypt password hash.
+   *
+   * @param email User's email (unique key in the in-memory store)
+   * @param password Plaintext password (will be hashed)
+   * @returns Basic user identity (id and email)
+   */
   async register({ email, password }: { email: string; password: string }) {
-    const id = crypto.randomUUID();
+    const id = randomUUID();
     const passwordHash = await bcrypt.hash(password, 10);
     // Make the very first registered user an admin (for demo/testing)
     const role: 'user' | 'admin' = users.size === 0 ? 'admin' : 'user';
@@ -17,6 +31,14 @@ export const authService = {
     users.set(email, user);
     return { id, email };
   },
+  /**
+   * Authenticate a user with email and password.
+   *
+   * @param email User's email
+   * @param password Plaintext password
+   * @throws Error with status 401 on invalid credentials
+   * @returns A signed JWT (15m) and minimal user info (id, role)
+   */
   async login({ email, password }: { email: string; password: string }) {
     const user = users.get(email);
     if (!user) throw Object.assign(new Error('Invalid credentials'), { status: 401 });

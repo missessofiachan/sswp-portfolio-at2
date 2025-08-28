@@ -7,6 +7,23 @@ import { router as authRoutes } from './api/routes/auth.routes';
 import { router as productRoutes } from './api/routes/products.routes';
 import { errorHandler } from './api/middleware/error';
 
+/**
+ * Express application instance created by calling express().
+ *
+ * This exported constant represents the central Application object used
+ * to configure middleware, routes, error handlers, and other server
+ * behavior. It is exported so the server startup logic or test suites can
+ * import and operate on the same app instance.
+ *
+ * @remarks
+ * - The app is created but not bound to a network port here; the caller
+ *   should start the HTTP server (for example with app.listen or by
+ *   attaching it to an http.Server) elsewhere.
+ * - Configure middleware and routes on this instance in the application
+ *   initialization modules to ensure they are available to all consumers.
+ *
+ * @public
+ */
 export const app: Application = express();
 app.use(helmet());
 // Allow all origins for development; restrict in production for security.
