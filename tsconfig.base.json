@@ -1,1 +1,16 @@
-# shared TS options for all packages
+// shared TS options for all packages
+{
+"compilerOptions": {
+"target": "ES2022",
+"module": "ESNext",
+"moduleResolution": "Bundler",
+"skipLibCheck": true,
+"resolveJsonModule": true,
+"strict": true,
+"baseUrl": ".",
+"paths": {
+"@client/*": ["client/src/*"],
+"@server/*": ["server/src/*"]
+}
+}
+}
