@@ -5,6 +5,7 @@ This document explains what each folder and file in the project is responsible f
 ---
 
 ## Root
+
 - **package.json** – root scripts (dev, lint, typecheck, test), workspaces setup.
 - **pnpm-workspace.yaml** – defines monorepo workspaces (`client` + `server`).
 - **tsconfig.base.json** – shared TypeScript settings for frontend and backend.
@@ -21,9 +22,10 @@ This document explains what each folder and file in the project is responsible f
 **client/index.html** – HTML entry for Vite app.  
 **client/vite.config.ts** – Vite build/dev configuration.  
 **client/tsconfig.json** – TypeScript config for frontend.  
-**client/.env.example** – sample VITE_* env vars for frontend.
+**client/.env.example** – sample VITE\_\* env vars for frontend.
 
 ### `client/src/`
+
 - **main.tsx** – React entrypoint; mounts root with RouterProvider.
 - **app/**
   - **routes.tsx** – central route definitions (Home, Products, etc.).
@@ -62,6 +64,7 @@ This document explains what each folder and file in the project is responsible f
 **server/.env.example** – backend env vars (port, secrets, Firebase creds).
 
 ### `server/src/`
+
 - **index.ts** – server entrypoint; starts Express on port.
 - **app.ts** – Express app setup (helmet, cors, morgan, routes, error handler).
 - **config/**
@@ -93,6 +96,7 @@ This document explains what each folder and file in the project is responsible f
 ---
 
 ## Docs
+
 - **docs/ASSESSMENT.md** – answers to assessment questions.
 - **docs/API_REFERENCE.md** – API endpoints, payloads, status codes.
 - **docs/ARCHITECTURE.md** – diagrams, hierarchy, data flows.
@@ -101,7 +105,7 @@ This document explains what each folder and file in the project is responsible f
 ---
 
 ## Scripts
+
 - **scripts/dev-all.sh** – runs client & server concurrently.
 - **scripts/seed.ts** – seeds database with sample data.
 - **scripts/healthcheck.ts** – pings endpoints for smoke testing.
-

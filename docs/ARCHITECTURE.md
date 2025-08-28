@@ -1,2 +1,1 @@
- # diagrams, tradeoffs, scaling
- 
+# diagrams, tradeoffs, scaling

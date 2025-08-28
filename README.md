@@ -1,26 +1,27 @@
 # sswp-portfolio-at2
 
-
 A fullstack TypeScript project built with **React + Vite (frontend)** and **Express + Firestore (backend)**. This repo implements authentication, CRUD operations, and meets portfolio assessment requirements.
 
 ---
 
 ## 🚀 Tech Stack
 
-**Frontend**  
-- React 18 + Vite + TypeScript  
-- React Router 6  
-- React Hook Form + Zod validation  
-- Axios with JWT interceptors  
-- Vanilla Extract (CSS-in-TS)  
+**Frontend**
+
+- React 18 + Vite + TypeScript
+- React Router 6
+- React Hook Form + Zod validation
+- Axios with JWT interceptors
+- Vanilla Extract (CSS-in-TS)
 - Vitest + Testing Library
 
-**Backend**  
-- Express + TypeScript  
-- Firestore (NoSQL) with Admin SDK  
-- Joi validation schemas  
-- JWT authentication & role-based access  
-- Helmet, CORS, Morgan for security & logging  
+**Backend**
+
+- Express + TypeScript
+- Firestore (NoSQL) with Admin SDK
+- Joi validation schemas
+- JWT authentication & role-based access
+- Helmet, CORS, Morgan for security & logging
 
 ---
 
@@ -50,6 +51,7 @@ your-project/
 ---
 
 ## 🔑 Features
+
 - User registration & login with JWT
 - Role-based authorisation (`user` vs `admin`)
 - Products CRUD (list, detail, create, update, delete)
@@ -64,11 +66,13 @@ your-project/
 ## ⚙️ Setup
 
 ### Prerequisites
+
 - Node.js (>=18)
 - pnpm or npm
 - Firebase project + service account (for Firestore)
 
 ### Clone & Install
+
 ```bash
 git clone <this-repo>
 cd your-project
@@ -76,6 +80,7 @@ pnpm install   # or npm install
 ```
 
 ### Environment
+
 Copy `.env.example` to `.env` in both `client/` and `server/`, then update:
 
 ```ini
@@ -95,6 +100,7 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n..."
 ## ▶️ Run
 
 Start client & server concurrently:
+
 ```bash
 pnpm run dev
 ```
@@ -107,17 +113,20 @@ Backend: <http://localhost:4000/api/v1>
 ## 🧪 Testing
 
 ### Frontend
+
 ```bash
 cd client
 pnpm run test
 ```
 
 ### Backend
+
 (Integration tests stubbed; use Postman collection in `docs/`.)
 
 ---
 
 ## 📸 Evidence Checklist
+
 - [ ] Screenshots of CRUD (GUI + Postman)
 - [ ] 404 page screenshot (no stack trace)
 - [ ] Chrome + Firefox rendering
@@ -129,6 +138,7 @@ pnpm run test
 ---
 
 ## 📖 Documentation
+
 - [`docs/ASSESSMENT.md`](./docs/ASSESSMENT.md) – Q&A answers, standards, scaling notes
 - [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) – endpoint definitions
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) – diagrams, flowcharts, data hierarchy
@@ -137,21 +147,25 @@ pnpm run test
 ---
 
 ## 📦 Deployment
+
 For production:
+
 ```bash
 cd server
 pnpm run build
 node dist/index.js
 ```
+
 Deploy frontend separately (e.g., Vercel, Netlify) with `VITE_API_URL` pointing to backend.
 
 ---
 
 ## 👩‍💻 Authors
+
 - Sofia's student project (Diploma of IT – Advanced Programming)
 
 ---
 
 ## 📝 License
-MIT – free to use and adapt.
 
+MIT – free to use and adapt.

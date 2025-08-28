@@ -5,6 +5,7 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## Core
+
 - **react / react-dom**  
   The React library for building user interfaces and DOM rendering.
 
@@ -17,6 +18,7 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## Routing & State
+
 - **react-router-dom**  
   Handles client-side routing (e.g., `/products/:id`, `/login`).
 
@@ -26,6 +28,7 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## Forms & Validation
+
 - **react-hook-form**  
   Efficient, performant form state management.
 
@@ -38,12 +41,14 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## HTTP & API
+
 - **axios**  
   HTTP client for making API requests to the Express backend. Configured with interceptors to attach JWT tokens.
 
 ---
 
 ## Styling
+
 - **@vanilla-extract/css**  
   Zero-runtime CSS-in-TS library for design tokens and scoped styles.
 
@@ -53,6 +58,7 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## Testing
+
 - **vitest**  
   Vite-native test runner (fast unit + integration tests).
 
@@ -68,13 +74,16 @@ This document lists all npm packages used in the **client** app and explains why
 ---
 
 ## DX (Developer Experience)
+
 - **vite-tsconfig-paths**  
   Supports `tsconfig.json` path aliases in Vite builds.
 
 ---
 
 ## Summary
+
 These packages together provide:
+
 - **React** for UI
 - **Vite** for tooling
 - **TypeScript** for type safety
@@ -85,4 +94,3 @@ These packages together provide:
 - **Vanilla Extract** for styling
 - **Vitest + Testing Library** for testing
 - **Path aliasing** for clean imports
-
