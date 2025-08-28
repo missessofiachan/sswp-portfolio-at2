@@ -3,13 +3,43 @@ import { fsProductsRepo } from '../data/firestore/products.repo.fs';
 import type { Product } from '../domain/product';
 
 // Select backing repository (Firestore by default; swap with memory for tests)
-const repo: ProductsRepo = fsProductsRepo;
+/**
+ * Product service exposing CRUD operations and statistics backed by the repository.
+ *
+ * Each method delegates to the underlying `repo` implementation and returns whatever
+ * the repository returns (synchronous value or Promise, depending on repo).
+ *
+ * Methods:
+ *  - list(sort?)     — Retrieve a list of products, optionally sorted.
+ *  - getById(id)     — Retrieve a single product by its identifier.
+ *  - create(input)   — Create a new product (input excludes `id` and `createdAt`).
+ *  - update(id, patch) — Apply a partial update to an existing product.
+ *  - remove(id)      — Remove a product by its identifier.
+ *  - stats()         — Retrieve aggregated product statistics.
+ *
+ * @param list.sort - Optional sort descriptor: { field: string; dir: 'asc' | 'desc' }.
+ * @param getById.id - Product identifier.
+ * @param create.input - Product input without `id` and `createdAt`.
+ * @param update.id - Identifier of the product to update.
+ * @param update.patch - Partial<Product> containing fields to update.
+ * @param remove.id - Identifier of the product to remove.
+ *
+ * @returns The result of the corresponding `repo` call for each method.
+ *
+ * @example
+ * // Example usage (repo may return a Promise):
+ * const items = await productsService.list({ field: 'name', dir: 'asc' });
+ */
+export function createProductsService(repo: ProductsRepo) {
+  return {
+    list: (sort?: { field: keyof Product; dir: 'asc' | 'desc' }) => repo.list({ sort }),
+    getById: (id: string) => repo.getById(id),
+    create: (input: Omit<Product, 'id' | 'createdAt'>) => repo.create(input),
+    update: (id: string, patch: Partial<Product>) => repo.update(id, patch),
+    remove: (id: string) => repo.remove(id),
+    stats: () => repo.stats(),
+  };
+}
 
-export const productsService = {
-  list: (sort?: { field: string; dir: 'asc' | 'desc' }) => repo.list({ sort: sort as any }),
-  getById: (id: string) => repo.getById(id),
-  create: (input: Omit<Product, 'id' | 'createdAt'>) => repo.create(input),
-  update: (id: string, patch: Partial<Product>) => repo.update(id, patch),
-  remove: (id: string) => repo.remove(id),
-  stats: () => repo.stats(),
-};
+// Default export using Firestore repo; swap in tests as needed
+export const productsService = createProductsService(fsProductsRepo);

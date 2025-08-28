@@ -43,4 +43,3 @@ app.use((req, res) => res.status(404).json({ error: { message: 'Not Found' } }))
  * Should be placed after all other middleware and routes.
  */
 app.use(errorHandler);
-app.use(errorHandler);

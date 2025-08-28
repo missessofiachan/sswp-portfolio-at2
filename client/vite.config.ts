@@ -5,5 +5,15 @@ import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), vanillaExtractPlugin()],
-  server: { port: 5173 },
+  server: {
+    port: 5173,
+    proxy: {
+      // Forward API requests during development
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        // Keep the /api prefix so client can use '/api/v1/*'
+      },
+    },
+  },
 });
