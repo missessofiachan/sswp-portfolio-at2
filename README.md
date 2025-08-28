@@ -148,7 +148,7 @@ Deploy frontend separately (e.g., Vercel, Netlify) with `VITE_API_URL` pointing 
 ---
 
 ## 👩‍💻 Authors
-- Timbertop United student project (Diploma of IT – Advanced Programming)
+- Sofia's student project (Diploma of IT – Advanced Programming)
 
 ---
 
