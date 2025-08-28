@@ -1,2 +1,1 @@
-# ping endpoints for smoke test
-
+//i ping endpoints for smoke test

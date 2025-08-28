@@ -3,9 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { router as authRoutes } from 'server/src/api/routes/auth.routes';
-import { router as productRoutes } from 'server/src/api/routes/products.routes';
-import { errorHandler } from 'server/src/api/middleware/error';
+import { router as authRoutes } from './api/routes/auth.routes';
+import { router as productRoutes } from './api/routes/products.routes';
+import { errorHandler } from './api/middleware/error';
 
 export const app = express();
 app.use(helmet());

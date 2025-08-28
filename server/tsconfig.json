@@ -3,9 +3,16 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "module": "ESNext",
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "emitDeclarationOnly": false,
+    "rootDir": "src",
+    "composite": false,
+    "noEmitOnError": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "paths": {
-      "@Server/*": ["src/*"]
+      "@server/*": ["src/*"]
     }
   },
   "include": ["src/**/*"],

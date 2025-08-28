@@ -61,6 +61,8 @@ your-project/
 - GUI integrated with API (React pages for CRUD + auth)
 - 7 evidence tests/screenshots (GUI, Postman, Morgan logs, Chrome/Firefox, etc.)
 
+Note: For local demo/testing, the very first account you register is granted the `admin` role; subsequent accounts are `user`.
+
 ---
 
 ## ⚙️ Setup
@@ -142,7 +144,17 @@ pnpm run test
 - [`docs/ASSESSMENT.md`](./docs/ASSESSMENT.md) – Q&A answers, standards, scaling notes
 - [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) – endpoint definitions
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) – diagrams, flowcharts, data hierarchy
-- [`docs/screenshots/`](./docs/screenshots/) – evidence images
+- [`docs/screenshots/`](./docs/screenshots/) - evidence images
+
+### Assessment Mapping (quick reference)
+
+- Part 1 – Confirm Application Requirements: see `docs/ICT50220_SSWP_AT2.md` (fill with brief answers) and this README (stack, standards)
+- Part 2 – React Client: routes in `client/src/app/routes.tsx`, pages in `client/src/pages/*`, styling under `client/src/styles/`
+- Part 3 – Database Design: Firestore repo `server/src/data/firestore/products.repo.fs.ts`, env in `server/src/config/env.ts`
+- Part 4 – REST API: Express app `server/src/app.ts`, routes under `server/src/api/routes/*`, controllers/validators/middleware under `server/src/api/*`
+- Part 5 – Refine Client/Server: sort key (products list), admin stats endpoint, security (helmet, JWT, joi), Morgan logging
+- Part 6 – Test & Debug: use Postman + browser screenshots; test folders under `client/test` and `server/src/test`
+- Part 7 – Handover: docs + private GitHub repo; see checklists in `docs/`
 
 ---
 
