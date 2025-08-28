@@ -146,3 +146,4 @@ client/src/**/*.d.ts
 # keep package/build dist
 client/dist
 server/dist
+test1-795d3-firebase-adminsdk-fbsvc-f8f926dfa7.json

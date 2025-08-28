@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@client/features/auth/AuthProvider';
 import { routes } from './app/routes';
 
 // Create the router once and reuse it.
@@ -23,7 +24,9 @@ function bootstrap(): void {
   const root = createRoot(container);
   root.render(
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </React.StrictMode>
   );
 }
