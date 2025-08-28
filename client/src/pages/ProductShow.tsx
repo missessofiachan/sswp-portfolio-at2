@@ -1,3 +1,2 @@
-# /products/:id 
+// products/:id 
 
-    
