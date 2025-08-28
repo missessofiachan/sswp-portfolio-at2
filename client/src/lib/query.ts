@@ -1,1 +1,1 @@
-# react-query init (optional)
+// react-query init (optional)
