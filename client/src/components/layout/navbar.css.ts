@@ -3,7 +3,7 @@ import { vars } from '@client/app/theme.css';
 
 export const bar = style({
   borderBottom: `1px solid ${vars.color.border}`,
-  backgroundColor: vars.color.bg
+  backgroundColor: vars.color.bg,
 });
 
 export const inner = style({
@@ -13,19 +13,19 @@ export const inner = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   paddingInline: vars.space.lg,
-  paddingBlock: vars.space.md
+  paddingBlock: vars.space.md,
 });
 
 export const brand = style({
   fontWeight: 800,
   color: vars.color.text,
-  ':hover': { textDecoration: 'none' }
+  ':hover': { textDecoration: 'none' },
 });
 
 export const links = style({
   display: 'flex',
   gap: vars.space.md,
-  alignItems: 'center'
+  alignItems: 'center',
 });
 
 export const link = style({
@@ -34,5 +34,5 @@ export const link = style({
 
 export const linkActive = style({
   textDecoration: 'underline',
-  textUnderlineOffset: '4px'
+  textUnderlineOffset: '4px',
 });

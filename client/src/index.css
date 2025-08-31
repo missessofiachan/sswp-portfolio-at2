@@ -1,33 +1,152 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* 
+FILE: client/src/index.css
+PURPOSE:
+  - Global base styles, design tokens, and accessibility-aware defaults for the app.
+  - Provides dark-mode-first tokens with a lightweight light-mode override via prefers-color-scheme.
+  - Small, focused reset and a handful of utility classes (visually-hidden) and input affordances.
 
+KEY PRINCIPLES:
+  - Token-driven: all important values (colors, typography, motion) are exposed as CSS custom properties for easy theming/overrides.
+  - Accessibility-first: reduced-motion, focus-visible, and a visually-hidden utility are included by default.
+  - Minimal and performant: modest transitions, optimized font smoothing, and predictable box-sizing.
+
+TOKENS (what to expect and how to use them):
+  - Typography
+    --font-family     : preferred stack for the app
+    --line-height     : global line-height
+    --font-weight     : base font weight
+
+  - Color & UI
+    --color-bg        : background color
+    --color-text      : primary text color
+    --color-accent    : primary accent / link color
+    --color-accent-hover : accent color when hovered/focused
+    --button-bg       : default button background
+    --button-border   : default button border color
+    --focus-ring-color: color used for accessible focus ring
+
+  - Motion & timing
+    --transition-fast : small transition duration used by interactive elements
+
+  - Rendering & box model
+    color-scheme      : lets UA render form controls appropriately for light/dark
+    box-sizing        : border-box applied globally
+
+THEMING & VARIANT SUGGESTIONS:
+  - Current setup respects user preferences via @media (prefers-color-scheme: light).
+    This is good for automatic light/dark support, but if you need programmatic toggling,
+    prefer a class-based approach to avoid fighting the user's OS preference:
+      Example pattern (conceptual): */
+      
+        /*html.theme--light { /* override tokens for light theme */ /*}
+        html.theme--dark  { /* override tokens for dark theme */ /*}
+    Use JS to toggle the html class at app startup (persist preference in localStorage).
+  - Keep components reading styles from tokens rather than hard-coding colors so theme switches are seamless.
+
+ACCESSIBILITY NOTES:
+  - Focus management:
+    Uses :focus-visible for keyboard-only focus styles and removes outline on non-keyboard focus.
+    Ensure interactive elements remain keyboard-navigable and that custom focus styles meet visibility requirements.
+  - Contrast:
+    Verify token contrast ratios with a tool (axe, WebAIM Contrast Checker). Aim for:
+      - WCAG AA: ≥4.5:1 for normal text, ≥3:1 for large text/icons.
+  - Reduced motion:
+    Honors prefers-reduced-motion by disabling animations and transitions for users who opt out.
+  - Visually hidden:
+    .visually-hidden is provided to hide content visually but keep it accessible to assistive technologies.
+
+RECOMMENDED TOOLING & QA:
+  - Run stylelint with a sensible config (e.g., order, custom-properties, accessibility rules).
+  - Run automated accessibility scans (axe-core) and manual checks with screen readers (NVDA, VoiceOver).
+  - Test color rendering on different devices and in both color schemes.
+  - Check keyboard navigation, focus order, and focus visibility across interactive components.
+
+BEST PRACTICES / CONTRIBUTING GUIDELINES:
+  - Prefer adding/updating tokens over introducing hard-coded colors/sizes in components.
+  - Keep transition durations short and consistent (use --transition-fast).
+  - When introducing new tokens, name them semantically (e.g., --surface-muted, --text-primary).
+  - Document token purpose and any accessibility considerations in code comments or a design tokens README.
+  - Keep resets minimal—avoid broad rules that may surprise component-level styles.
+
+PERFORMANCE & BROWSER SUPPORT:
+  - Designed for modern evergreen browsers; properties like color-scheme and :focus-visible rely on recent browser support.
+  - Provide graceful fallbacks where necessary; tokens ensure components degrade gracefully.
+  - Avoid heavy animations and large repaints on the root level.
+
+CHANGELOG / FUTURE WORK:
+  - Consider adding:
+    - A small ThemeProvider JS util to manage theme persistence and class toggling.
+    - A CI step to run stylelint + axe checks on pull requests.
+    - A small tokens documentation page for designers/developers listing approved values and usage examples.
+
+AUTHORS:
+  - [Sofia] - Initial implementation and documentation.
+
+TODO:
+  - Run stylelint and audit with an accessibility contrast tool (e.g., axe, Contrast Checker).
+  - Consider theme toggling with a .theme--light / .theme--dark class if programmatic switching is needed.
+
+*/
+
+:root {
+  /* Typography */
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --line-height: 1.5;
+  --font-weight: 400;
+
+  /* Color tokens (dark mode defaults) */
+  --color-bg: #0b0b0d;
+  --color-text: rgba(255, 255, 255, 0.92);
+  --color-accent: #646cff;
+  --color-accent-hover: #535bf2;
+  --button-bg: #1a1a1a;
+  --button-border: transparent;
+  --focus-ring-color: rgba(91, 157, 217, 0.9);
+
+  /* Motion & timing */
+  --transition-fast: 0.18s;
+
+  /* Rendering hints */
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+
+  font-family: var(--font-family);
+  line-height: var(--line-height);
+  font-weight: var(--font-weight);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Box model */
+  box-sizing: border-box;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* Make box-sizing predictable */
+*, *::before, *::after {
+  box-sizing: inherit;
 }
-a:hover {
-  color: #535bf2;
+
+/* Minimal reset */
+html, body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Basic element spacing */
+p, ul, ol, h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 1rem 0;
 }
 
 h1 {
@@ -35,34 +154,79 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+/* Links */
+a {
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+  color: var(--color-accent);
+  text-decoration: inherit;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+a:hover,
+a:focus {
+  color: var(--color-accent-hover);
 }
 
+/* Buttons */
+button {
+  border-radius: 8px;
+  border: 1px solid var(--button-border);
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--button-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* Hover affordance */
+button:hover {
+  border-color: var(--color-accent);
+}
+
+/* Respect native focus for non-keyboard interactions, but provide strong visible focus for keyboard users */
+button:focus {
+  outline: none;
+}
+
+/* Accessible custom focus for keyboard users */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(91, 157, 217, 0.35);
+  border-color: var(--color-accent);
+}
+
+/* Utility: visually hidden for assistive tech */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Light theme overrides when the user prefers a light color scheme */
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --color-bg: #ffffff;
+    --color-text: #213547;
+    --color-accent: #646cff;
+    --color-accent-hover: #747bff;
+    --button-bg: #f9f9f9;
+    --button-border: transparent;
+    --focus-ring-color: rgba(91, 157, 217, 0.9);
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
   }
 }

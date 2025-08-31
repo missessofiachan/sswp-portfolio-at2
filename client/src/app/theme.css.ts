@@ -15,29 +15,29 @@ export const vars = createGlobalTheme(':root', {
     border: '#e2e8f0', // slate-200
     link: '#2563eb', // blue-600
     linkHover: '#1d4ed8', // blue-700
-    danger: '#ef4444'
+    danger: '#ef4444',
   },
   space: {
     xs: '4px',
     sm: '8px',
     md: '16px',
     lg: '24px',
-    xl: '32px'
+    xl: '32px',
   },
   radius: {
     sm: '6px',
     md: '10px',
-    lg: '16px'
+    lg: '16px',
   },
   shadow: {
-    card: '0 1px 2px rgba(2, 6, 23, 0.06), 0 1px 3px rgba(2, 6, 23, 0.10)'
+    card: '0 1px 2px rgba(2, 6, 23, 0.06), 0 1px 3px rgba(2, 6, 23, 0.10)',
   },
   font: {
-    body: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji"'
+    body: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji", sans-serif',
   },
   layout: {
-    maxWidth: '1120px'
-  }
+    maxWidth: '1120px',
+  },
 });
 
 // Dark theme overrides (enabled when <html data-theme="dark"> is present)
@@ -54,13 +54,13 @@ export const dark = createGlobalTheme('[data-theme="dark"]', {
     border: '#1f2937',
     link: '#93c5fd',
     linkHover: '#60a5fa',
-    danger: '#ef4444'
+    danger: '#ef4444',
   },
   space: vars.space,
   radius: vars.radius,
   shadow: vars.shadow,
   font: vars.font,
-  layout: vars.layout
+  layout: vars.layout,
 });
 
 // Global defaults
@@ -72,18 +72,18 @@ globalStyle('body', {
   color: vars.color.text,
   fontFamily: vars.font.body,
   WebkitFontSmoothing: 'antialiased',
-  MozOsxFontSmoothing: 'grayscale'
+  MozOsxFontSmoothing: 'grayscale',
 });
 globalStyle('a', { color: vars.color.link, textDecoration: 'none' });
 globalStyle('a:hover', { color: vars.color.linkHover, textDecoration: 'underline' });
 
 // Shared layout class (container)
 export const container = {
-  class: 've-container'
+  class: 'container',
 };
 globalStyle(`.${container.class}`, {
   maxWidth: vars.layout.maxWidth,
   marginInline: 'auto',
   paddingInline: vars.space.lg,
-  paddingBlock: vars.space.lg
+  paddingBlock: vars.space.lg,
 });

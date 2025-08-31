@@ -6,7 +6,7 @@ export const card = style({
   border: `1px solid ${vars.color.border}`,
   borderRadius: vars.radius.lg,
   boxShadow: vars.shadow.card,
-  padding: vars.space.lg
+  padding: vars.space.lg,
 });
 
 export const input = style({
@@ -20,27 +20,27 @@ export const input = style({
     '&:focus': {
       outline: 'none',
       boxShadow: `0 0 0 3px rgba(96,165,250,0.35)`,
-      borderColor: vars.color.primary
-    }
-  }
+      borderColor: vars.color.primary,
+    },
+  },
 });
 
 export const label = style({
   display: 'block',
   marginBottom: vars.space.xs,
   color: vars.color.textMuted,
-  fontSize: '0.9rem'
+  fontSize: '0.9rem',
 });
 
 export const field = style({
-  marginBottom: vars.space.md
+  marginBottom: vars.space.md,
 });
 
 export const actions = style({
   marginTop: vars.space.md,
   display: 'flex',
   gap: vars.space.sm,
-  alignItems: 'center'
+  alignItems: 'center',
 });
 
 export const btn = style({
@@ -49,7 +49,7 @@ export const btn = style({
   borderRadius: vars.radius.md,
   padding: `${vars.space.sm} ${vars.space.md}`,
   fontWeight: 600,
-  cursor: 'pointer'
+  cursor: 'pointer',
 });
 
 export const btnPrimary = style([
@@ -57,8 +57,8 @@ export const btnPrimary = style([
   {
     backgroundColor: vars.color.primary,
     color: vars.color.primaryText,
-    selectors: { '&:hover': { filter: 'brightness(0.95)' } }
-  }
+    selectors: { '&:hover': { filter: 'brightness(0.95)' } },
+  },
 ]);
 
 export const btnSecondary = style([
@@ -66,8 +66,8 @@ export const btnSecondary = style([
   {
     backgroundColor: vars.color.secondary,
     color: vars.color.secondaryText,
-    selectors: { '&:hover': { filter: 'brightness(0.95)' } }
-  }
+    selectors: { '&:hover': { filter: 'brightness(0.95)' } },
+  },
 ]);
 
 export const btnOutline = style([
@@ -76,8 +76,8 @@ export const btnOutline = style([
     backgroundColor: 'transparent',
     border: `1px solid ${vars.color.border}`,
     color: vars.color.text,
-    selectors: { '&:hover': { borderColor: vars.color.link } }
-  }
+    selectors: { '&:hover': { borderColor: vars.color.link } },
+  },
 ]);
 
 export const btnDanger = style([
@@ -85,6 +85,6 @@ export const btnDanger = style([
   {
     backgroundColor: vars.color.danger,
     color: '#ffffff',
-    selectors: { '&:hover': { filter: 'brightness(0.95)' } }
-  }
+    selectors: { '&:hover': { filter: 'brightness(0.95)' } },
+  },
 ]);
