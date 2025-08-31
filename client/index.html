@@ -1,3 +1,35 @@
+<!--
+File: /c:/Users/Sofia/Documents/GitHub/sswp-portfolio-at2/client/index.html
+
+Purpose:
+  Minimal HTML entry point for a Vite-powered React + TypeScript application.
+  Provides the host document that the client-side React app mounts into.
+
+Important elements:
+  - <meta charset="UTF-8">: ensures UTF-8 encoding.
+  - <meta name="viewport" content="width=device-width, initial-scale=1.0">: enables responsive layout on mobile devices.
+  - <link rel="icon" type="image/svg+xml" href="/vite.svg">: references the app favicon (served from the project root/public).
+  - <title>: page title displayed in browser tab (change as appropriate for your app).
+  - <div id="root"></div>: mount point for the React application. React will typically call:
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+  - <script type="module" src="/src/main.tsx"></script>: loads the app entry (ES module). Vite serves and hot-reloads this file in development.
+
+Development & build notes:
+  - Run the development server (hot module replacement) with the Vite dev script (commonly: npm run dev or yarn dev).
+  - Produce a production build with the Vite build script (commonly: npm run build).
+  - Preview a production build with the Vite preview script (commonly: npm run preview).
+  - Keep static assets referenced from the public folder or import them from source files to allow Vite to process them.
+
+Customization & deployment tips:
+  - Update <title> and favicon to reflect your project branding.
+  - If deploying under a subpath, configure Vite's base option in vite.config.ts so asset URLs resolve correctly.
+  - Consider adding a description meta tag, Open Graph tags, and other SEO/accessibility metadata as needed.
+  - For improved performance, add preloads or critical CSS, and consider using a service worker or CDN for static assets in production.
+
+Security & accessibility:
+  - Consider adding a Content-Security-Policy header/configuration at server or build time.
+  - Ensure the root element and app content follow accessibility best practices (landmarks, ARIA where appropriate).
+-->
 <!doctype html>
 <html lang="en">
   <head>
