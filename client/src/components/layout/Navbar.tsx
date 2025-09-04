@@ -42,7 +42,7 @@ export default function Navbar() {
     <nav className={s.bar}>
       <div className={s.inner}>
         <Link className={s.brand} to="/">
-          TU Shop
+          Sofia's Shop
         </Link>
         <span className={s.links}>
           <NavLink to="/products" className={getLinkClassName}>

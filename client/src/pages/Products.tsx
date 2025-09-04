@@ -31,7 +31,7 @@ import { useAuth } from '@client/features/auth/AuthProvider';
  */
 export default function Products() {
   const [items, setItems] = useState<any[]>([]);
-  const { token } = useAuth();
+  const { isAdmin } = useAuth();
   useEffect(() => {
     listProducts({ sort: { field: 'price', dir: 'asc' } }).then(setItems);
   }, []);
@@ -46,8 +46,8 @@ export default function Products() {
         }}
       >
         <h2>Products</h2>
-        {token && (
-          <Link className={btnPrimary} to="/products/new">
+        {isAdmin && (
+          <Link className={btnPrimary} to="/admin">
             Create Product
           </Link>
         )}
@@ -61,6 +61,22 @@ export default function Products() {
       >
         {items.map((p) => (
           <article key={p.id} className={card}>
+            {Array.isArray(p.images) && p.images[0] && (
+              <Link to={`/products/${p.id}`}>
+                <img
+                  src={p.images[0]}
+                  alt={p.name}
+                  style={{
+                    width: '100%',
+                    height: 160,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    marginBottom: 8,
+                  }}
+                  loading="lazy"
+                />
+              </Link>
+            )}
             <h3 style={{ marginTop: 0 }}>
               <Link to={`/products/${p.id}`}>{p.name}</Link>
             </h3>

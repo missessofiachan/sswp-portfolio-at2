@@ -37,8 +37,8 @@ THEMING & VARIANT SUGGESTIONS:
     This is good for automatic light/dark support, but if you need programmatic toggling,
     prefer a class-based approach to avoid fighting the user's OS preference:
       Example pattern (conceptual): */
-      
-        /*html.theme--light { /* override tokens for light theme */ /*}
+
+/*html.theme--light { /* override tokens for light theme */ /*}
         html.theme--dark  { /* override tokens for dark theme */ /*}
     Use JS to toggle the html class at app startup (persist preference in localStorage).
   - Keep components reading styles from tokens rather than hard-coding colors so theme switches are seamless.
@@ -125,12 +125,15 @@ TODO:
 }
 
 /* Make box-sizing predictable */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
 /* Minimal reset */
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -145,7 +148,15 @@ body {
 }
 
 /* Basic element spacing */
-p, ul, ol, h1, h2, h3, h4, h5, h6 {
+p,
+ul,
+ol,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0 0 1rem 0;
 }
 
@@ -176,7 +187,9 @@ button {
   background-color: var(--button-bg);
   color: var(--color-text);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 /* Hover affordance */

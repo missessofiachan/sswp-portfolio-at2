@@ -1,58 +1,212 @@
 import { useEffect, useState } from 'react';
-import { getProductStats } from '@client/api/clients/products.api';
+import ProductCreate from '@client/pages/ProductCreate';
+import { getProductStats, listProducts, deleteProduct } from '@client/api/clients/products.api';
+import { listUsers, deleteUser, type AdminUser } from '@client/api/clients/admin.api';
+import { card, btnOutline, btnPrimary } from '@client/app/ui.css';
 
 /**
- * Admin
- *
- * Renders a small admin dashboard section that displays product statistics.
- *
- * The component:
- * - Fetches product statistics once on mount via `getProductStats()`.
- * - Maintains local state for `stats` (shape: `{ count: number; avgPrice: number } | null`)
- *   and `error` (string | null).
- * - Shows a loading indicator while the request is in progress.
- * - Shows a crimson-colored error message when the request fails (the error message will
- *   attempt to be extracted from an axios-like response shape: `e?.response?.data?.error?.message`).
- * - Logs fetch errors to the console.
- * - When stats are available, displays total product count and average price (formatted to 2 decimals).
- *
- * @remarks
- * - This component has no props and performs its network side-effect in a `useEffect` with an empty dependency array.
- * - `getProductStats()` is expected to return a promise that resolves to an object matching the `stats` shape.
- *
- * @returns JSX.Element - a section containing the admin stats heading, an error message (if any),
- *                        a loading indicator, or the stats list.
- *
- * @example
- * <Admin />
- *
- * @since 1.0.0
+ * Admin Dashboard
+ * - Product stats
+ * - Users list (admin-only) with delete
+ * - Products list with delete and edit links
+ * - Create Product form (moved here from the standalone page)
  */
 export default function Admin() {
   const [stats, setStats] = useState<{ count: number; avgPrice: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersError, setUsersError] = useState<string | null>(null);
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [productsError, setProductsError] = useState<string | null>(null);
+
+  async function refreshStats() {
+    try {
+      setStatsError(null);
+      const s = await getProductStats();
+      setStats(s);
+    } catch (e: any) {
+      console.error('Error fetching product stats:', e);
+      setStatsError(e?.response?.data?.error?.message || 'Error');
+    }
+  }
+
+  async function refreshUsers() {
+    try {
+      setUsersError(null);
+      const u = await listUsers();
+      setUsers(u);
+    } catch (e: any) {
+      console.error('Error fetching users:', e);
+      setUsersError(e?.response?.data?.error?.message || 'Error');
+    }
+  }
+
+  async function refreshProducts() {
+    try {
+      setProductsError(null);
+      const p = await listProducts();
+      setProducts(p);
+    } catch (e: any) {
+      console.error('Error fetching products:', e);
+      setProductsError(e?.response?.data?.error?.message || 'Error');
+    }
+  }
 
   useEffect(() => {
-    getProductStats()
-      .then(setStats)
-      .catch((e) => {
-        console.error('Error fetching product stats:', e);
-        setError(e?.response?.data?.error?.message || 'Error');
-      });
+    refreshStats();
+    refreshUsers();
+    refreshProducts();
   }, []);
 
   return (
-    <section>
-      <h2>Admin Stats</h2>
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      {stats ? (
-        <ul>
-          <li>Total products: {stats.count}</li>
-          <li>Average price: ${stats.avgPrice != null ? stats.avgPrice.toFixed(2) : 'N/A'}</li>
-        </ul>
-      ) : (
-        !error && <p>Loading…</p>
-      )}
+    <section style={{ display: 'grid', gap: 24 }}>
+      <div className={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Admin Stats</h2>
+          <button className={btnOutline} onClick={refreshStats}>
+            Refresh
+          </button>
+        </div>
+        {statsError && <p style={{ color: 'crimson' }}>{statsError}</p>}
+        {stats ? (
+          <ul>
+            <li>Total products: {stats.count}</li>
+            <li>Average price: ${stats.avgPrice != null ? stats.avgPrice.toFixed(2) : 'N/A'}</li>
+          </ul>
+        ) : (
+          !statsError && <p>Loading.</p>
+        )}
+      </div>
+
+      <div className={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Users</h2>
+          <button className={btnOutline} onClick={refreshUsers}>
+            Refresh
+          </button>
+        </div>
+        {usersError && <p style={{ color: 'crimson' }}>{usersError}</p>}
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: 8 }}>
+                Email
+              </th>
+              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: 8 }}>
+                Role
+              </th>
+              <th style={{ textAlign: 'right', borderBottom: '1px solid #ddd', padding: 8 }}>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td style={{ padding: 8 }}>{u.email}</td>
+                <td style={{ padding: 8 }}>{u.role}</td>
+                <td style={{ padding: 8, textAlign: 'right' }}>
+                  <button
+                    className={btnOutline}
+                    onClick={async () => {
+                      if (!confirm(`Delete user ${u.email}?`)) return;
+                      try {
+                        await deleteUser(u.id);
+                        await refreshUsers();
+                      } catch (e) {
+                        alert('Failed to delete user');
+                        console.error(e);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={3} style={{ padding: 8, color: '#777' }}>
+                  No users yet. Register to create users.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Products</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className={btnOutline} onClick={refreshProducts}>
+              Refresh
+            </button>
+          </div>
+        </div>
+        {productsError && <p style={{ color: 'crimson' }}>{productsError}</p>}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: 16,
+          }}
+        >
+          {products.map((p) => (
+            <article key={p.id} className={card}>
+              {Array.isArray(p.images) && p.images[0] && (
+                <img
+                  src={p.images[0]}
+                  alt={p.name}
+                  style={{
+                    width: '100%',
+                    height: 140,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    marginBottom: 8,
+                  }}
+                  loading="lazy"
+                />
+              )}
+              <h3 style={{ marginTop: 0 }}>{p.name}</h3>
+              <p style={{ margin: '4px 0 12px' }}>${p.price}</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <a className={btnOutline} href={`/products/${p.id}/edit`}>
+                  Edit
+                </a>
+                <button
+                  className={btnPrimary}
+                  onClick={async () => {
+                    if (!confirm(`Delete product ${p.name}?`)) return;
+                    try {
+                      await deleteProduct(p.id);
+                      await refreshProducts();
+                      await refreshStats();
+                    } catch (e) {
+                      alert('Failed to delete product');
+                      console.error(e);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+        {products.length === 0 && !productsError && <p>No products found.</p>}
+      </div>
+
+      <div className={card}>
+        <h2 style={{ marginTop: 0 }}>New Product</h2>
+        <p style={{ marginTop: 0, color: '#666' }}>
+          Create a product directly from the admin dashboard.
+        </p>
+        {/* Reuse the existing creation form */}
+        <ProductCreate />
+      </div>
     </section>
   );
 }

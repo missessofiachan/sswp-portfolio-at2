@@ -68,24 +68,28 @@ export default function Login() {
     <div className={card}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {errorMessage && (
-          <div style={{ color: 'crimson', marginBottom: 8 }}>{errorMessage}</div>
-        )}
+        {errorMessage && <div style={{ color: 'crimson', marginBottom: 8 }}>{errorMessage}</div>}
 
         <div className={field}>
-          <label className={label} htmlFor="email">Email</label>
+          <label className={label} htmlFor="email">
+            Email
+          </label>
           <input id="email" className={input} type="email" {...register('email')} />
           {errors.email && <small style={{ color: 'crimson' }}>{errors.email.message}</small>}
         </div>
 
         <div className={field}>
-          <label className={label} htmlFor="password">Password</label>
+          <label className={label} htmlFor="password">
+            Password
+          </label>
           <input id="password" className={input} type="password" {...register('password')} />
           {errors.password && <small style={{ color: 'crimson' }}>{errors.password.message}</small>}
         </div>
 
         <div className={actions}>
-          <button className={btnPrimary} type="submit">Login</button>
+          <button className={btnPrimary} type="submit">
+            Login
+          </button>
           <button className={btnOutline} type="button" onClick={() => reset()}>
             Reset
           </button>

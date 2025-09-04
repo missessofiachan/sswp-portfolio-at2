@@ -13,6 +13,7 @@ type Product = {
   description?: string;
   category?: string;
   rating?: number;
+  images?: string[];
 };
 
 // Simple confirmation modal component
@@ -149,6 +150,36 @@ export default function ProductShow() {
     <>
       <article className={card}>
         <h2 style={{ marginTop: 0 }}>{product.name}</h2>
+        {Array.isArray(product.images) && product.images.length > 0 && (
+          <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
+            {/* Primary image */}
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              style={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 8 }}
+            />
+            {/* Thumbnails */}
+            {product.images.length > 1 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {product.images.slice(1).map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`${product.name} ${i + 2}`}
+                    loading="lazy"
+                    style={{
+                      width: 96,
+                      height: 96,
+                      objectFit: 'cover',
+                      borderRadius: 6,
+                      border: '1px solid #eee',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {product.description && <p>{product.description}</p>}
         <p>Price: ${Number(product.price).toFixed(2)}</p>
         {canEdit && (
@@ -156,11 +187,7 @@ export default function ProductShow() {
             <Link className={btnPrimary} to={`/products/${product.id}/edit`}>
               Edit
             </Link>
-            <button
-              className={btnDanger}
-              onClick={() => setShowConfirm(true)}
-              disabled={deleting}
-            >
+            <button className={btnDanger} onClick={() => setShowConfirm(true)} disabled={deleting}>
               Delete
             </button>
             <Link className={btnOutline} to="/products">

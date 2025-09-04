@@ -84,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(data: { email: string; password: string }) {
-    const res = await apiLogin(data);
     // api returns { data: { token, user } }
+    const res = await apiLogin(data);
     const payload = (res as any)?.data;
     if (!payload || typeof payload.token !== 'string' || !payload.user) {
       setUser(null);

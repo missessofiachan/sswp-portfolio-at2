@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createProduct } from '@client/api/clients/products.api';
+import { createProduct, uploadImages } from '@client/api/clients/products.api';
 import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
 
 const Schema = z.object({
@@ -11,6 +11,8 @@ const Schema = z.object({
   description: z.string().optional().default(''),
   category: z.string().min(2),
   rating: z.coerce.number().min(0).max(5).default(0),
+  // Users can paste image URLs (one per line or comma-separated)
+  imagesText: z.string().optional().default(''),
 });
 
 type FormValues = z.infer<typeof Schema>;
@@ -31,7 +33,7 @@ type FormValues = z.infer<typeof Schema>;
  *   - A form-level Reset button (type="reset") to clear native form fields.
  *
  * Submission behavior:
- * - onSubmit awaits createProduct(values).
+ * - onSubmit awaits createProduct(values).files
  * - If the server returns an object with an id, the component navigates to `/products/{id}` using useNavigate.
  * - If the response is invalid or an exception occurs, the component alerts the user and logs the error to the console.
  *
@@ -51,12 +53,25 @@ export default function ProductCreate() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<z.input<typeof Schema>, any, FormValues>({ resolver: zodResolver(Schema) });
 
   async function onSubmit(values: FormValues) {
     try {
-      const created = await createProduct(values);
+      const images = (values.imagesText || '')
+        .split(/\r?\n|,/) // split by newline or comma
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const created = await createProduct({
+        name: values.name,
+        price: values.price,
+        description: values.description,
+        category: values.category,
+        rating: values.rating,
+        images,
+      });
       if (created && created.id) {
         nav(`/products/${created.id}`);
       } else {
@@ -76,6 +91,41 @@ export default function ProductCreate() {
           <label className={label}>Name</label>
           <input className={input} {...register('name')} />
           {errors.name && <small style={{ color: 'crimson' }}>{errors.name.message}</small>}
+        </div>
+        <div className={field}>
+          <label className={label}>Image URLs</label>
+          <textarea
+            className={input}
+            rows={3}
+            placeholder={'https://...jpg\nhttps://...png'}
+            {...register('imagesText')}
+          />
+          <small>One URL per line (or comma separated).</small>
+        </div>
+        <div className={field}>
+          <label className={label}>Upload Images</label>
+          <input
+            className={input}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={async (e) => {
+              const fl = e.currentTarget.files;
+              if (!fl || fl.length === 0) return;
+              try {
+                const urls = await uploadImages(Array.from(fl));
+                const current = getValues('imagesText') || '';
+                const appended = [current.trim(), urls.join('\n')].filter(Boolean).join('\n');
+                setValue('imagesText', appended, { shouldDirty: true });
+                // clear selection
+                e.currentTarget.value = '';
+              } catch (err) {
+                alert('Upload failed');
+                console.error(err);
+              }
+            }}
+          />
+          <small>Selected files upload immediately; their URLs are added above.</small>
         </div>
         <div className={field}>
           <label className={label}>Price</label>

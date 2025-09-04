@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getProduct, updateProduct } from '@client/api/clients/products.api';
+import { getProduct, updateProduct, uploadImages } from '@client/api/clients/products.api';
 import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
 
 const Schema = z.object({
@@ -12,6 +12,7 @@ const Schema = z.object({
   description: z.string().optional(),
   category: z.string().min(2),
   rating: z.coerce.number().min(0).max(5).default(0),
+  imagesText: z.string().optional().default(''),
 });
 
 type FormValues = z.infer<typeof Schema>;
@@ -65,7 +66,7 @@ function ErrorMessage({ message }: { message?: string }) {
 export default function ProductEdit() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { register, handleSubmit, reset, formState } = useForm<
+  const { register, handleSubmit, reset, formState, getValues, setValue } = useForm<
     z.input<typeof Schema>,
     any,
     FormValues
@@ -82,13 +83,25 @@ export default function ProductEdit() {
         description: p.description ?? '',
         category: p.category ?? '',
         rating: p.rating ?? 0,
+        imagesText: Array.isArray(p.images) ? p.images.join('\n') : '',
       })
     );
   }, [id, reset]);
 
   async function onSubmit(values: FormValues) {
     if (!id) return;
-    await updateProduct(id, values);
+    const images = (values.imagesText || '')
+      .split(/\r?\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    await updateProduct(id, {
+      name: values.name,
+      price: values.price,
+      description: values.description,
+      category: values.category,
+      rating: values.rating,
+      images,
+    });
     nav(`/products/${id}`);
   }
 
@@ -100,6 +113,30 @@ export default function ProductEdit() {
           <label className={label}>Name</label>
           <input className={input} {...register('name')} />
           <ErrorMessage message={formState.errors.name?.message} />
+        </div>
+        <div className={field}>
+          <label className={label}>Upload Images</label>
+          <input
+            className={input}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={async (e) => {
+              const fl = e.currentTarget.files;
+              if (!fl || fl.length === 0) return;
+              try {
+                const urls = await uploadImages(Array.from(fl));
+                const current = getValues('imagesText') || '';
+                const appended = [current.trim(), urls.join('\n')].filter(Boolean).join('\n');
+                setValue('imagesText', appended, { shouldDirty: true });
+                e.currentTarget.value = '';
+              } catch (err) {
+                alert('Upload failed');
+                console.error(err);
+              }
+            }}
+          />
+          <small>Selected files upload immediately; their URLs are added above.</small>
         </div>
         <div className={field}>
           <label className={label}>Price</label>
@@ -126,6 +163,16 @@ export default function ProductEdit() {
         <div className={field}>
           <label className={label}>Description</label>
           <textarea className={input} rows={3} {...register('description')} />
+        </div>
+        <div className={field}>
+          <label className={label}>Image URLs</label>
+          <textarea
+            className={input}
+            rows={3}
+            placeholder={'https://...jpg\nhttps://...png'}
+            {...register('imagesText')}
+          />
+          <small>One URL per line (or comma separated).</small>
         </div>
         <div className={actions}>
           <button className={btnPrimary} type="submit">

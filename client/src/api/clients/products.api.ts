@@ -14,6 +14,7 @@ type ProductInput = {
   description?: string;
   category: string;
   rating?: number;
+  images?: string[];
 };
 
 export async function createProduct(data: ProductInput) {
@@ -44,4 +45,14 @@ export async function deleteProduct(id: string) {
 export async function getProductStats(): Promise<{ count: number; avgPrice: number }> {
   const res = await axiosInstance.get('/products/admin/stats');
   return res.data.data as { count: number; avgPrice: number };
+}
+
+// Upload images and get back public URLs
+export async function uploadImages(files: File[]): Promise<string[]> {
+  const fd = new FormData();
+  for (const f of files) fd.append('files', f);
+  const res = await axiosInstance.post('/uploads', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return (res.data?.urls as string[]) ?? [];
 }

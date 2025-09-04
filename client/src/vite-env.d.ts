@@ -16,7 +16,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-/* Asset modules */
+/* Asset modules 
 declare module '*.svg' {
   const src: string;
   export default src;
@@ -49,5 +49,5 @@ declare module '*.ico' {
   const src: string;
   export default src;
 }
-
+*/
 export {};

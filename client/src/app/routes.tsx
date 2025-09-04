@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
 
 import Navbar from '@client/components/layout/Navbar';
+import Footer from '@client/components/layout/Footer';
 import { container as containerClass } from './theme.css';
 
 import Home from '@client/pages/Home';
@@ -13,7 +14,8 @@ import NotFound from '@client/pages/NotFound';
 import LegacyClock from '@client/pages/LegacyClock';
 import { RequireAuth } from '@client/features/auth/RequireAuth';
 import Admin from '@client/pages/Admin';
-import ProductCreate from '@client/pages/ProductCreate';
+// ProductCreate is now embedded in Admin; keep legacy route redirected
+import { Navigate } from 'react-router-dom';
 import ProductEdit from '@client/pages/ProductEdit';
 
 function Shell() {
@@ -23,6 +25,7 @@ function Shell() {
       <main className={containerClass.class}>
         <Outlet />
       </main>
+      <Footer />
     </>
   );
 }
@@ -95,8 +98,8 @@ export const routes: RouteObject[] = [
       {
         path: 'products/new',
         element: (
-          <RequireAuth>
-            <ProductCreate />
+          <RequireAuth role="admin">
+            <Navigate to="/admin" replace />
           </RequireAuth>
         ),
         errorElement: <NotFound />,

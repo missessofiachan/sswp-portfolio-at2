@@ -70,17 +70,19 @@ export default function Register() {
       <h2>Create account</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={field}>
-          <label className={label} htmlFor="email">Email</label>
+          <label className={label} htmlFor="email">
+            Email
+          </label>
           <input id="email" type="email" className={input} {...register('email')} />
           {errors.email && <small style={{ color: 'crimson' }}>{errors.email.message}</small>}
         </div>
 
         <div className={field}>
-          <label className={label} htmlFor="password">Password</label>
+          <label className={label} htmlFor="password">
+            Password
+          </label>
           <input id="password" type="password" className={input} {...register('password')} />
-          {errors.password && (
-            <small style={{ color: 'crimson' }}>{errors.password.message}</small>
-          )}
+          {errors.password && <small style={{ color: 'crimson' }}>{errors.password.message}</small>}
         </div>
 
         <div className={actions}>
