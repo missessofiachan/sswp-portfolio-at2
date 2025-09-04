@@ -12,7 +12,12 @@ export const memProductsRepo: ProductsRepo = {
     return mem.find((p) => p.id === id) ?? null;
   },
   async create(input: Omit<Product, 'id' | 'createdAt'>) {
-    const p: Product = { id: crypto.randomUUID(), createdAt: Date.now(), ...input };
+    const p: Product = {
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      images: (input as any)?.images ?? [],
+      ...input,
+    } as Product;
     mem.push(p);
     return p;
   },

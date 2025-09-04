@@ -45,7 +45,21 @@ export const productCreateSchema = Joi.object({
   description: Joi.string().allow(''),
   category: Joi.string().required(),
   rating: Joi.number().min(0).max(5).default(0),
+  images: Joi.array().items(Joi.string().uri()).default([]),
 });
 
 // Require at least one field to be present when updating a product
-export const productUpdateSchema = productCreateSchema.min(1);
+// Update schema should NOT apply defaults (e.g., avoid resetting images to [])
+export const productUpdateSchema = Joi.object({
+  name: Joi.string(),
+  price: Joi.number().custom((value, helpers) => {
+    if (!/^\d+(\.\d{1,2})?$/.test(value.toString())) {
+      return helpers.error('any.invalid');
+    }
+    return value;
+  }, 'Two decimal places validation'),
+  description: Joi.string().allow(''),
+  category: Joi.string(),
+  rating: Joi.number().min(0).max(5),
+  images: Joi.array().items(Joi.string().uri()),
+}).min(1);

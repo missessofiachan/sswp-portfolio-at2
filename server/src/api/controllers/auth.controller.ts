@@ -24,6 +24,6 @@ export async function register(req: Request, res: Response): Promise<void> {
  */
 export async function login(req: Request, res: Response): Promise<void> {
   const out = await authService.login(req.body);
-  res.json({ token: out.token, user: out.user });
-  res.json({ token: out.token, user: out.user });
+  // Standardize response shape to { data: { ... } } like other endpoints
+  res.json({ data: { token: out.token, user: out.user } });
 }

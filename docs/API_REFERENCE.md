@@ -6,6 +6,14 @@ All responses are JSON.
 
 Errors follow the shape: `{ "error": { "message": string } }` with relevant HTTP status codes (400/401/403/404/500).
 
+## Health
+
+GET `/health`
+
+- 200 → `{ api: { ok: true, timestamp: string, uptimeSec: number }, database: { ok: boolean, store: 'firestore'|'memory', latencyMs: number|null } }`
+- 503 → same shape as above with `database.ok: false` and `database.error: string`
+- Notes: Checks API reachability and attempts a read-only database operation. Does not write data.
+
 ## Auth
 
 POST `/auth/register`
@@ -16,7 +24,7 @@ POST `/auth/register`
 POST `/auth/login`
 
 - Body: `{ email: string, password: string }`
-- 200 → `{ token: string, user: { id: string, role: 'user'|'admin' } }`
+- 200 → `{ data: { token: string, user: { id: string, role: 'user'|'admin' } } }`
 - Notes: Include `Authorization: Bearer <token>` header for protected routes.
 
 ## Products

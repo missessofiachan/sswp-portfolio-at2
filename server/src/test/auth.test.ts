@@ -1,1 +1,5 @@
-//spins up app with memory repo
+import { describe, it } from 'vitest';
+
+describe.skip('auth placeholder', () => {
+  it('noop', () => {});
+});

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { productsService } from '../../services/products.service';
 import type { Product } from '../../domain/product';
+import { deleteLocalFiles } from '../../utils/uploads';
 
 /**
  * Controller action to list products and send them as a JSON response.
@@ -65,12 +66,26 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const data = await productsService.update(req.params.id, req.body);
+  const id = req.params.id;
+  // If images are changing, compute removed files and clean them up
+  const patch = req.body as Partial<Product>;
+  let removed: string[] = [];
+  if (patch && Object.prototype.hasOwnProperty.call(patch, 'images')) {
+    const before = await productsService.getById(id);
+    const prev = Array.isArray(before?.images) ? before!.images! : [];
+    const next = Array.isArray(patch.images) ? patch.images : prev;
+    removed = prev.filter((u) => !next.includes(u));
+  }
+  const data = await productsService.update(id, patch);
+  if (removed.length) await deleteLocalFiles(removed);
   res.json({ data });
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  await productsService.remove(req.params.id);
+  const id = req.params.id;
+  const before = await productsService.getById(id);
+  await productsService.remove(id);
+  if (before?.images?.length) await deleteLocalFiles(before.images);
   res.status(204).send();
 }
 

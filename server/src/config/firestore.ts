@@ -1,9 +1,9 @@
 // admin.initializeApp + getFirestore()
 
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 import { loadEnv } from './env';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let db: FirebaseFirestore.Firestore | null = null;
 

@@ -5,9 +5,12 @@
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "build": "tsc -p .",
     "start": "node dist/index.js",
-    "test": "echo 'add tests' && exit 0",
+    "test": "vitest run --reporter=dot",
+    "seed": "ts-node ../scripts/seed.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "firestore:list": "node ./scripts/list-root-collections.js",
+    "firestore:clear": "node ./scripts/clear-root-collections.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -26,12 +29,17 @@
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/express-fileupload": "^1.5.1",
+    "@types/helmet": "^4.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.3.0",
+    "@types/supertest": "^6.0.3",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

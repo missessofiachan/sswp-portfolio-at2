@@ -3,8 +3,13 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import fileUpload from 'express-fileupload';
+import path from 'path';
 import { router as authRoutes } from './api/routes/auth.routes';
 import { router as productRoutes } from './api/routes/products.routes';
+import { router as adminRoutes } from './api/routes/admin.routes';
+import { router as uploadsRoutes } from './api/routes/uploads.routes';
+import { router as healthRoutes } from './api/routes/health.routes';
 import { errorHandler } from './api/middleware/error';
 
 /**
@@ -30,9 +35,24 @@ app.use(helmet());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(morgan('tiny'));
+// Enable multipart/form-data for file uploads
+const MAX_MB = Number(process.env.UPLOAD_MAX_MB || 5);
+app.use(
+  fileUpload({
+    createParentPath: true,
+    limits: { fileSize: MAX_MB * 1024 * 1024 },
+  })
+);
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+// Also serve under the API prefix so dev proxy forwards correctly
+app.use('/api/v1/files', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/uploads', uploadsRoutes);
+app.use('/api/v1/health', healthRoutes);
 
 app.use((req, res) => res.status(404).json({ error: { message: 'Not Found' } }));
 

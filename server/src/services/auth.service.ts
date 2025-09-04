@@ -49,4 +49,22 @@ export const authService = {
     });
     return { token, user: { id: user.id, role: user.role } };
   },
+  /**
+   * List users (admin view). Returns non-sensitive fields only.
+   */
+  async listUsers(): Promise<Array<{ id: string; email: string; role: 'user' | 'admin' }>> {
+    return Array.from(users.values()).map((u) => ({ id: u.id, email: u.email, role: u.role }));
+  },
+  /**
+   * Remove a user by id (admin action).
+   */
+  async removeUser(id: string): Promise<void> {
+    // Find by id (map is keyed by email)
+    for (const [email, u] of users.entries()) {
+      if (u.id === id) {
+        users.delete(email);
+        break;
+      }
+    }
+  },
 };

@@ -79,10 +79,16 @@ export const fsProductsRepo: ProductsRepo = {
 
   async create(input) {
     const now = Date.now();
+    const payload: Omit<Product, 'id'> = {
+      // ensure images defaults to [] if omitted
+      ...(input as any),
+      images: (input as any)?.images ?? [],
+      createdAt: now,
+    } as any;
     const ref = await getDb()
       .collection(COLLECTION)
-      .add({ ...input, createdAt: now });
-    return { id: ref.id, ...input, createdAt: now } as Product;
+      .add(payload as any);
+    return { id: ref.id, ...(payload as any) } as Product;
   },
 
   async update(id, patch) {
