@@ -70,17 +70,17 @@ router.post('/', requireAuth, async (req, res) => {
             ? '.jpg'
             : f.mimetype === 'image/jpg'
               ? '.jpg'
-            : f.mimetype === 'image/webp'
-              ? '.webp'
-              : f.mimetype === 'image/gif'
-                ? '.gif'
-                : f.mimetype === 'image/heic'
-                  ? '.heic'
-                  : f.mimetype === 'image/heif'
-                    ? '.heif'
-                    : f.mimetype === 'image/avif'
-                      ? '.avif'
-                : '.bin');
+              : f.mimetype === 'image/webp'
+                ? '.webp'
+                : f.mimetype === 'image/gif'
+                  ? '.gif'
+                  : f.mimetype === 'image/heic'
+                    ? '.heic'
+                    : f.mimetype === 'image/heif'
+                      ? '.heif'
+                      : f.mimetype === 'image/avif'
+                        ? '.avif'
+                        : '.bin');
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
       const dest = path.join(filesRoot, filename);
       // express-fileupload provides mv()
