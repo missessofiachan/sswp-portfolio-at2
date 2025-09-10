@@ -27,9 +27,8 @@ axiosInstance.interceptors.response.use(
       } catch (error) {
         console.error('Error removing token from localStorage:', error);
       }
-      window.location.href = LOGIN_ROUTE;
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = LOGIN_ROUTE;
       }
     }
     return Promise.reject(err);

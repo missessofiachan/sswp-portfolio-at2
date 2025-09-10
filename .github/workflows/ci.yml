@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  checks:
+    name: Lint, Typecheck, Test, Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Enable Corepack and pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (all workspaces)
+        run: pnpm -r run lint
+
+      - name: Typecheck (root tsbuild)
+        run: pnpm run typecheck
+
+      - name: Test (all workspaces)
+        env:
+          NODE_ENV: test
+          DATA_STORE: memory
+          JWT_SECRET: test-secret
+        run: pnpm -r run test
+
+      - name: Build (client and server)
+        env:
+          NODE_ENV: production
+        run: |
+          pnpm --filter client run build
+          pnpm --filter server run build

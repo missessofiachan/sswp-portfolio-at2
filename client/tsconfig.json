@@ -3,19 +3,25 @@
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
 
   "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true,
-    "declarationDir": "dist/types",
-    "emitDeclarationOnly": false,
+  "outDir": "dist",
+  "declaration": false,
+  "emitDeclarationOnly": false,
     "rootDir": "src",
     "composite": false,
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "@testing-library/jest-dom"],
+  "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@client/*": ["src/*"]
     }
   },
   "include": ["src/**/*", "vite-env.d.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "dist/types/**/*"
+  ]
 }

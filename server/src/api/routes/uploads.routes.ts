@@ -26,29 +26,60 @@ router.post('/', requireAuth, async (req, res) => {
     }
     files = Array.isArray(payload) ? payload : [payload];
 
-    const allowed = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+    const allowed = new Set([
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+      'image/gif',
+      'image/heic',
+      'image/heif',
+      'image/avif',
+    ]);
+    const allowedExts = new Set([
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.webp',
+      '.gif',
+      '.heic',
+      '.heif',
+      '.avif',
+    ]);
     const maxMb = Number(process.env.UPLOAD_MAX_MB || 5);
     const maxBytes = maxMb * 1024 * 1024;
 
     const urls: string[] = [];
     for (const f of files) {
-      if (!allowed.has(f.mimetype)) {
-        return res.status(400).json({ error: { message: `Unsupported type: ${f.mimetype}` } });
+      const extFromName = path.extname(f.name).toLowerCase();
+      const mimeAllowed = allowed.has(f.mimetype);
+      const extAllowed = extFromName ? allowedExts.has(extFromName) : false;
+      if (!mimeAllowed && !extAllowed) {
+        return res
+          .status(400)
+          .json({ error: { message: `Unsupported file type: ${f.mimetype || extFromName}` } });
       }
       if (typeof f.size === 'number' && f.size > maxBytes) {
         return res.status(413).json({ error: { message: `File too large (max ${maxMb}MB)` } });
       }
-      const extFromName = path.extname(f.name).toLowerCase();
       const ext =
         extFromName ||
         (f.mimetype === 'image/png'
           ? '.png'
           : f.mimetype === 'image/jpeg'
             ? '.jpg'
+            : f.mimetype === 'image/jpg'
+              ? '.jpg'
             : f.mimetype === 'image/webp'
               ? '.webp'
               : f.mimetype === 'image/gif'
                 ? '.gif'
+                : f.mimetype === 'image/heic'
+                  ? '.heic'
+                  : f.mimetype === 'image/heif'
+                    ? '.heif'
+                    : f.mimetype === 'image/avif'
+                      ? '.avif'
                 : '.bin');
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
       const dest = path.join(filesRoot, filename);

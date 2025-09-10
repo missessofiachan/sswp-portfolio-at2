@@ -15,8 +15,9 @@ import LegacyClock from '@client/pages/LegacyClock';
 import { RequireAuth } from '@client/features/auth/RequireAuth';
 import Admin from '@client/pages/Admin';
 // ProductCreate is now embedded in Admin; keep legacy route redirected
-import { Navigate } from 'react-router-dom';
 import ProductEdit from '@client/pages/ProductEdit';
+import Unauthorized from '@client/pages/Unauthorized';
+import ProductCreate from '@client/pages/ProductCreate';
 
 function Shell() {
   return (
@@ -93,13 +94,14 @@ export const routes: RouteObject[] = [
       { path: 'legacy', element: <LegacyClock />, errorElement: <NotFound /> },
       { path: 'register', element: <Register />, errorElement: <NotFound /> },
       { path: 'login', element: <Login />, errorElement: <NotFound /> },
+  { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },
       { path: 'products', element: <Products />, errorElement: <NotFound /> },
       { path: 'products/:id', element: <ProductShow />, errorElement: <NotFound /> },
       {
         path: 'products/new',
         element: (
-          <RequireAuth role="admin">
-            <Navigate to="/admin" replace />
+          <RequireAuth>
+            <ProductCreate />
           </RequireAuth>
         ),
         errorElement: <NotFound />,

@@ -20,12 +20,8 @@ server/tsconfig.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-# Logs
 logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 lerna-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -88,8 +84,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
-.env.*
+.env*
 !.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -165,7 +160,10 @@ client/src/**/*.js
 client/src/**/*.js.map
 client/src/**/*.d.ts
 
-# keep package/build dist
 client/dist
 server/dist
+# uploads should not be committed
+server/uploads/
+uploads/
+# Example service account path (ensure not committed)
 test1-795d3-firebase-adminsdk-fbsvc-f8f926dfa7.json

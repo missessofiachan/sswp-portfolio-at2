@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { login as apiLogin } from '@client/api/clients/auth.api';
 
 type User = { id: string; role: 'user' | 'admin' } | null;
@@ -58,7 +59,7 @@ const AuthCtx = createContext<Ctx | undefined>(undefined);
  *
  * @public
  */
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [token, setToken] = useState<string | null>(null);
 

@@ -32,7 +32,14 @@ import { errorHandler } from './api/middleware/error';
 export const app: Application = express();
 app.use(helmet());
 // Allow all origins for development; restrict in production for security.
-app.use(cors({ origin: true, credentials: true }));
+// CORS: allow any origin in dev; restrict in production via CORS_ORIGIN env
+const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : true);
+app.use(
+  cors({
+    origin: corsOrigin ?? 'http://localhost:5173',
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(morgan('tiny'));
 // Enable multipart/form-data for file uploads

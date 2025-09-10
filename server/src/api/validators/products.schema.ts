@@ -45,7 +45,16 @@ export const productCreateSchema = Joi.object({
   description: Joi.string().allow(''),
   category: Joi.string().required(),
   rating: Joi.number().min(0).max(5).default(0),
-  images: Joi.array().items(Joi.string().uri()).default([]),
+  images: Joi.array()
+    .items(
+      Joi.string().custom((value, helpers) => {
+        const v = String(value);
+        // Accept absolute http(s) URLs or API-relative paths
+        if (/^https?:\/\//.test(v) || v.startsWith('/')) return v;
+        return helpers.error('any.invalid');
+      }, 'absolute or relative URL')
+    )
+    .default([]),
 });
 
 // Require at least one field to be present when updating a product
@@ -61,5 +70,11 @@ export const productUpdateSchema = Joi.object({
   description: Joi.string().allow(''),
   category: Joi.string(),
   rating: Joi.number().min(0).max(5),
-  images: Joi.array().items(Joi.string().uri()),
+  images: Joi.array().items(
+    Joi.string().custom((value, helpers) => {
+      const v = String(value);
+      if (/^https?:\/\//.test(v) || v.startsWith('/')) return v;
+      return helpers.error('any.invalid');
+    }, 'absolute or relative URL')
+  ),
 }).min(1);
