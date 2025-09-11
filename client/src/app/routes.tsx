@@ -13,7 +13,11 @@ import Register from '@client/pages/Register';
 import NotFound from '@client/pages/NotFound';
 import LegacyClock from '@client/pages/LegacyClock';
 import { RequireAuth } from '@client/features/auth/RequireAuth';
-import Admin from '@client/pages/Admin';
+import AdminLayout from '@client/pages/admin/Layout';
+import AdminOverview from '@client/pages/admin/Overview';
+import AdminUsers from '@client/pages/admin/Users';
+import AdminProducts from '@client/pages/admin/Products';
+import AdminProductNew from '@client/pages/admin/ProductNew';
 // ProductCreate is now embedded in Admin; keep legacy route redirected
 import ProductEdit from '@client/pages/ProductEdit';
 import Unauthorized from '@client/pages/Unauthorized';
@@ -94,7 +98,7 @@ export const routes: RouteObject[] = [
       { path: 'legacy', element: <LegacyClock />, errorElement: <NotFound /> },
       { path: 'register', element: <Register />, errorElement: <NotFound /> },
       { path: 'login', element: <Login />, errorElement: <NotFound /> },
-  { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },
+      { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },
       { path: 'products', element: <Products />, errorElement: <NotFound /> },
       { path: 'products/:id', element: <ProductShow />, errorElement: <NotFound /> },
       {
@@ -121,10 +125,16 @@ export const routes: RouteObject[] = [
         path: 'admin',
         element: (
           <RequireAuth role="admin">
-            <Admin />
+            <AdminLayout />
           </RequireAuth>
         ),
         errorElement: <NotFound />,
+        children: [
+          { index: true, element: <AdminOverview />, errorElement: <NotFound /> },
+          { path: 'users', element: <AdminUsers />, errorElement: <NotFound /> },
+          { path: 'products', element: <AdminProducts />, errorElement: <NotFound /> },
+          { path: 'products/new', element: <AdminProductNew />, errorElement: <NotFound /> },
+        ],
       },
     ],
   },

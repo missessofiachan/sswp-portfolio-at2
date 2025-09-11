@@ -11,3 +11,15 @@ export async function removeUser(req: Request, res: Response): Promise<void> {
   await authService.removeUser(id);
   res.status(204).send();
 }
+
+export async function promoteUser(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const user = await authService.setRole(id, 'admin');
+  res.json({ data: user });
+}
+
+export async function demoteUser(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const user = await authService.setRole(id, 'user');
+  res.json({ data: user });
+}

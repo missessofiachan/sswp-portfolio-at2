@@ -1,27 +1,51 @@
 {
   "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
 
   "compilerOptions": {
-  "outDir": "dist",
-  "declaration": false,
-  "emitDeclarationOnly": false,
-    "rootDir": "src",
-    "composite": false,
+    /* Output */
+    "outDir": "./dist",
+
+    /* Declarations */
+    "declaration": true,
+    "emitDeclarationOnly": false,
+
+    /* Root source */
+    "rootDir": "./src",
+
+    /* Project build */
+    "composite": true,
+
+    /* React JSX transform (for React 17+) */
     "jsx": "react-jsx",
-  "types": ["vite/client", "vitest/globals"],
+
+    /* Types */
+    "types": ["vite/client", "vitest/globals"],
+
+    /* Module resolution */
     "baseUrl": ".",
     "paths": {
       "@client/*": ["src/*"]
-    }
+    },
+
+    /* Recommended strictness */
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "vite-env.d.ts", "types/**/*.d.ts"],
+
+  "include": ["src", "vite-env.d.ts", "types/**/*.d.ts"],
   "exclude": [
     "node_modules",
     "dist",
     "build",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "dist/types/**/*"
+    "dist/types"
   ]
 }

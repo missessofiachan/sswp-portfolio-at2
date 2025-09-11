@@ -10,5 +10,7 @@ router.use(requireAuth, requireRole('admin'));
 // Users management
 router.get('/users', ctrl.listUsers);
 router.delete('/users/:id', ctrl.removeUser);
+router.post('/users/:id/promote', ctrl.promoteUser);
+router.post('/users/:id/demote', ctrl.demoteUser);
 
 export default router;

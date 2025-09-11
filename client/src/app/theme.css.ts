@@ -4,17 +4,20 @@ import { createGlobalTheme, globalStyle } from '@vanilla-extract/css';
 // Design tokens – modern light theme focused on white, light blue and light pink
 export const vars = createGlobalTheme(':root', {
   color: {
-    bg: '#ffffff', // white base
-    surface: '#f8fafc', // soft surface (slate-50)
-    text: '#0f172a', // slate-900
-    textMuted: '#475569', // slate-600
-    primary: '#60a5fa', // light blue (sky-400)
-    primaryText: '#0b1220',
-    secondary: '#f9a8d4', // light pink (pink-300)
-    secondaryText: '#1a1020',
-    border: '#e2e8f0', // slate-200
-    link: '#2563eb', // blue-600
-    linkHover: '#1d4ed8', // blue-700
+    // Light mode
+    bg: '#ffffff', // white background
+    surface: '#f7f7f8', // subtle surface for cards/inputs
+    text: '#0a0a0a', // near-black text
+    textMuted: '#525252', // muted gray
+    // Accents
+    primary: '#5bcffb', // requested blue
+    primaryText: '#0a0a0a', // readable on the light blue
+    secondary: '#f5abb9', // requested pink
+    secondaryText: '#0a0a0a',
+    // UI chrome
+    border: '#e5e7eb',
+    link: '#0ea5e9', // cyan-500 (close to primary)
+    linkHover: '#0284c7', // cyan-600 (darker on hover)
     danger: '#ef4444',
   },
   space: {
@@ -43,17 +46,19 @@ export const vars = createGlobalTheme(':root', {
 // Dark theme overrides (enabled when <html data-theme="dark"> is present)
 export const dark = createGlobalTheme('[data-theme="dark"]', {
   color: {
-    bg: '#0b0b0f',
-    surface: '#111827',
-    text: '#f6f7fb',
-    textMuted: '#cbd5e1',
-    primary: '#60a5fa',
-    primaryText: '#06101e',
-    secondary: '#f472b6',
-    secondaryText: '#120914',
+    // Dark mode with black background
+    bg: '#000000', // black background
+    surface: '#0b0b0f', // near-black surface
+    text: '#f5f5f5',
+    textMuted: '#c7c7c7',
+    // Keep the same accents for brand consistency
+    primary: '#5bcffb',
+    primaryText: '#0a0a0a',
+    secondary: '#f5abb9',
+    secondaryText: '#0a0a0a',
     border: '#1f2937',
-    link: '#93c5fd',
-    linkHover: '#60a5fa',
+    link: '#5bcffb',
+    linkHover: '#34bdf9',
     danger: '#ef4444',
   },
   space: vars.space,

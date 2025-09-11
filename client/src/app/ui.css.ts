@@ -14,12 +14,12 @@ export const input = style({
   padding: `${vars.space.sm} ${vars.space.md}`,
   border: `1px solid ${vars.color.border}`,
   borderRadius: vars.radius.md,
-  backgroundColor: '#fff',
+  backgroundColor: vars.color.surface,
   color: vars.color.text,
   selectors: {
     '&:focus': {
       outline: 'none',
-      boxShadow: `0 0 0 3px rgba(96,165,250,0.35)`,
+      boxShadow: `0 0 0 3px rgba(91,207,251,0.35)`,
       borderColor: vars.color.primary,
     },
   },

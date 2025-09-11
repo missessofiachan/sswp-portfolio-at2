@@ -1,0 +1,56 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-and-test-server",
+			"type": "shell",
+			"command": "pnpm -C server run build && pnpm -C server run test",
+			"args": [],
+			"problemMatcher": [
+				"$tsc",
+				"$eslint - stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build-server-and-client",
+			"type": "shell",
+			"command": "pnpm -C server run build && pnpm -C server run test && pnpm -C client run build",
+			"args": [],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "typecheck-and-build",
+			"type": "shell",
+			"command": "pnpm -C client run typecheck && pnpm -C client run build",
+			"args": [],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "typecheck-client-noemit",
+			"type": "shell",
+			"command": "pnpm -C client run typecheck",
+			"args": [],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "typecheck-client-noemit",
+			"type": "shell",
+			"command": "pnpm -C client run typecheck",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		}
+	]
+}

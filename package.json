@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-  "typecheck": "pnpm -r run typecheck",
+    "typecheck": "pnpm -r run typecheck",
     "test": "npm-run-all -p test:client test:server",
     "test:client": "npm --workspace client run test",
     "test:server": "npm --workspace server run test"

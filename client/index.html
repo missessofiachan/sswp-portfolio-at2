@@ -36,11 +36,29 @@ Security & accessibility:
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Portfolio app with products, uploads, and admin.">
-  <meta property="og:title" content="Portfolio" />
-  <meta property="og:description" content="Products showcase with image uploads and admin." />
-  <meta property="og:type" content="website" />
-  <title>Portfolio</title>
+    <meta name="description" content="Portfolio app with products, uploads, and admin." />
+    <meta property="og:title" content="Portfolio" />
+    <meta property="og:description" content="Products showcase with image uploads and admin." />
+    <meta property="og:type" content="website" />
+    <title>Portfolio</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var mode =
+            stored === 'dark' || stored === 'light' ? stored : prefersDark ? 'dark' : 'light';
+          if (mode === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.removeAttribute('data-theme');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -8,6 +8,15 @@ export async function getProduct(id: string) {
   const res = await axiosInstance.get(`/products/${id}`);
   return res.data.data;
 }
+export async function listProductsPaged(params?: {
+  sort?: { field: string; dir: 'asc' | 'desc' };
+  filter?: { q?: string; category?: string; minPrice?: number; maxPrice?: number };
+  page?: number;
+  pageSize?: number;
+}): Promise<{ data: any[]; meta: { total: number; page: number; pageSize: number } }> {
+  const res = await axiosInstance.get('/products', { params });
+  return res.data as { data: any[]; meta: { total: number; page: number; pageSize: number } };
+}
 type ProductInput = {
   name: string;
   price: number;
@@ -45,6 +54,15 @@ export async function deleteProduct(id: string) {
 export async function getProductStats(): Promise<{ count: number; avgPrice: number }> {
   const res = await axiosInstance.get('/products/admin/stats');
   return res.data.data as { count: number; avgPrice: number };
+}
+
+export type ProductsTimeseriesPoint = { t: number; count: number; avgPrice: number };
+export async function getProductsTimeseries(params?: {
+  windowDays?: number;
+  interval?: 'day' | 'week' | 'month';
+}): Promise<ProductsTimeseriesPoint[]> {
+  const res = await axiosInstance.get('/products/admin/timeseries', { params });
+  return res.data.data as ProductsTimeseriesPoint[];
 }
 
 // Upload images and get back public URLs

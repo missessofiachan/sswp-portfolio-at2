@@ -38,17 +38,29 @@ import { deleteLocalFiles } from '../../utils/uploads';
  * // Service receives: { field: 'price', dir: 'desc' }
  */
 export async function list(req: Request, res: Response): Promise<void> {
-  // Accept query as either structured (sort[field]=price&sort[dir]=asc)
-  // or absent. Use a safe cast since express query parsing is untyped.
   const q: any = req.query;
   let sort: { field: keyof Product; dir: 'asc' | 'desc' } | undefined;
   if (q?.sort && typeof q.sort === 'object') {
     const field = q.sort.field as keyof Product;
-    const dir = q.sort.dir === 'desc' ? 'desc' : 'asc';
+    const dir: 'asc' | 'desc' = q.sort.dir === 'desc' ? 'desc' : 'asc';
     sort = { field, dir };
   }
-  const data = await productsService.list(sort);
-  res.json({ data });
+  const filter =
+    q?.filter && typeof q.filter === 'object'
+      ? {
+          q: typeof q.filter.q === 'string' ? q.filter.q : undefined,
+          category: typeof q.filter.category === 'string' ? q.filter.category : undefined,
+          minPrice: q.filter.minPrice != null ? Number(q.filter.minPrice) : undefined,
+          maxPrice: q.filter.maxPrice != null ? Number(q.filter.maxPrice) : undefined,
+        }
+      : undefined;
+  const page = q?.page != null ? Number(q.page) : undefined;
+  const pageSize = q?.pageSize != null ? Number(q.pageSize) : undefined;
+  const result = await productsService.list({ sort, filter, page, pageSize });
+  res.json({
+    data: result.data,
+    meta: { total: result.total, page: page ?? 1, pageSize: pageSize ?? 20 },
+  });
 }
 
 export async function getById(req: Request, res: Response): Promise<void> {
@@ -83,13 +95,23 @@ export async function update(req: Request, res: Response): Promise<void> {
 
 export async function remove(req: Request, res: Response): Promise<void> {
   const id = req.params.id;
-  const before = await productsService.getById(id);
+  // Fetch current to know which local files to clean up
+  const existing = await productsService.getById(id);
   await productsService.remove(id);
-  if (before?.images?.length) await deleteLocalFiles(before.images);
+  const images = Array.isArray(existing?.images) ? existing!.images! : [];
+  if (images.length) await deleteLocalFiles(images);
   res.status(204).send();
 }
 
 export async function stats(_req: Request, res: Response): Promise<void> {
   const data = await productsService.stats();
+  res.json({ data });
+}
+
+export async function timeseries(req: Request, res: Response): Promise<void> {
+  const q: any = req.query;
+  const windowDays = q?.windowDays != null ? Number(q.windowDays) : undefined;
+  const interval = q?.interval === 'week' || q?.interval === 'month' ? q.interval : 'day';
+  const data = await productsService.timeseries({ windowDays, interval });
   res.json({ data });
 }

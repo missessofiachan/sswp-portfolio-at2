@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { listProducts } from '@client/api/clients/products.api';
+import { listProductsPaged } from '@client/api/clients/products.api';
 import { card, btnPrimary } from '@client/app/ui.css';
 import { useAuth } from '@client/features/auth/AuthProvider';
 
@@ -31,10 +31,29 @@ import { useAuth } from '@client/features/auth/AuthProvider';
  */
 export default function Products() {
   const [items, setItems] = useState<any[]>([]);
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>(
+    'price-asc'
+  );
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+  const [total, setTotal] = useState(0);
   const { isAdmin } = useAuth();
+  async function load() {
+    const [field, dir] = sort.split('-') as [string, 'asc' | 'desc'];
+    const res = await listProductsPaged({
+      sort: { field, dir },
+      filter: q ? { q } : undefined,
+      page,
+      pageSize,
+    });
+    setItems(res.data);
+    setTotal(res.meta.total);
+  }
   useEffect(() => {
-    listProducts({ sort: { field: 'price', dir: 'asc' } }).then(setItems);
-  }, []);
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, sort, page, pageSize]);
   return (
     <section>
       <div
@@ -51,6 +70,39 @@ export default function Products() {
             Create Product
           </Link>
         )}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <input
+          value={q}
+          onChange={(e) => {
+            setPage(1);
+            setQ(e.target.value);
+          }}
+          placeholder="Search..."
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', flex: 1 }}
+        />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+        >
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
+          <option value="name-asc">Name A-Z</option>
+          <option value="name-desc">Name Z-A</option>
+        </select>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            setPage(1);
+            setPageSize(Number(e.target.value));
+          }}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+        >
+          <option value={6}>6</option>
+          <option value={12}>12</option>
+          <option value={24}>24</option>
+        </select>
       </div>
       <div
         style={{
@@ -83,6 +135,26 @@ export default function Products() {
             <p style={{ margin: 0 }}>${p.price}</p>
           </article>
         ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+        <button
+          disabled={page <= 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          style={{ padding: '6px 10px' }}
+        >
+          Prev
+        </button>
+        <span>
+          Page {page} / {Math.max(1, Math.ceil(total / pageSize))}
+        </span>
+        <button
+          disabled={page >= Math.ceil(total / pageSize)}
+          onClick={() => setPage((p) => p + 1)}
+          style={{ padding: '6px 10px' }}
+        >
+          Next
+        </button>
+        <span style={{ marginLeft: 'auto' }}>{total} items</span>
       </div>
     </section>
   );

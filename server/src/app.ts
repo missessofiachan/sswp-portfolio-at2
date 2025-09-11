@@ -2,7 +2,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
+// Removed morgan in favor of custom Firestore-backed logger
 import fileUpload from 'express-fileupload';
 import path from 'path';
 import { router as authRoutes } from './api/routes/auth.routes';
@@ -11,6 +11,7 @@ import { router as adminRoutes } from './api/routes/admin.routes';
 import { router as uploadsRoutes } from './api/routes/uploads.routes';
 import { router as healthRoutes } from './api/routes/health.routes';
 import { errorHandler } from './api/middleware/error';
+import { requestLogger } from './utils/logger';
 
 /**
  * Express application instance created by calling express().
@@ -42,7 +43,7 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(morgan('tiny'));
+app.use(requestLogger);
 // Enable multipart/form-data for file uploads
 const MAX_MB = Number(process.env.UPLOAD_MAX_MB || 5);
 app.use(

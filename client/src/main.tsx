@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@client/features/auth/AuthProvider';
+import AppErrorBoundary from './AppErrorBoundary';
 import { routes } from './app/routes';
 
 // Create the router once and reuse it.
@@ -45,11 +46,17 @@ function bootstrap(): void {
   if (!root) {
     root = createRoot(container);
   }
+  // Boot instrumentation to help diagnose white screen:
+  // eslint-disable-next-line no-console
+  console.log('[BOOT] Mounting React application');
+  (window as any).__APP_BOOT = Date.now();
   root.render(
     <React.StrictMode>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <AppErrorBoundary>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </AppErrorBoundary>
     </React.StrictMode>
   );
 }

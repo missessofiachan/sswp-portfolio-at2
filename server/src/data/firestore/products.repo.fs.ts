@@ -62,14 +62,29 @@ export const fsProductsRepo: ProductsRepo = {
   async list(params) {
     const db = getDb();
     let q: FirebaseFirestore.Query = db.collection(COLLECTION);
-    if (params?.sort) {
-      // e.g. order by price asc; ensure Firestore indexes exist when combined with filters
-      q = q.orderBy(params.sort.field as string, params.sort.dir);
-    }
+    const { sort, filter, page = 1, pageSize = 20 } = params || {};
+    // Apply server-side filters when feasible (category, price). Text search is in-memory fallback.
+    if (filter?.category) q = q.where('category', '==', filter.category);
+    if (filter?.minPrice != null) q = q.where('price', '>=', filter.minPrice);
+    if (filter?.maxPrice != null) q = q.where('price', '<=', filter.maxPrice);
+    if (sort) q = q.orderBy(sort.field as string, sort.dir);
     const snap = await q.get();
-    return snap.docs
+    let items = snap.docs
       .map((d) => d.data() && ({ id: d.id, ...(d.data() as any) } as Product))
       .filter((p): p is Product => Boolean(p));
+    // Client text filter fallback
+    if (filter?.q) {
+      const qlc = filter.q.toLowerCase();
+      items = items.filter(
+        (p) =>
+          p.name.toLowerCase().includes(qlc) || (p.description || '').toLowerCase().includes(qlc)
+      );
+    }
+    const total = items.length;
+    const start = Math.max(0, (page - 1) * pageSize);
+    const end = start + pageSize;
+    const data = items.slice(start, end);
+    return { data, total };
   },
 
   async getById(id) {
@@ -111,5 +126,41 @@ export const fsProductsRepo: ProductsRepo = {
     const count = products.length;
     const avgPrice = count ? products.reduce((sum, p) => sum + (p.price || 0), 0) / count : 0;
     return { count, avgPrice };
+  },
+
+  async timeseries(params) {
+    const { windowDays = 30, interval = 'day' } = params || {};
+    const since = Date.now() - windowDays * 24 * 60 * 60 * 1000;
+    const snap = await getDb()
+      .collection(COLLECTION)
+      .where('createdAt', '>=', since)
+      .orderBy('createdAt', 'asc')
+      .get();
+    const items: Product[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    const buckets = new Map<number, { count: number; sum: number }>();
+    function bucketKey(ts: number): number {
+      const d = new Date(ts);
+      if (interval === 'week') {
+        // Monday-based week start
+        const day = d.getUTCDay();
+        const diff = (day + 6) % 7; // 0..6 (Mon=0)
+        const start =
+          Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - diff * 86400000;
+        return start;
+      }
+      if (interval === 'month') return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+      return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    }
+    for (const p of items) {
+      const k = bucketKey(p.createdAt);
+      const b = buckets.get(k) || { count: 0, sum: 0 };
+      b.count += 1;
+      b.sum += p.price || 0;
+      buckets.set(k, b);
+    }
+    const rows = Array.from(buckets.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([t, v]) => ({ t, count: v.count, avgPrice: v.count ? v.sum / v.count : 0 }));
+    return rows;
   },
 };

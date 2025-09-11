@@ -1,46 +1,20 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { randomUUID } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { loadEnv } from '../config/env';
+import { fsUsersRepo } from '../data/firestore/users.repo.fs';
+import { getDb } from '../config/firestore';
 
-/**
- * In-memory user store for demo/testing only.
- * NOTE: Data is ephemeral and will reset on process restart.
- */
-const users = new Map<
-  string,
-  { id: string; email: string; passwordHash: string; role: 'user' | 'admin' }
->();
-
+// Firestore-backed auth service (no in-memory persistence).
 export const authService = {
-  /**
-   * Register a new user.
-   * - The very first registered user becomes an admin (for demo/testing).
-   * - Stores only a bcrypt password hash.
-   *
-   * @param email User's email (unique key in the in-memory store)
-   * @param password Plaintext password (will be hashed)
-   * @returns Basic user identity (id and email)
-   */
   async register({ email, password }: { email: string; password: string }) {
-    const id = randomUUID();
     const passwordHash = await bcrypt.hash(password, 10);
-    // Make the very first registered user an admin (for demo/testing)
-    const role: 'user' | 'admin' = users.size === 0 ? 'admin' : 'user';
-    const user = { id, email, passwordHash, role };
-    users.set(email, user);
-    return { id, email };
+    // Attempt to create as initial admin if none exists yet; falls back to normal user.
+    const user = await fsUsersRepo.createInitialUser({ email, passwordHash });
+    return { id: user.id, email: user.email };
   },
-  /**
-   * Authenticate a user with email and password.
-   *
-   * @param email User's email
-   * @param password Plaintext password
-   * @throws Error with status 401 on invalid credentials
-   * @returns A signed JWT (15m) and minimal user info (id, role)
-   */
   async login({ email, password }: { email: string; password: string }) {
-    const user = users.get(email);
+    const user = await fsUsersRepo.findByEmail(email);
     if (!user) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
@@ -49,22 +23,45 @@ export const authService = {
     });
     return { token, user: { id: user.id, role: user.role } };
   },
-  /**
-   * List users (admin view). Returns non-sensitive fields only.
-   */
-  async listUsers(): Promise<Array<{ id: string; email: string; role: 'user' | 'admin' }>> {
-    return Array.from(users.values()).map((u) => ({ id: u.id, email: u.email, role: u.role }));
+  async listUsers() {
+    return fsUsersRepo.list();
+  },
+  async removeUser(id: string) {
+    await fsUsersRepo.remove(id);
+  },
+  async setRole(id: string, role: 'user' | 'admin') {
+    return fsUsersRepo.setRole(id, role);
   },
   /**
-   * Remove a user by id (admin action).
+   * Initiate a password reset: creates a one-time token (valid 1h) stored hashed in Firestore.
+   * Returns the raw token (for demo/testing; in production email it to the user).
    */
-  async removeUser(id: string): Promise<void> {
-    // Find by id (map is keyed by email)
-    for (const [email, u] of users.entries()) {
-      if (u.id === id) {
-        users.delete(email);
-        break;
-      }
+  async requestPasswordReset(email: string): Promise<void | { token: string }> {
+    const user = await fsUsersRepo.findByEmail(email);
+    if (!user) return; // Do not leak existence
+    const raw = randomBytes(32).toString('hex');
+    const hash = createHash('sha256').update(raw).digest('hex');
+    const db = getDb();
+    const ref = db.collection('password_resets').doc(hash);
+    await ref.set({ userId: user.id, createdAt: Date.now(), expiresAt: Date.now() + 3600_000 });
+    return { token: raw };
+  },
+  /**
+   * Complete password reset given a raw token and new password.
+   */
+  async resetPassword(token: string, newPassword: string) {
+    const hash = createHash('sha256').update(token).digest('hex');
+    const db = getDb();
+    const ref = db.collection('password_resets').doc(hash);
+    const snap = await ref.get();
+    if (!snap.exists) throw Object.assign(new Error('Invalid or expired reset token'), { status: 400 });
+    const data = snap.data() as { userId: string; expiresAt: number };
+    if (Date.now() > data.expiresAt) {
+      await ref.delete().catch(() => {});
+      throw Object.assign(new Error('Invalid or expired reset token'), { status: 400 });
     }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await fsUsersRepo.updatePassword(data.userId, passwordHash);
+    await ref.delete().catch(() => {});
   },
 };
