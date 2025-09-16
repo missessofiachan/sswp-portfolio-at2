@@ -6,9 +6,9 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const [sort, setSort] = useState<'createdAt-desc' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>(
-    'createdAt-desc'
-  );
+  const [sort, setSort] = useState<
+    'createdAt-desc' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
+  >('createdAt-desc');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);

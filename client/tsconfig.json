@@ -1,9 +1,6 @@
 {
   "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
 
   "compilerOptions": {
     /* Output */
@@ -40,12 +37,5 @@
   },
 
   "include": ["src", "vite-env.d.ts", "types/**/*.d.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "dist/types"
-  ]
+  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts", "**/*.test.ts", "dist/types"]
 }
