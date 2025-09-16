@@ -29,7 +29,8 @@ export const fsUsersRepo: UsersRepo = {
       // Ensure email not reserved
       const emailRef = db.collection(EMAILS_COL).doc(norm);
       const emailSnap = await tx.get(emailRef);
-      if (emailSnap.exists) throw Object.assign(new Error('Email already registered'), { status: 409 });
+      if (emailSnap.exists)
+        throw Object.assign(new Error('Email already registered'), { status: 409 });
       const userRef = db.collection(USERS_COL).doc();
       const user: User = { id: userRef.id, email: norm, passwordHash, role: 'admin' };
       tx.set(userRef, user);
@@ -45,7 +46,8 @@ export const fsUsersRepo: UsersRepo = {
     return db.runTransaction(async (tx) => {
       const emailRef = db.collection(EMAILS_COL).doc(norm);
       const emailSnap = await tx.get(emailRef);
-      if (emailSnap.exists) throw Object.assign(new Error('Email already registered'), { status: 409 });
+      if (emailSnap.exists)
+        throw Object.assign(new Error('Email already registered'), { status: 409 });
       const userRef = db.collection(USERS_COL).doc();
       const user: User = { id: userRef.id, email: norm, passwordHash, role: 'user' };
       tx.set(userRef, user);
@@ -82,7 +84,11 @@ export const fsUsersRepo: UsersRepo = {
     const { email } = userSnap.data() as User;
     await Promise.all([
       userRef.delete(),
-      db.collection(EMAILS_COL).doc(email).delete().catch(() => {}),
+      db
+        .collection(EMAILS_COL)
+        .doc(email)
+        .delete()
+        .catch(() => {}),
     ]);
   },
   async setRole(id: string, role: 'user' | 'admin') {

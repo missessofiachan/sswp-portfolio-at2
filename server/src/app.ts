@@ -10,6 +10,8 @@ import { router as productRoutes } from './api/routes/products.routes';
 import { router as adminRoutes } from './api/routes/admin.routes';
 import { router as uploadsRoutes } from './api/routes/uploads.routes';
 import { router as healthRoutes } from './api/routes/health.routes';
+import { router as maintenanceRoutes } from './api/routes/maintenance.routes';
+import { maintenanceGuard } from './api/middleware/maintenanceAuth';
 import { errorHandler } from './api/middleware/error';
 import { requestLogger } from './utils/logger';
 
@@ -62,6 +64,7 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/uploads', uploadsRoutes);
 app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/maintenance', maintenanceGuard, maintenanceRoutes);
 
 app.use((req, res) => res.status(404).json({ error: { message: 'Not Found' } }));
 

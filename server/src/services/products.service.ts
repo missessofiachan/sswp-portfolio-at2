@@ -1,7 +1,5 @@
 import type { ProductsRepo } from '../data/ports/products.repo';
 import { fsProductsRepo } from '../data/firestore/products.repo.fs';
-import { memProductsRepo } from '../data/memory/products.repo.mem';
-import { loadEnv } from '../config/env';
 import type { Product } from '../domain/product';
 
 // Select backing repository (Firestore by default; swap with memory for tests)
@@ -50,8 +48,5 @@ export function createProductsService(repo: ProductsRepo) {
   };
 }
 
-// Select backing repository via env (Firestore by default)
-const { DATA_STORE } = loadEnv();
-const repo: ProductsRepo = DATA_STORE === 'memory' ? memProductsRepo : fsProductsRepo;
-// Default export uses selected repo
-export const productsService = createProductsService(repo);
+// Always use Firestore-backed repo (memory implementation removed)
+export const productsService = createProductsService(fsProductsRepo);

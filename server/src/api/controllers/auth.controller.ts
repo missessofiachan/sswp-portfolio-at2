@@ -27,3 +27,17 @@ export async function login(req: Request, res: Response): Promise<void> {
   // Standardize response shape to { data: { ... } } like other endpoints
   res.json({ data: { token: out.token, user: out.user } });
 }
+
+export async function requestPasswordReset(req: Request, res: Response): Promise<void> {
+  const result = await authService.requestPasswordReset(req.body.email);
+  // Always return 202 to avoid leaking which emails exist
+  const payload: any = { accepted: true };
+  // In test environment expose token to allow end-to-end reset flow coverage
+  if (process.env.NODE_ENV === 'test' && result?.token) payload.token = result.token;
+  res.status(202).json({ data: payload });
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  await authService.resetPassword(req.body.token, req.body.newPassword);
+  res.status(200).json({ data: { reset: true } });
+}

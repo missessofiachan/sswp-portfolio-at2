@@ -1,7 +1,17 @@
 import { Router, type Router as ExpressRouter } from 'express';
-import { login, register } from '../controllers/auth.controller';
+import {
+  login,
+  register,
+  requestPasswordReset,
+  resetPassword,
+} from '../controllers/auth.controller';
 import { validate } from '../middleware/validate';
-import { loginSchema, registerSchema } from '../validators/auth.schema';
+import {
+  loginSchema,
+  registerSchema,
+  requestResetSchema,
+  resetPasswordSchema,
+} from '../validators/auth.schema';
 /**
  * Express router that groups authentication-related endpoints.
  *
@@ -20,3 +30,5 @@ import { loginSchema, registerSchema } from '../validators/auth.schema';
 export const router: ExpressRouter = Router();
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
+router.post('/password/request', validate(requestResetSchema), requestPasswordReset);
+router.post('/password/reset', validate(resetPasswordSchema), resetPassword);

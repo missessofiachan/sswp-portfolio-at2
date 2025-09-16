@@ -4,6 +4,7 @@ import { randomBytes, createHash } from 'crypto';
 import { loadEnv } from '../config/env';
 import { fsUsersRepo } from '../data/firestore/users.repo.fs';
 import { getDb } from '../config/firestore';
+import { emailService } from './email.service';
 
 // Firestore-backed auth service (no in-memory persistence).
 export const authService = {
@@ -39,11 +40,25 @@ export const authService = {
   async requestPasswordReset(email: string): Promise<void | { token: string }> {
     const user = await fsUsersRepo.findByEmail(email);
     if (!user) return; // Do not leak existence
+    const db = getDb();
+    const rlRef = db.collection('password_reset_rl').doc(user.id);
+    const rlSnap = await rlRef.get();
+    const now = Date.now();
+    if (rlSnap.exists) {
+      const { nextAllowedAt } = rlSnap.data() as { nextAllowedAt: number };
+      if (now < nextAllowedAt) return; // silently ignore - rate limited
+    }
     const raw = randomBytes(32).toString('hex');
     const hash = createHash('sha256').update(raw).digest('hex');
-    const db = getDb();
     const ref = db.collection('password_resets').doc(hash);
-    await ref.set({ userId: user.id, createdAt: Date.now(), expiresAt: Date.now() + 3600_000 });
+    await Promise.all([
+      ref.set({ userId: user.id, createdAt: now, expiresAt: now + 3600_000 }),
+      rlRef.set({ nextAllowedAt: now + 5 * 60_000 }),
+    ]);
+    if (process.env.NODE_ENV !== 'test') {
+      // Fire and forget email (do not await to keep endpoint fast)
+      void emailService.sendPasswordReset({ to: user.email, token: raw }).catch(() => {});
+    }
     return { token: raw };
   },
   /**
@@ -54,7 +69,8 @@ export const authService = {
     const db = getDb();
     const ref = db.collection('password_resets').doc(hash);
     const snap = await ref.get();
-    if (!snap.exists) throw Object.assign(new Error('Invalid or expired reset token'), { status: 400 });
+    if (!snap.exists)
+      throw Object.assign(new Error('Invalid or expired reset token'), { status: 400 });
     const data = snap.data() as { userId: string; expiresAt: number };
     if (Date.now() > data.expiresAt) {
       await ref.delete().catch(() => {});

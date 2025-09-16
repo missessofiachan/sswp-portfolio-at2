@@ -109,4 +109,37 @@ describe('Server integration: auth, products, uploads', () => {
       .expect(204);
     await request(app).get(`/api/v1/products/${productId}`).expect(404);
   });
+
+  it('supports password reset flow with rate limiting', async () => {
+    const email = `reset+${Date.now()}@example.com`;
+    const password = 'initialPass123';
+    // Register a new (non-admin) user
+    await request(app).post('/api/v1/auth/register').send({ email, password }).expect(201);
+    // Request reset (test env returns token)
+    const req1 = await request(app)
+      .post('/api/v1/auth/password/request')
+      .send({ email })
+      .expect(202);
+    const token1 = req1.body?.data?.token;
+    expect(typeof token1).toBe('string');
+    // Second immediate request should be rate limited (returns accepted true but no token)
+    const req2 = await request(app)
+      .post('/api/v1/auth/password/request')
+      .send({ email })
+      .expect(202);
+    expect(req2.body?.data?.token).toBeUndefined();
+    // Perform reset
+    const newPassword = 'newPass456!';
+    await request(app)
+      .post('/api/v1/auth/password/reset')
+      .send({ token: token1, newPassword })
+      .expect(200);
+    // Old password fails
+    await request(app).post('/api/v1/auth/login').send({ email, password }).expect(401);
+    // New password works
+    await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email, password: newPassword })
+      .expect(200);
+  });
 });

@@ -15,12 +15,21 @@ import Joi from 'joi';
  * @constant
  */
 export const registerSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
+  email: Joi.string().trim().lowercase().email().required(),
+  password: Joi.string().min(8).max(100).required(),
 });
 
 // Schema for validating user login data
 export const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
+  email: Joi.string().trim().lowercase().email().required(),
   password: Joi.string().required(),
+});
+
+export const requestResetSchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().required(),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().min(10).required(),
+  newPassword: Joi.string().min(8).max(100).required(),
 });
