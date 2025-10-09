@@ -11,6 +11,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
+import { showToast } from '../lib/toast';
 import { ORDER_STATUS_INFO, PAYMENT_METHOD_INFO, type Order } from '../types/orders';
 
 /**
@@ -47,9 +48,9 @@ export function Orders() {
       // Refresh orders list
       const result = await ordersApi.getMyOrders();
       setOrders(result.orders);
-      alert('Order cancelled successfully');
+  showToast('Order cancelled successfully', { type: 'success' });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to cancel order');
+  showToast(err instanceof Error ? err.message : 'Failed to cancel order', { type: 'error' });
     }
   };
 

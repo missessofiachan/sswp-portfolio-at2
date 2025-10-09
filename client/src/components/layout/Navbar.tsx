@@ -68,7 +68,6 @@ export default function Navbar() {
           <NavLink to="/contact" className={getLinkClassName}>
             Contact
           </NavLink>
-
           {!token && (
             <>
               <NavLink to="/register" className={getLinkClassName}>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -63,9 +63,12 @@ function ErrorMessage({ message }: { message?: string }) {
  *
  * @returns JSX.Element - The product edit form UI.
  */
+
 export default function ProductEdit() {
   const { id } = useParams();
   const nav = useNavigate();
+  const [uploadStatus, setUploadStatus] = useState<{ text: string; color: string } | null>(null);
+  const statusTimeout = useRef<NodeJS.Timeout | null>(null);
   const { register, handleSubmit, reset, formState, getValues, setValue } = useForm<
     z.input<typeof Schema>,
     any,
@@ -126,11 +129,8 @@ export default function ProductEdit() {
               if (!fl || fl.length === 0) return;
 
               // Show loading state
-              const statusEl = document.getElementById('upload-status-edit');
-              if (statusEl) {
-                statusEl.textContent = 'Uploading...';
-                statusEl.style.color = '#d49a6a';
-              }
+              if (statusTimeout.current) clearTimeout(statusTimeout.current);
+              setUploadStatus({ text: 'Uploading...', color: '#d49a6a' });
 
               try {
                 const urls = await uploadImages(Array.from(fl));
@@ -139,13 +139,10 @@ export default function ProductEdit() {
                 setValue('imagesText', appended, { shouldDirty: true });
                 e.currentTarget.value = '';
 
-                if (statusEl) {
-                  statusEl.textContent = `✓ Uploaded ${urls.length} file(s)`;
-                  statusEl.style.color = '#2d5a27';
-                  setTimeout(() => {
-                    statusEl.textContent = '';
-                  }, 3000);
-                }
+                setUploadStatus({ text: `✓ Uploaded ${urls.length} file(s)`, color: '#2d5a27' });
+                statusTimeout.current = setTimeout(() => {
+                  setUploadStatus(null);
+                }, 3000);
               } catch (err: any) {
                 console.error('Upload error:', err);
 
@@ -166,19 +163,18 @@ export default function ProductEdit() {
                   errorMessage = err.message;
                 }
 
-                if (statusEl) {
-                  statusEl.textContent = `✗ ${errorMessage}`;
-                  statusEl.style.color = '#c53030';
-                  setTimeout(() => {
-                    statusEl.textContent = '';
-                  }, 5000);
-                }
+                setUploadStatus({ text: `✗ ${errorMessage}`, color: '#c53030' });
+                statusTimeout.current = setTimeout(() => {
+                  setUploadStatus(null);
+                }, 5000);
               }
             }}
           />
           <small>
             Selected files upload immediately; their URLs are added above.
-            <span id="upload-status-edit" style={{ marginLeft: '8px', fontWeight: 'bold' }}></span>
+            {uploadStatus && (
+              <span style={{ marginLeft: '8px', fontWeight: 'bold', color: uploadStatus.color }}>{uploadStatus.text}</span>
+            )}
           </small>
         </div>
         <div className={field}>

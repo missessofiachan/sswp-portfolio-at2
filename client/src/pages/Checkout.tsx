@@ -17,6 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cartItemsAtom, cartSummaryAtom, clearCartAtom } from '../features/cart/cartAtoms';
 import { ordersApi } from '../api/clients/orders.api';
+import { showToast } from '../lib/toast';
 import { PaymentMethod, type CreateOrderInput } from '../types/orders';
 
 // Shipping address validation schema
@@ -96,7 +97,7 @@ export function Checkout() {
 
       const order = await ordersApi.createOrder(orderData);
       clearCart();
-      alert('Order placed successfully!');
+  showToast('Order placed successfully!', { type: 'success' });
       navigate(`/orders/${order.id}`);
     } catch (error) {
       console.error('Order creation failed:', error);
