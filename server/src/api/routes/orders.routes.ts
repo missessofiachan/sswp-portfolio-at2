@@ -35,7 +35,7 @@ export function createOrderRoutes(): Router {
   // Initialize dependencies
   const productRepository = new ProductRepositoryAdapter(fsProductsRepo);
   const orderRepository = new FirestoreOrderRepository(productRepository);
-  const orderService = new OrderService(orderRepository as any);
+  const orderService = new OrderService(orderRepository);
   const orderController = new OrderController(orderService);
 
   /**
