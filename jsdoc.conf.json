@@ -1,0 +1,38 @@
+{
+  "source": {
+    "include": ["./client/src/", "./server/src/", "./README.md"],
+    "exclude": [
+      "node_modules/",
+      "dist/",
+      "build/",
+      "coverage/",
+      "uploads/",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx"
+    ],
+    "includePattern": "\\.(js|jsx|ts|tsx)$"
+  },
+  "opts": {
+    "destination": "./docs/jsdoc/",
+    "recurse": true,
+    "readme": "./README.md"
+  },
+  "plugins": ["plugins/markdown"],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "markdown": {
+    "parser": "gfm",
+    "hardwrap": false
+  },
+  "typescript": {
+    "moduleRoot": "src"
+  }
+}

@@ -33,6 +33,8 @@ This document explains what each folder and file in the project is responsible f
 - **components/**
   - **ui/** – reusable UI elements (Button, Input, Card).
   - **layout/** – layout components (Navbar, Footer, Sidebar).
+    - **HelpChat.tsx** – floating help/chat component with quick navigation and actions.
+    - **helpChat.css.ts** – Vanilla Extract styles for help chat component.
 - **features/**
   - **auth/** – authentication feature: AuthProvider, RequireAuth, hooks.
   - **products/** – optional feature folder for product hooks/views.
@@ -100,6 +102,7 @@ This document explains what each folder and file in the project is responsible f
 - **docs/ASSESSMENT.md** – answers to assessment questions.
 - **docs/API_REFERENCE.md** – API endpoints, payloads, status codes.
 - **docs/ARCHITECTURE.md** – diagrams, hierarchy, data flows.
+- **docs/HELP_CHAT.md** – documentation for the custom help chat component.
 - **docs/screenshots/** – required evidence screenshots (GUI, Postman, logs).
 
 ---

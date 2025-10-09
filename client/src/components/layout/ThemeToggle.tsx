@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { btnOutline } from '@client/app/ui.css';
+import { useEffect, useState, type KeyboardEvent } from 'react';
+import { vars } from '@client/app/theme.css';
+import { icon, toggle } from './themeToggle.css';
 
 function getInitial(): 'light' | 'dark' {
   if (typeof window !== 'undefined') {
@@ -63,14 +64,67 @@ export default function ThemeToggle() {
     }
   }, [mode]);
 
-  return (
-    <button
-      className={btnOutline}
-      onClick={() => setMode((m) => (m === 'light' ? 'dark' : 'light'))}
-      aria-pressed={mode === 'dark'}
-      title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+  const toggleMode = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleMode();
+    }
+  };
+
+  const label = mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+
+  const sunIcon = (
+    <svg
+      className={icon}
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden="true"
+      style={{ color: vars.color.primary }}
     >
-      {mode === 'light' ? 'Dark mode' : 'Light mode'}
-    </button>
+      <circle cx="10" cy="10" r="5" fill="currentColor" />
+      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <line x1="10" y1="1" x2="10" y2="3" />
+        <line x1="10" y1="17" x2="10" y2="19" />
+        <line x1="1" y1="10" x2="3" y2="10" />
+        <line x1="17" y1="10" x2="19" y2="10" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+        <line x1="14.36" y1="14.36" x2="15.78" y2="15.78" />
+        <line x1="4.22" y1="15.78" x2="5.64" y2="14.36" />
+        <line x1="14.36" y1="5.64" x2="15.78" y2="4.22" />
+      </g>
+    </svg>
+  );
+
+  const moonIcon = (
+    <svg
+      className={icon}
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden="true"
+      style={{ color: vars.color.link }}
+    >
+      <path
+        d="M17.293 13.293A8 8 0 016.707 2.707a.75.75 0 00-.832-.832A8 8 0 1018 14.125a.75.75 0 00-.707-.832z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-pressed={mode === 'dark'}
+      aria-label={label}
+      title={label}
+      className={toggle}
+      onClick={toggleMode}
+      onKeyDown={handleKeyDown}
+    >
+      {mode === 'dark' ? moonIcon : sunIcon}
+      <span className="sr-only">{label}</span>
+    </span>
   );
 }

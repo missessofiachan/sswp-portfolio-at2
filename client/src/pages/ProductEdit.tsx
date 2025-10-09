@@ -124,21 +124,62 @@ export default function ProductEdit() {
             onChange={async (e) => {
               const fl = e.currentTarget.files;
               if (!fl || fl.length === 0) return;
+
+              // Show loading state
+              const statusEl = document.getElementById('upload-status-edit');
+              if (statusEl) {
+                statusEl.textContent = 'Uploading...';
+                statusEl.style.color = '#d49a6a';
+              }
+
               try {
                 const urls = await uploadImages(Array.from(fl));
                 const current = getValues('imagesText') || '';
                 const appended = [current.trim(), urls.join('\n')].filter(Boolean).join('\n');
                 setValue('imagesText', appended, { shouldDirty: true });
                 e.currentTarget.value = '';
+
+                if (statusEl) {
+                  statusEl.textContent = `✓ Uploaded ${urls.length} file(s)`;
+                  statusEl.style.color = '#2d5a27';
+                  setTimeout(() => {
+                    statusEl.textContent = '';
+                  }, 3000);
+                }
               } catch (err: any) {
+                console.error('Upload error:', err);
+
+                // Detailed error handling
+                let errorMessage = 'Upload failed';
                 const status = err?.response?.status;
-                if (status === 401) alert('Upload failed: please log in and try again.');
-                else alert('Upload failed');
-                console.error(err);
+                const serverMessage = err?.response?.data?.error?.message;
+
+                if (status === 401) {
+                  errorMessage = 'Please log in and try again';
+                } else if (status === 400) {
+                  errorMessage = serverMessage || 'Invalid file type or format';
+                } else if (status === 413) {
+                  errorMessage = serverMessage || 'File too large';
+                } else if (serverMessage) {
+                  errorMessage = serverMessage;
+                } else if (err.message) {
+                  errorMessage = err.message;
+                }
+
+                if (statusEl) {
+                  statusEl.textContent = `✗ ${errorMessage}`;
+                  statusEl.style.color = '#c53030';
+                  setTimeout(() => {
+                    statusEl.textContent = '';
+                  }, 5000);
+                }
               }
             }}
           />
-          <small>Selected files upload immediately; their URLs are added above.</small>
+          <small>
+            Selected files upload immediately; their URLs are added above.
+            <span id="upload-status-edit" style={{ marginLeft: '8px', fontWeight: 'bold' }}></span>
+          </small>
         </div>
         <div className={field}>
           <label className={label}>Price</label>

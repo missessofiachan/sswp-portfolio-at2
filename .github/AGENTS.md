@@ -7,15 +7,15 @@ This file gives AI/autonomous contributors a concise operating manual. Follow it
 ### 🔄 Daily workflow
 
 1. Sync & inspect
-	- `git pull --rebase origin main`
-	- skim `todo` and the latest commits for context.
+   - `git pull --rebase origin main`
+   - skim `todo` and the latest commits for context.
 2. Reproduce locally
-	- Install once: `pnpm install`
-	- Optional clean build: `pnpm run build`
+   - Install once: `pnpm install`
+   - Optional clean build: `pnpm run build`
 3. Work in focus areas
-	- **Client** code lives in `client/src/...`
-	- **Server** code in `server/src/...`
-	- **Docs** in `docs/`
+   - **Client** code lives in `client/src/...`
+   - **Server** code in `server/src/...`
+   - **Docs** in `docs/`
 4. Verify incrementally (see verification matrix below).
 5. Summarise results, tests run, and follow-ups in your report.
 
@@ -54,13 +54,13 @@ This file gives AI/autonomous contributors a concise operating manual. Follow it
 
 ### ✅ Verification matrix (run what you touch)
 
-| Change type | Required checks | Optional extras |
-|-------------|-----------------|-----------------|
-| Client UI/components | `pnpm -C client run typecheck` | `pnpm -C client run test`, manual smoke in dev server |
-| Server routes/services | `pnpm -C server run typecheck` | `pnpm -C server run test`, Postman or curl call |
-| Shared schema/types | Both client & server typechecks | End-to-end smoke if Firestore queries involved |
-| Styling/theme only | Visual check in dev server | Axe accessibility scan |
-| Docs only | None required | Proofread & link check |
+| Change type            | Required checks                 | Optional extras                                       |
+| ---------------------- | ------------------------------- | ----------------------------------------------------- |
+| Client UI/components   | `pnpm -C client run typecheck`  | `pnpm -C client run test`, manual smoke in dev server |
+| Server routes/services | `pnpm -C server run typecheck`  | `pnpm -C server run test`, Postman or curl call       |
+| Shared schema/types    | Both client & server typechecks | End-to-end smoke if Firestore queries involved        |
+| Styling/theme only     | Visual check in dev server      | Axe accessibility scan                                |
+| Docs only              | None required                   | Proofread & link check                                |
 
 Record every command you run in the final report.
 
@@ -92,4 +92,4 @@ Record every command you run in the final report.
 
 ---
 
-By following this playbook you keep the repo consistent, testable, and ready for assessment evidence.*** End Patch
+By following this playbook you keep the repo consistent, testable, and ready for assessment evidence.\*\*\* End Patch

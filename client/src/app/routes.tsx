@@ -5,25 +5,26 @@ import Navbar from '@client/components/layout/Navbar';
 import Footer from '@client/components/layout/Footer';
 import { container as containerClass } from './theme.css';
 
-import Home from '@client/pages/Home';
-import Products from '@client/pages/Products';
-import ProductShow from '@client/pages/ProductShow';
-import Login from '@client/pages/Login';
-import Register from '@client/pages/Register';
-import NotFound from '@client/pages/NotFound';
-import LegacyClock from '@client/pages/LegacyClock';
-import About from '@client/pages/About';
-import Contact from '@client/pages/Contact';
-import { RequireAuth } from '@client/features/auth/RequireAuth';
-import AdminLayout from '@client/pages/admin/Layout';
-import AdminOverview from '@client/pages/admin/Overview';
-import AdminUsers from '@client/pages/admin/Users';
-import AdminProducts from '@client/pages/admin/Products';
-import AdminProductNew from '@client/pages/admin/ProductNew';
 // ProductCreate is now embedded in Admin; keep legacy route redirected
 import ProductEdit from '@client/pages/ProductEdit';
 import Unauthorized from '@client/pages/Unauthorized';
 import ProductCreate from '@client/pages/ProductCreate';
+import { Checkout } from '@client/pages/Checkout';
+import { RequireAuth } from '@client/features/auth/RequireAuth';
+import About from '@client/pages/About';
+import AdminLayout from '@client/pages/admin/Layout';
+import AdminOverview from '@client/pages/admin/Overview';
+import AdminProductNew from '@client/pages/admin/ProductNew';
+import AdminProducts from '@client/pages/admin/Products';
+import AdminUsers from '@client/pages/admin/Users';
+import Contact from '@client/pages/Contact';
+import Home from '@client/pages/Home';
+import LegacyClock from '@client/pages/LegacyClock';
+import Login from '@client/pages/Login';
+import NotFound from '@client/pages/NotFound';
+import Products from '@client/pages/Products';
+import ProductShow from '@client/pages/ProductShow';
+import Register from '@client/pages/Register';
 
 function Shell() {
   return (
@@ -105,6 +106,7 @@ export const routes: RouteObject[] = [
       { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },
       { path: 'products', element: <Products />, errorElement: <NotFound /> },
       { path: 'products/:id', element: <ProductShow />, errorElement: <NotFound /> },
+      { path: 'checkout', element: <Checkout />, errorElement: <NotFound /> },
       {
         path: 'products/new',
         element: (
