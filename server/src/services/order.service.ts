@@ -171,12 +171,12 @@ export class OrderService {
 
       // Restrict what non-admin users can update
       const allowedFields = OrderService.USER_ALLOWED_UPDATE_FIELDS;
-      const restrictedUpdate = Object.keys(updateData).filter(
+      const restrictedFields = Object.keys(updateData).filter(
         (key) => !allowedFields.includes(key)
       );
 
-      if (restrictedUpdate.length > 0) {
-        throw new Error(`Unauthorized field updates: ${restrictedUpdate.join(', ')}`);
+      if (restrictedFields.length > 0) {
+        throw new Error(`Unauthorized field updates: ${restrictedFields.join(', ')}`);
       }
     }
 
