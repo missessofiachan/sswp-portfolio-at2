@@ -16,6 +16,7 @@ import { ProductRepositoryAdapter } from '../../data/adapters/ProductRepositoryA
 import { fsProductsRepo } from '../../data/firestore/products.repo.fs';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { validateParams } from '../middleware/validation';
 import {
   createOrderSchema,
   updateOrderSchema,
@@ -83,7 +84,7 @@ export function createOrderRoutes(): Router {
    * @desc Get order by ID
    * @access Private
    */
-  router.get('/:id', requireAuth, validate(orderIdSchema), (req, res) =>
+  router.get('/:id', requireAuth, validateParams(orderIdSchema), (req, res) =>
     orderController.getOrder(req, res)
   );
 
@@ -95,13 +96,12 @@ export function createOrderRoutes(): Router {
   router.put(
     '/:id',
     requireAuth,
-    validate(orderIdSchema), // Validate route parameter
+    validateParams(orderIdSchema), // Validate route parameter
     validate(updateOrderSchema), // Validate request body
     (req, res) => orderController.updateOrder(req, res)
   );
 
   /**
-  router.post('/:id/cancel', requireAuth, validate(orderIdSchema), (req, res) => orderController.cancelOrder(req, res));
    * @desc Cancel an order
    * @access Private
    */
@@ -116,7 +116,7 @@ export function createOrderRoutes(): Router {
     '/:id',
     requireAuth,
     requireRole('admin'),
-    validate(orderIdSchema), // Validate route parameter
+    validateParams(orderIdSchema), // Validate route parameter
     (req, res) => orderController.deleteOrder(req, res)
   );
 

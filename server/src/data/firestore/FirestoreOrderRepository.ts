@@ -332,61 +332,6 @@ export class FirestoreOrderRepository implements OrderRepository {
   }
 
   /**
-  async getStats(startDate?: Date, endDate?: Date): Promise<OrderStats> {
-    const db = getDb();
-    let baseQuery: admin.firestore.Query = db.collection(this.collectionName);
-
-    if (startDate) {
-      baseQuery = baseQuery.where('createdAt', '>=', admin.firestore.Timestamp.fromDate(startDate));
-    }
-
-    if (endDate) {
-      baseQuery = baseQuery.where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate));
-    }
-
-    // Use Firestore count() aggregation for totalOrders
-    const totalOrdersAgg = await baseQuery.count().get();
-    const totalOrders = totalOrdersAgg.data().count || 0;
-
-    // Use Firestore count() for pending orders
-    const pendingOrdersAgg = await baseQuery.where('status', '==', OrderStatus.PENDING).count().get();
-    const pendingOrders = pendingOrdersAgg.data().count || 0;
-
-    // Status breakdown using count() for each status
-    const statusBreakdown: Record<OrderStatus, number> = {} as Record<OrderStatus, number>;
-    for (const status of Object.values(OrderStatus)) {
-      const statusAgg = await baseQuery.where('status', '==', status).count().get();
-      statusBreakdown[status] = statusAgg.data().count || 0;
-    }
-
-    // For totalRevenue and averageOrderValue, fetch only totalAmount fields
-    // (Firestore does not support sum aggregation natively, so this is still a scan but only loads minimal data)
-    const revenueSnapshot = await baseQuery.select('totalAmount').get();
-    let totalRevenue = 0;
-    revenueSnapshot.forEach(doc => {
-      const data = doc.data();
-      if (typeof data.totalAmount === 'number') {
-        totalRevenue += data.totalAmount;
-      }
-    });
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-    return {
-      totalOrders,
-      totalRevenue,
-      averageOrderValue,
-      pendingOrders,
-      statusBreakdown,
-    };
-  }
-      totalRevenue,
-      averageOrderValue,
-      pendingOrders,
-      statusBreakdown,
-    };
-  }
-
-  /**
    * Check if user owns the order
    *
    * @param {string} orderId - Order ID to check
