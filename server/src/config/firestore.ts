@@ -93,3 +93,6 @@ export function getDb() {
     throw new Error(`Failed to get Firestore instance: ${(err as Error).message}`);
   }
 }
+
+// Export the database instance for direct access
+export { db };
