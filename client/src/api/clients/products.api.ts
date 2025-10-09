@@ -69,8 +69,7 @@ export async function getProductsTimeseries(params?: {
 export async function uploadImages(files: File[]): Promise<string[]> {
   const fd = new FormData();
   for (const f of files) fd.append('files', f);
-  const res = await axiosInstance.post('/uploads', fd, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  // Do not set Content-Type manually; the browser will include the correct boundary
+  const res = await axiosInstance.post('/uploads', fd);
   return (res.data?.urls as string[]) ?? [];
 }

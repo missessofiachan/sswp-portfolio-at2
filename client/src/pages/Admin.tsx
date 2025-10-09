@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import ProductCreate from '@client/pages/ProductCreate';
 import { getProductStats, listProducts, deleteProduct } from '@client/api/clients/products.api';
 import { listUsers, deleteUser, type AdminUser } from '@client/api/clients/admin.api';
-import { card, btnOutline, btnPrimary } from '@client/app/ui.css';
+import { card, btnOutline, btnPrimary, photoFrame, sepiaPhoto } from '@client/app/ui.css';
+import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 
 /**
  * Admin Dashboard
@@ -61,7 +62,7 @@ export default function Admin() {
   }, []);
 
   return (
-    <section style={{ display: 'grid', gap: 24 }}>
+    <section style={{ display: 'grid', gap: 28 }}>
       <div className={card}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ margin: 0 }}>Admin Stats</h2>
@@ -91,23 +92,17 @@ export default function Admin() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: 8 }}>
-                Email
-              </th>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: 8 }}>
-                Role
-              </th>
-              <th style={{ textAlign: 'right', borderBottom: '1px solid #ddd', padding: 8 }}>
-                Actions
-              </th>
+              <th style={{ textAlign: 'left', padding: 10 }}>Email</th>
+              <th style={{ textAlign: 'left', padding: 10 }}>Role</th>
+              <th style={{ textAlign: 'right', padding: 10 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id}>
-                <td style={{ padding: 8 }}>{u.email}</td>
-                <td style={{ padding: 8 }}>{u.role}</td>
-                <td style={{ padding: 8, textAlign: 'right' }}>
+                <td style={{ padding: 10 }}>{u.email}</td>
+                <td style={{ padding: 10 }}>{u.role}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>
                   <button
                     className={btnOutline}
                     onClick={async () => {
@@ -128,7 +123,7 @@ export default function Admin() {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={3} style={{ padding: 8, color: '#777' }}>
+                <td colSpan={3} style={{ padding: 12, color: '#6d5b45' }}>
                   No users yet. Register to create users.
                 </td>
               </tr>
@@ -158,16 +153,19 @@ export default function Admin() {
             <article key={p.id} className={card}>
               {Array.isArray(p.images) && p.images[0] && (
                 <img
-                  src={p.images[0]}
+                  src={resolveImageUrl(p.images[0])}
                   alt={p.name}
+                  className={`${photoFrame} ${sepiaPhoto}`}
                   style={{
-                    width: '100%',
                     height: 140,
                     objectFit: 'cover',
-                    borderRadius: 8,
-                    marginBottom: 8,
+                    marginBottom: 12,
                   }}
                   loading="lazy"
+                  onError={(e) => {
+                    const t = e.currentTarget as HTMLImageElement;
+                    if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+                  }}
                 />
               )}
               <h3 style={{ marginTop: 0 }}>{p.name}</h3>
@@ -201,7 +199,7 @@ export default function Admin() {
 
       <div className={card}>
         <h2 style={{ marginTop: 0 }}>New Product</h2>
-        <p style={{ marginTop: 0, color: '#666' }}>
+        <p style={{ marginTop: 0, color: '#6d5b45' }}>
           Create a product directly from the admin dashboard.
         </p>
         {/* Reuse the existing creation form */}

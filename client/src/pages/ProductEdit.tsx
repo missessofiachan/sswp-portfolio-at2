@@ -130,8 +130,10 @@ export default function ProductEdit() {
                 const appended = [current.trim(), urls.join('\n')].filter(Boolean).join('\n');
                 setValue('imagesText', appended, { shouldDirty: true });
                 e.currentTarget.value = '';
-              } catch (err) {
-                alert('Upload failed');
+              } catch (err: any) {
+                const status = err?.response?.status;
+                if (status === 401) alert('Upload failed: please log in and try again.');
+                else alert('Upload failed');
                 console.error(err);
               }
             }}

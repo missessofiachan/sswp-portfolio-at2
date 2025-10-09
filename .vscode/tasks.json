@@ -51,6 +51,16 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "typecheck-server-noemit",
+			"type": "shell",
+			"command": "pnpm -C server run typecheck",
+			"args": [],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
 		}
 	]
 }

@@ -4,21 +4,20 @@ import { createGlobalTheme, globalStyle } from '@vanilla-extract/css';
 // Design tokens – modern light theme focused on white, light blue and light pink
 export const vars = createGlobalTheme(':root', {
   color: {
-    // Light mode
-    bg: '#ffffff', // white background
-    surface: '#f7f7f8', // subtle surface for cards/inputs
-    text: '#0a0a0a', // near-black text
-    textMuted: '#525252', // muted gray
-    // Accents
-    primary: '#5bcffb', // requested blue
-    primaryText: '#0a0a0a', // readable on the light blue
-    secondary: '#f5abb9', // requested pink
-    secondaryText: '#0a0a0a',
-    // UI chrome
-    border: '#e5e7eb',
-    link: '#0ea5e9', // cyan-500 (close to primary)
-    linkHover: '#0284c7', // cyan-600 (darker on hover)
-    danger: '#ef4444',
+    // Aged paper palette
+    bg: '#f6ecd6',
+    surface: '#fcf3e0',
+    text: '#3a2b1a',
+    textMuted: '#6d5b45',
+    // Accents inspired by vintage inks
+    primary: '#923f2b',
+    primaryText: '#fef8ec',
+    secondary: '#d7b48b',
+    secondaryText: '#3a2b1a',
+    border: '#c7a57a',
+    link: '#8b3a29',
+    linkHover: '#62281d',
+    danger: '#8c1c13',
   },
   space: {
     xs: '4px',
@@ -28,15 +27,16 @@ export const vars = createGlobalTheme(':root', {
     xl: '32px',
   },
   radius: {
-    sm: '6px',
-    md: '10px',
-    lg: '16px',
+    sm: '4px',
+    md: '6px',
+    lg: '10px',
   },
   shadow: {
-    card: '0 1px 2px rgba(2, 6, 23, 0.06), 0 1px 3px rgba(2, 6, 23, 0.10)',
+    card: '4px 4px 0 rgba(82, 52, 27, 0.25)',
   },
   font: {
-    body: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji", sans-serif',
+    body: '"Libre Baskerville", "Times New Roman", serif',
+    display: '"Playfair Display", "Libre Baskerville", serif',
   },
   layout: {
     maxWidth: '1120px',
@@ -46,20 +46,19 @@ export const vars = createGlobalTheme(':root', {
 // Dark theme overrides (enabled when <html data-theme="dark"> is present)
 export const dark = createGlobalTheme('[data-theme="dark"]', {
   color: {
-    // Dark mode with black background
-    bg: '#000000', // black background
-    surface: '#0b0b0f', // near-black surface
-    text: '#f5f5f5',
-    textMuted: '#c7c7c7',
-    // Keep the same accents for brand consistency
-    primary: '#5bcffb',
-    primaryText: '#0a0a0a',
-    secondary: '#f5abb9',
-    secondaryText: '#0a0a0a',
-    border: '#1f2937',
-    link: '#5bcffb',
-    linkHover: '#34bdf9',
-    danger: '#ef4444',
+    // Deep sepia night mode
+    bg: '#1f1811',
+    surface: '#2a2118',
+    text: '#f0e7d6',
+    textMuted: '#bda988',
+    primary: '#c46d4c',
+    primaryText: '#1f1811',
+    secondary: '#aa8a5f',
+    secondaryText: '#1f1811',
+    border: '#5c4733',
+    link: '#d9a074',
+    linkHover: '#f2b894',
+    danger: '#f87171',
   },
   space: vars.space,
   radius: vars.radius,
@@ -74,13 +73,34 @@ globalStyle('html,body,#root', { height: '100%' });
 globalStyle('body', {
   margin: 0,
   backgroundColor: vars.color.bg,
+  backgroundImage:
+    'radial-gradient(circle at 1px 1px, rgba(89, 63, 38, 0.08) 1px, transparent 0), linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(198, 167, 128, 0.12) 100%)',
+  backgroundSize: '12px 12px, 100% 100%',
   color: vars.color.text,
   fontFamily: vars.font.body,
   WebkitFontSmoothing: 'antialiased',
   MozOsxFontSmoothing: 'grayscale',
 });
+globalStyle('[data-theme="dark"] body', {
+  backgroundColor: vars.color.bg,
+  backgroundImage:
+    'radial-gradient(circle at 1px 1px, rgba(255, 219, 173, 0.06) 1px, transparent 0), linear-gradient(180deg, rgba(48, 34, 21, 0.85) 0%, rgba(32, 23, 15, 0.95) 100%)',
+  backgroundSize: '12px 12px, 100% 100%',
+  color: vars.color.text,
+});
 globalStyle('a', { color: vars.color.link, textDecoration: 'none' });
 globalStyle('a:hover', { color: vars.color.linkHover, textDecoration: 'underline' });
+
+globalStyle('h1, h2, h3, h4, h5, h6', {
+  fontFamily: vars.font.display,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+});
+
+globalStyle('h1', {
+  borderBottom: `4px double ${vars.color.border}`,
+  paddingBottom: '0.35rem',
+});
 
 // Shared layout class (container)
 export const container = {

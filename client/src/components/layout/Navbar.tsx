@@ -48,6 +48,12 @@ export default function Navbar() {
           <NavLink to="/products" className={getLinkClassName}>
             Products
           </NavLink>
+          <NavLink to="/about" className={getLinkClassName}>
+            About
+          </NavLink>
+          <NavLink to="/contact" className={getLinkClassName}>
+            Contact
+          </NavLink>
           <NavLink to="/legacy" className={getLinkClassName}>
             Legacy
           </NavLink>

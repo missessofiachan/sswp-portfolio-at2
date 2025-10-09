@@ -1,114 +1,37 @@
-/* 
-FILE: client/src/index.css
-PURPOSE:
-  - Global base styles, design tokens, and accessibility-aware defaults for the app.
-  - Provides dark-mode-first tokens with a lightweight light-mode override via prefers-color-scheme.
-  - Small, focused reset and a handful of utility classes (visually-hidden) and input affordances.
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Playfair+Display:wght@600;700&display=swap');
 
-KEY PRINCIPLES:
-  - Token-driven: all important values (colors, typography, motion) are exposed as CSS custom properties for easy theming/overrides.
-  - Accessibility-first: reduced-motion, focus-visible, and a visually-hidden utility are included by default.
-  - Minimal and performant: modest transitions, optimized font smoothing, and predictable box-sizing.
-
-TOKENS (what to expect and how to use them):
-  - Typography
-    --font-family     : preferred stack for the app
-    --line-height     : global line-height
-    --font-weight     : base font weight
-
-  - Color & UI
-    --color-bg        : background color
-    --color-text      : primary text color
-    --color-accent    : primary accent / link color
-    --color-accent-hover : accent color when hovered/focused
-    --button-bg       : default button background
-    --button-border   : default button border color
-    --focus-ring-color: color used for accessible focus ring
-
-  - Motion & timing
-    --transition-fast : small transition duration used by interactive elements
-
-  - Rendering & box model
-    color-scheme      : lets UA render form controls appropriately for light/dark
-    box-sizing        : border-box applied globally
-
-THEMING & VARIANT SUGGESTIONS:
-  - Current setup respects user preferences via @media (prefers-color-scheme: light).
-    This is good for automatic light/dark support, but if you need programmatic toggling,
-    prefer a class-based approach to avoid fighting the user's OS preference:
-      Example pattern (conceptual): */
-
-/*html.theme--light { /* override tokens for light theme */ /*}
-        html.theme--dark  { /* override tokens for dark theme */ /*}
-    Use JS to toggle the html class at app startup (persist preference in localStorage).
-  - Keep components reading styles from tokens rather than hard-coding colors so theme switches are seamless.
-
-ACCESSIBILITY NOTES:
-  - Focus management:
-    Uses :focus-visible for keyboard-only focus styles and removes outline on non-keyboard focus.
-    Ensure interactive elements remain keyboard-navigable and that custom focus styles meet visibility requirements.
-  - Contrast:
-    Verify token contrast ratios with a tool (axe, WebAIM Contrast Checker). Aim for:
-      - WCAG AA: ≥4.5:1 for normal text, ≥3:1 for large text/icons.
-  - Reduced motion:
-    Honors prefers-reduced-motion by disabling animations and transitions for users who opt out.
-  - Visually hidden:
-    .visually-hidden is provided to hide content visually but keep it accessible to assistive technologies.
-
-RECOMMENDED TOOLING & QA:
-  - Run stylelint with a sensible config (e.g., order, custom-properties, accessibility rules).
-  - Run automated accessibility scans (axe-core) and manual checks with screen readers (NVDA, VoiceOver).
-  - Test color rendering on different devices and in both color schemes.
-  - Check keyboard navigation, focus order, and focus visibility across interactive components.
-
-BEST PRACTICES / CONTRIBUTING GUIDELINES:
-  - Prefer adding/updating tokens over introducing hard-coded colors/sizes in components.
-  - Keep transition durations short and consistent (use --transition-fast).
-  - When introducing new tokens, name them semantically (e.g., --surface-muted, --text-primary).
-  - Document token purpose and any accessibility considerations in code comments or a design tokens README.
-  - Keep resets minimal—avoid broad rules that may surprise component-level styles.
-
-PERFORMANCE & BROWSER SUPPORT:
-  - Designed for modern evergreen browsers; properties like color-scheme and :focus-visible rely on recent browser support.
-  - Provide graceful fallbacks where necessary; tokens ensure components degrade gracefully.
-  - Avoid heavy animations and large repaints on the root level.
-
-CHANGELOG / FUTURE WORK:
-  - Consider adding:
-    - A small ThemeProvider JS util to manage theme persistence and class toggling.
-    - A CI step to run stylelint + axe checks on pull requests.
-    - A small tokens documentation page for designers/developers listing approved values and usage examples.
-
-AUTHORS:
-  - [Sofia] - Initial implementation and documentation.
-
-TODO:
-  - Run stylelint and audit with an accessibility contrast tool (e.g., axe, Contrast Checker).
-  - Consider theme toggling with a .theme--light / .theme--dark class if programmatic switching is needed.
-
+/*
+Vintage magazine inspired global styles.
+Keeps the accessibility guidance from the original file while swapping to
+heritage typography, warm paper tones, and ornamental borders.
 */
 
 :root {
   /* Typography */
-  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --line-height: 1.5;
+  --font-family: 'Libre Baskerville', 'Times New Roman', serif;
+  --line-height: 1.6;
   --font-weight: 400;
+  --font-display: 'Playfair Display', 'Libre Baskerville', serif;
 
-  /* Color tokens (dark mode defaults) */
-  --color-bg: #0b0b0d;
-  --color-text: rgba(255, 255, 255, 0.92);
-  --color-accent: #646cff;
-  --color-accent-hover: #535bf2;
-  --button-bg: #1a1a1a;
-  --button-border: transparent;
-  --focus-ring-color: rgba(91, 157, 217, 0.9);
+  /* Color tokens inspired by aged paper and burgundy ink */
+  --color-bg: #f6ecd6;
+  --color-paper: #fcf3e0;
+  --color-ink: #3a2b1a;
+  --color-text: #3a2b1a;
+  --color-ink-muted: #6d5b45;
+  --color-accent: #923f2b;
+  --color-accent-hover: #6e2d1f;
+  --button-bg: #d7b48b;
+  --button-border: #995c33;
+  --focus-ring-color: rgba(146, 63, 43, 0.45);
+  --divider-color: rgba(86, 59, 31, 0.35);
 
   /* Motion & timing */
   --transition-fast: 0.18s;
 
   /* Rendering hints */
   color-scheme: light dark;
-  color: var(--color-text);
+  color: var(--color-ink);
   background-color: var(--color-bg);
 
   font-family: var(--font-family);
@@ -122,6 +45,21 @@ TODO:
 
   /* Box model */
   box-sizing: border-box;
+}
+
+[data-theme='dark'] {
+  --color-bg: #1f1811;
+  --color-paper: #2a2118;
+  --color-ink: #f2e4cf;
+  --color-text: #f2e4cf;
+  --color-ink-muted: #c9b89d;
+  --color-accent: #d89b64;
+  --color-accent-hover: #f0b985;
+  --button-bg: #3b2a1a;
+  --button-border: #b77946;
+  --focus-ring-color: rgba(216, 155, 100, 0.5);
+  --divider-color: rgba(216, 155, 100, 0.35);
+  color-scheme: dark;
 }
 
 /* Make box-sizing predictable */
@@ -142,9 +80,23 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--color-bg);
-  color: var(--color-text);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(89, 63, 38, 0.1) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(198, 167, 128, 0.07) 100%);
+  background-size:
+    12px 12px,
+    100% 100%;
+  color: var(--color-ink);
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme='dark'] body {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(248, 213, 163, 0.06) 1px, transparent 0),
+    linear-gradient(180deg, rgba(48, 34, 21, 0.88) 0%, rgba(24, 16, 10, 0.96) 100%);
+  color: var(--color-ink);
 }
 
 /* Basic element spacing */
@@ -160,9 +112,31 @@ h6 {
   margin: 0 0 1rem 0;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 3.1rem;
+  line-height: 1.05;
+  border-bottom: 4px double var(--divider-color);
+  padding-bottom: 0.35rem;
+}
+
+h2 {
+  font-size: 2.1rem;
+}
+
+h3 {
+  font-size: 1.5rem;
 }
 
 /* Links */
@@ -178,23 +152,39 @@ a:focus {
 
 /* Buttons */
 button {
-  border-radius: 8px;
-  border: 1px solid var(--button-border);
-  padding: 0.6em 1.2em;
-  font-size: 1rem;
-  font-weight: 500;
-  font-family: inherit;
+  border-radius: 0;
+  border: 2px solid var(--button-border);
+  padding: 0.55em 1.3em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   background-color: var(--button-bg);
-  color: var(--color-text);
+  color: var(--color-ink);
   cursor: pointer;
   transition:
     border-color var(--transition-fast),
-    background-color var(--transition-fast);
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+  box-shadow: 3px 3px 0 rgba(58, 43, 26, 0.2);
 }
 
 /* Hover affordance */
 button:hover {
   border-color: var(--color-accent);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(58, 43, 26, 0.3);
+}
+
+[data-theme='dark'] button {
+  background-color: var(--button-bg);
+  color: var(--color-ink);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] button:hover {
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
 }
 
 /* Respect native focus for non-keyboard interactions, but provide strong visible focus for keyboard users */
@@ -205,7 +195,7 @@ button:focus {
 /* Accessible custom focus for keyboard users */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(91, 157, 217, 0.35);
+  box-shadow: 0 0 0 4px var(--focus-ring-color);
   border-color: var(--color-accent);
 }
 
@@ -226,13 +216,13 @@ button:focus {
 /* Light theme overrides when the user prefers a light color scheme */
 @media (prefers-color-scheme: light) {
   :root {
-    --color-bg: #ffffff;
-    --color-text: #213547;
-    --color-accent: #646cff;
-    --color-accent-hover: #747bff;
-    --button-bg: #f9f9f9;
-    --button-border: transparent;
-    --focus-ring-color: rgba(91, 157, 217, 0.9);
+    --color-bg: #f6ecd6;
+    --color-text: var(--color-ink);
+    --color-accent: #923f2b;
+    --color-accent-hover: #6e2d1f;
+    --button-bg: #d7b48b;
+    --button-border: #995c33;
+    --focus-ring-color: rgba(146, 63, 43, 0.45);
   }
 }
 
@@ -242,4 +232,81 @@ button:focus {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Form elements */
+input,
+select,
+textarea {
+  font-family: inherit;
+  border-radius: 0;
+  border: 2px solid rgba(110, 73, 44, 0.45);
+  background-color: var(--color-paper);
+  padding: 0.55em 0.75em;
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  border: 2px solid rgba(216, 155, 100, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  color: var(--color-ink);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(146, 63, 43, 0.15);
+  outline: none;
+}
+
+table {
+  border: 2px solid rgba(95, 62, 32, 0.5);
+  background-color: rgba(252, 243, 224, 0.92);
+  box-shadow: 4px 4px 0 rgba(66, 44, 24, 0.25);
+}
+
+thead th {
+  background: rgba(146, 63, 43, 0.15);
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+th,
+td {
+  border-bottom: 1px dashed rgba(95, 62, 32, 0.35);
+  color: var(--color-ink);
+}
+
+[data-theme='dark'] table {
+  border: 2px solid rgba(216, 155, 100, 0.3);
+  background-color: rgba(44, 31, 20, 0.9);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] thead th {
+  background: rgba(216, 155, 100, 0.15);
+}
+
+[data-theme='dark'] th,
+[data-theme='dark'] td {
+  border-bottom: 1px dashed rgba(216, 155, 100, 0.35);
+  color: var(--color-ink);
+}
+
+blockquote {
+  border-left: 4px solid rgba(146, 63, 43, 0.3);
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+[data-theme='dark'] blockquote {
+  border-left: 4px solid rgba(216, 155, 100, 0.3);
 }

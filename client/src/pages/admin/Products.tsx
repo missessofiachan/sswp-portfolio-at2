@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { card, btnOutline, btnPrimary } from '@client/app/ui.css';
+import {
+  card,
+  btnOutline,
+  btnPrimary,
+  input as inputField,
+  photoFrame,
+  sepiaPhoto,
+} from '@client/app/ui.css';
+import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 import { listProductsPaged, deleteProduct } from '@client/api/clients/products.api';
 
 export default function AdminProducts() {
@@ -41,7 +49,7 @@ export default function AdminProducts() {
         </button>
       </div>
       {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <input
           value={q}
           onChange={(e) => {
@@ -49,12 +57,14 @@ export default function AdminProducts() {
             setQ(e.target.value);
           }}
           placeholder="Search..."
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', flex: 1 }}
+          className={inputField}
+          style={{ flex: 1 }}
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          className={inputField}
+          style={{ width: 'auto' }}
         >
           <option value="createdAt-desc">Newest</option>
           <option value="price-asc">Price ↑</option>
@@ -68,7 +78,8 @@ export default function AdminProducts() {
             setPage(1);
             setPageSize(Number(e.target.value));
           }}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          className={inputField}
+          style={{ width: 'auto' }}
         >
           <option value={6}>6</option>
           <option value={12}>12</option>
@@ -86,9 +97,14 @@ export default function AdminProducts() {
           <article key={p.id} className={card}>
             {Array.isArray(p.images) && p.images[0] && (
               <img
-                src={p.images[0]}
+                src={resolveImageUrl(p.images[0])}
                 alt={p.name}
-                style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8 }}
+                className={`${photoFrame} ${sepiaPhoto}`}
+                style={{ height: 140, objectFit: 'cover', marginBottom: 12 }}
+                onError={(e) => {
+                  const t = e.currentTarget as HTMLImageElement;
+                  if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+                }}
               />
             )}
             <h3 style={{ marginTop: 8 }}>{p.name}</h3>
@@ -112,11 +128,11 @@ export default function AdminProducts() {
         ))}
       </div>
       {products.length === 0 && !error && <p>No products found.</p>}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
         <button
+          className={btnOutline}
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          style={{ padding: '6px 10px' }}
         >
           Prev
         </button>
@@ -124,9 +140,9 @@ export default function AdminProducts() {
           Page {page} / {Math.max(1, Math.ceil(total / pageSize))}
         </span>
         <button
+          className={btnOutline}
           disabled={page >= Math.ceil(total / pageSize)}
           onClick={() => setPage((p) => p + 1)}
-          style={{ padding: '6px 10px' }}
         >
           Next
         </button>

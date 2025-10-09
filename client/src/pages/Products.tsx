@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listProductsPaged } from '@client/api/clients/products.api';
-import { card, btnPrimary } from '@client/app/ui.css';
+import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
+import {
+  card,
+  btnPrimary,
+  btnOutline,
+  input as inputField,
+  photoFrame,
+  sepiaPhoto,
+} from '@client/app/ui.css';
 import { useAuth } from '@client/features/auth/AuthProvider';
 
 /**
@@ -71,7 +79,7 @@ export default function Products() {
           </Link>
         )}
       </div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <input
           value={q}
           onChange={(e) => {
@@ -79,12 +87,14 @@ export default function Products() {
             setQ(e.target.value);
           }}
           placeholder="Search..."
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', flex: 1 }}
+          className={inputField}
+          style={{ flex: 1 }}
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          className={inputField}
+          style={{ width: 'auto' }}
         >
           <option value="price-asc">Price ↑</option>
           <option value="price-desc">Price ↓</option>
@@ -97,7 +107,8 @@ export default function Products() {
             setPage(1);
             setPageSize(Number(e.target.value));
           }}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+          className={inputField}
+          style={{ width: 'auto' }}
         >
           <option value={6}>6</option>
           <option value={12}>12</option>
@@ -111,36 +122,60 @@ export default function Products() {
           gap: 16,
         }}
       >
-        {items.map((p) => (
-          <article key={p.id} className={card}>
-            {Array.isArray(p.images) && p.images[0] && (
-              <Link to={`/products/${p.id}`}>
-                <img
-                  src={p.images[0]}
-                  alt={p.name}
-                  style={{
-                    width: '100%',
-                    height: 160,
-                    objectFit: 'cover',
-                    borderRadius: 8,
-                    marginBottom: 8,
-                  }}
-                  loading="lazy"
-                />
-              </Link>
-            )}
-            <h3 style={{ marginTop: 0 }}>
-              <Link to={`/products/${p.id}`}>{p.name}</Link>
-            </h3>
-            <p style={{ margin: 0 }}>${p.price}</p>
-          </article>
-        ))}
+        {items.map((p) => {
+          const hasRating = typeof p.rating === 'number' && !Number.isNaN(p.rating);
+          const clampedRating = hasRating ? Math.max(0, Math.min(5, Number(p.rating))) : null;
+          const roundedStars = clampedRating !== null ? Math.round(clampedRating) : null;
+          const descriptionPreview = p.description
+            ? `${p.description.slice(0, 120)}${p.description.length > 120 ? '…' : ''}`
+            : 'No description yet.';
+
+          return (
+            <article key={p.id} className={card}>
+              {Array.isArray(p.images) && p.images[0] && (
+                <Link to={`/products/${p.id}`} style={{ display: 'block', marginBottom: 12 }}>
+                  <img
+                    src={resolveImageUrl(p.images[0])}
+                    alt={p.name}
+                    className={`${photoFrame} ${sepiaPhoto}`}
+                    style={{
+                      height: 160,
+                      objectFit: 'cover',
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      const t = e.currentTarget as HTMLImageElement;
+                      if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+                    }}
+                  />
+                </Link>
+              )}
+              <h3 style={{ marginTop: 0 }}>
+                <Link to={`/products/${p.id}`}>{p.name}</Link>
+              </h3>
+              <p style={{ margin: '4px 0', color: '#6d5b45', fontSize: '0.95rem' }}>
+                {p.category ? `Category: ${p.category}` : 'Category: Uncategorised'}
+              </p>
+              {clampedRating !== null && (
+                <p style={{ margin: '4px 0', fontSize: '0.95rem' }}>
+                  Rating: {clampedRating.toFixed(1)} / 5{' '}
+                  <span aria-hidden="true" style={{ color: '#d49a6a' }}>
+                    {'★'.repeat(roundedStars!)}
+                    {'☆'.repeat(5 - roundedStars!)}
+                  </span>
+                </p>
+              )}
+              <p style={{ margin: '4px 0 8px', fontSize: '0.95rem' }}>{descriptionPreview}</p>
+              <p style={{ margin: 0, fontWeight: 600 }}>${Number(p.price).toFixed(2)}</p>
+            </article>
+          );
+        })}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
         <button
+          className={btnOutline}
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          style={{ padding: '6px 10px' }}
         >
           Prev
         </button>
@@ -148,9 +183,9 @@ export default function Products() {
           Page {page} / {Math.max(1, Math.ceil(total / pageSize))}
         </span>
         <button
+          className={btnOutline}
           disabled={page >= Math.ceil(total / pageSize)}
           onClick={() => setPage((p) => p + 1)}
-          style={{ padding: '6px 10px' }}
         >
           Next
         </button>

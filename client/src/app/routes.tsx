@@ -12,6 +12,8 @@ import Login from '@client/pages/Login';
 import Register from '@client/pages/Register';
 import NotFound from '@client/pages/NotFound';
 import LegacyClock from '@client/pages/LegacyClock';
+import About from '@client/pages/About';
+import Contact from '@client/pages/Contact';
 import { RequireAuth } from '@client/features/auth/RequireAuth';
 import AdminLayout from '@client/pages/admin/Layout';
 import AdminOverview from '@client/pages/admin/Overview';
@@ -96,6 +98,8 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Home />, errorElement: <NotFound /> },
       { path: 'legacy', element: <LegacyClock />, errorElement: <NotFound /> },
+      { path: 'about', element: <About />, errorElement: <NotFound /> },
+      { path: 'contact', element: <Contact />, errorElement: <NotFound /> },
       { path: 'register', element: <Register />, errorElement: <NotFound /> },
       { path: 'login', element: <Login />, errorElement: <NotFound /> },
       { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },

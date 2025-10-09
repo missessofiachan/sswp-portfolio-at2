@@ -4,7 +4,17 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteProduct, getProduct } from '@client/api/clients/products.api';
 import { useAuth } from '@client/features/auth/AuthProvider';
-import { card, actions, btnOutline, btnDanger, btnPrimary } from '@client/app/ui.css';
+import {
+  card,
+  actions,
+  btnOutline,
+  btnDanger,
+  btnPrimary,
+  photoFrame,
+  photoThumb,
+  sepiaPhoto,
+} from '@client/app/ui.css';
+import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 
 type Product = {
   id: string;
@@ -44,7 +54,16 @@ function ConfirmModal({
         zIndex: 1000,
       }}
     >
-      <div style={{ background: 'white', padding: 24, borderRadius: 8, minWidth: 300 }}>
+      <div
+        style={{
+          background: 'rgba(252, 243, 224, 0.96)',
+          padding: 24,
+          borderRadius: 8,
+          border: '2px solid #c7a57a',
+          minWidth: 300,
+          boxShadow: '6px 6px 0 rgba(82, 52, 27, 0.3)',
+        }}
+      >
         <p>{message}</p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button className={btnOutline} onClick={onCancel}>
@@ -66,16 +85,6 @@ function ConfirmModal({
  * error and not-found states, and conditionally renders edit/delete controls
  * for authorized users. Deleting a product shows a confirmation modal and,
  * upon success, navigates back to the product list.
- *
- * Behavior:
- * - Reads `id` from route params and fetches the product via `getProduct(id)`
- *   on mount and whenever `id` changes.
- * - Renders a loading indicator while fetching, an inline error message on
- *   failure, and a "Product not found" message when no product is returned.
- * - Formats the product price to two decimal places for display.
- * - Uses `useAuth()` to determine whether the current user can edit/delete
- *   (either authenticated or admin).
- * - Shows edit and delete actions when permitted:
  *   - Edit navigates to `/products/{id}/edit`.
  *   - Delete opens a confirmation modal; confirming calls `deleteProduct(id)`,
  *     disables the delete button while in progress, and navigates to
@@ -85,13 +94,6 @@ function ConfirmModal({
  * - product: Product | null — the loaded product data.
  * - loading: boolean — whether the product is currently being fetched.
  * - error: string | null — an error message to display if a fetch or delete fails.
- * - showConfirm: boolean — whether the delete confirmation modal is visible.
- * - deleting: boolean — whether a delete request is in progress.
- *
- * Side effects:
- * - Fetch product in a useEffect when `id` changes.
- * - Trigger delete flow when the user confirms deletion.
- *
  * Dependencies / External APIs:
  * - getProduct(id): Promise<Product>
  * - deleteProduct(id): Promise<void>
@@ -154,9 +156,14 @@ export default function ProductShow() {
           <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
             {/* Primary image */}
             <img
-              src={product.images[0]}
+              src={resolveImageUrl(product.images[0])}
               alt={product.name}
-              style={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 8 }}
+              className={`${photoFrame} ${sepiaPhoto}`}
+              style={{ maxHeight: 360, objectFit: 'cover' }}
+              onError={(e) => {
+                const t = e.currentTarget as HTMLImageElement;
+                if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+              }}
             />
             {/* Thumbnails */}
             {product.images.length > 1 && (
@@ -164,15 +171,18 @@ export default function ProductShow() {
                 {product.images.slice(1).map((url, i) => (
                   <img
                     key={i}
-                    src={url}
+                    src={resolveImageUrl(url)}
                     alt={`${product.name} ${i + 2}`}
                     loading="lazy"
+                    className={`${photoThumb} ${sepiaPhoto}`}
                     style={{
                       width: 96,
                       height: 96,
                       objectFit: 'cover',
-                      borderRadius: 6,
-                      border: '1px solid #eee',
+                    }}
+                    onError={(e) => {
+                      const t = e.currentTarget as HTMLImageElement;
+                      if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
                     }}
                   />
                 ))}
@@ -180,8 +190,30 @@ export default function ProductShow() {
             )}
           </div>
         )}
+        <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
+          <p style={{ margin: 0, color: '#6d5b45' }}>
+            Category: {product.category ? product.category : 'Uncategorised'}
+          </p>
+          {typeof product.rating === 'number' && !Number.isNaN(product.rating) && (
+            <p style={{ margin: 0 }}>
+              {(() => {
+                const clamped = Math.max(0, Math.min(5, Number(product.rating)));
+                const rounded = Math.round(clamped);
+                return (
+                  <>
+                    Rating: {clamped.toFixed(1)} / 5{' '}
+                    <span aria-hidden="true" style={{ color: '#d49a6a' }}>
+                      {'★'.repeat(rounded)}
+                      {'☆'.repeat(5 - rounded)}
+                    </span>
+                  </>
+                );
+              })()}
+            </p>
+          )}
+          <p style={{ margin: 0, fontWeight: 600 }}>Price: ${Number(product.price).toFixed(2)}</p>
+        </div>
         {product.description && <p>{product.description}</p>}
-        <p>Price: ${Number(product.price).toFixed(2)}</p>
         {canEdit && (
           <div className={actions}>
             <Link className={btnPrimary} to={`/products/${product.id}/edit`}>
