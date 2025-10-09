@@ -96,6 +96,7 @@ Note: For local demo/testing, the very first account you register is granted the
 - Node.js (>=18)
 - pnpm or npm
 - Firebase project + service account (for Firestore)
+- fireStore storage for pictures 
 
 ### Clone & Install
 
@@ -263,8 +264,6 @@ Ensure these are set:
 ## 👩‍💻 Authors
 
 - Sofia's student project (Diploma of IT – Advanced Programming)
-- Enhanced with AI help chat and comprehensive documentation
-
 ---
 
 ## 📝 License
