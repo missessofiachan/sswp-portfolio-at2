@@ -4,6 +4,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@client/features/auth/AuthProvider';
 import AppErrorBoundary from './AppErrorBoundary';
 import { routes } from './app/routes';
+import { ToastContainer } from './components/ui/ToastContainer';
 
 // Create the router once and reuse it.
 const router = createBrowserRouter(routes);
@@ -56,6 +57,7 @@ function bootstrap(): void {
         <AuthProvider>
           <RouterProvider router={router} />
         </AuthProvider>
+        <ToastContainer />
       </AppErrorBoundary>
     </React.StrictMode>
   );

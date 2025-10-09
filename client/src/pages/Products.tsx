@@ -11,6 +11,8 @@ import {
   sepiaPhoto,
 } from '@client/app/ui.css';
 import { useAuth } from '@client/features/auth/AuthProvider';
+import { useSetAtom } from 'jotai';
+import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
 
 /**
  * Products component
@@ -39,6 +41,8 @@ import { useAuth } from '@client/features/auth/AuthProvider';
  */
 export default function Products() {
   const [items, setItems] = useState<any[]>([]);
+  const setAddToCart = useSetAtom(addToCartAtom);
+  const setCartOpen = useSetAtom(isCartOpenAtom);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>(
     'price-asc'
@@ -167,6 +171,16 @@ export default function Products() {
               )}
               <p style={{ margin: '4px 0 8px', fontSize: '0.95rem' }}>{descriptionPreview}</p>
               <p style={{ margin: 0, fontWeight: 600 }}>${Number(p.price).toFixed(2)}</p>
+              <button
+                className={btnPrimary}
+                style={{ marginTop: 8, width: '100%' }}
+                onClick={() => {
+                  setAddToCart(p, 1);
+                  setCartOpen(true);
+                }}
+              >
+                Add to Cart
+              </button>
             </article>
           );
         })}

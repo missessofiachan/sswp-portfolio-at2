@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteProduct, getProduct } from '@client/api/clients/products.api';
 import { useAuth } from '@client/features/auth/AuthProvider';
+import { useSetAtom } from 'jotai';
+import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
 import {
   card,
   actions,
@@ -16,15 +18,8 @@ import {
 } from '@client/app/ui.css';
 import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-  category?: string;
-  rating?: number;
-  images?: string[];
-};
+import type { Product as CanonicalProduct } from '@client/types/product';
+type Product = CanonicalProduct;
 
 // Simple confirmation modal component
 function ConfirmModal({
@@ -104,6 +99,8 @@ function ConfirmModal({
  * @returns JSX.Element - the Product detail view with conditional actions and a confirmation modal.
  */
 export default function ProductShow() {
+  const setAddToCart = useSetAtom(addToCartAtom);
+  const setCartOpen = useSetAtom(isCartOpenAtom);
   const { id } = useParams();
   const nav = useNavigate();
   const { token, isAdmin } = useAuth();
@@ -214,6 +211,16 @@ export default function ProductShow() {
           <p style={{ margin: 0, fontWeight: 600 }}>Price: ${Number(product.price).toFixed(2)}</p>
         </div>
         {product.description && <p>{product.description}</p>}
+        <button
+          className={btnPrimary}
+          style={{ margin: '12px 0', width: '100%' }}
+          onClick={() => {
+            setAddToCart(product, 1);
+            setCartOpen(true);
+          }}
+        >
+          Add to Cart
+        </button>
         {canEdit && (
           <div className={actions}>
             <Link className={btnPrimary} to={`/products/${product.id}/edit`}>
