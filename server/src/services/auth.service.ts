@@ -6,14 +6,82 @@ import { fsUsersRepo } from '../data/firestore/users.repo.fs';
 import { getDb } from '../config/firestore';
 import { emailService } from './email.service';
 
-// Firestore-backed auth service (no in-memory persistence).
+/**
+ * Authentication Service
+ *
+ * Provides comprehensive authentication and user management functionality
+ * for Sofia's Shop. Handles user registration, login, password resets,
+ * and admin operations with secure password hashing and JWT tokens.
+ *
+ * **Features:**
+ * - User registration with automatic admin assignment for first user
+ * - Secure password hashing with bcrypt
+ * - JWT token generation with configurable expiration
+ * - Password reset flow with secure token generation
+ * - User role management (admin/user)
+ * - Account cleanup and user deletion
+ *
+ * **Security:**
+ * - Passwords are hashed with bcrypt (10 rounds)
+ * - JWT tokens expire after 15 minutes
+ * - Password reset tokens expire after 1 hour
+ * - Constant-time comparisons for credentials
+ * - Secure random token generation for password resets
+ *
+ * @namespace authService
+ */
 export const authService = {
+  /**
+   * Registers a new user with email and password.
+   *
+   * The first registered user automatically becomes an admin.
+   * Subsequent users are assigned the 'user' role by default.
+   *
+   * @param {Object} credentials - User registration data
+   * @param {string} credentials.email - User's email address
+   * @param {string} credentials.password - User's plain text password
+   * @returns {Promise<{id: string, email: string}>} Created user data
+   * @throws {Error} When email already exists or validation fails
+   *
+   * @example
+   * ```typescript
+   * const user = await authService.register({
+   *   email: 'user@example.com',
+   *   password: 'securePassword123'
+   * });
+   * console.log(`Created user: ${user.email}`);
+   * ```
+   */
   async register({ email, password }: { email: string; password: string }) {
     const passwordHash = await bcrypt.hash(password, 10);
     // Attempt to create as initial admin if none exists yet; falls back to normal user.
     const user = await fsUsersRepo.createInitialUser({ email, passwordHash });
     return { id: user.id, email: user.email };
   },
+
+  /**
+   * Authenticates a user with email and password, returning a JWT token.
+   *
+   * @param {Object} credentials - Login credentials
+   * @param {string} credentials.email - User's email address
+   * @param {string} credentials.password - User's plain text password
+   * @returns {Promise<{token: string, user: {id: string, role: string}}>} JWT token and user data
+   * @throws {Error} With status 401 when credentials are invalid
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const result = await authService.login({
+   *     email: 'user@example.com',
+   *     password: 'userPassword'
+   *   });
+   *   console.log(`Token: ${result.token}`);
+   *   console.log(`User role: ${result.user.role}`);
+   * } catch (error) {
+   *   console.error('Login failed:', error.message);
+   * }
+   * ```
+   */
   async login({ email, password }: { email: string; password: string }) {
     const user = await fsUsersRepo.findByEmail(email);
     if (!user) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
@@ -24,12 +92,36 @@ export const authService = {
     });
     return { token, user: { id: user.id, role: user.role } };
   },
+
+  /**
+   * Retrieves a list of all registered users (admin only).
+   *
+   * @returns {Promise<Array>} Array of user objects with id, email, role
+   * @throws {Error} When database access fails
+   */
   async listUsers() {
     return fsUsersRepo.list();
   },
+
+  /**
+   * Removes a user account by ID (admin only).
+   *
+   * @param {string} id - User ID to remove
+   * @returns {Promise<void>}
+   * @throws {Error} When user not found or database error occurs
+   */
   async removeUser(id: string) {
     await fsUsersRepo.remove(id);
   },
+
+  /**
+   * Updates a user's role (admin only).
+   *
+   * @param {string} id - User ID to update
+   * @param {'user'|'admin'} role - New role to assign
+   * @returns {Promise<Object>} Updated user object
+   * @throws {Error} When user not found or invalid role provided
+   */
   async setRole(id: string, role: 'user' | 'admin') {
     return fsUsersRepo.setRole(id, role);
   },
