@@ -1,43 +1,39 @@
 import { style } from '@vanilla-extract/css';
+import { sprinkles } from '@client/app/sprinkles.css';
 import { vars } from '@client/app/theme.css';
 
-export const page = style({
-  display: 'grid',
-  gap: vars.space.xl,
-});
+export const page = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'xl',
+  }),
+]);
 
-export const hero = style({
-  backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
-  borderRadius: vars.radius.lg,
-  boxShadow: vars.shadow.card,
-  padding: vars.space.xl,
-  display: 'grid',
-  gap: vars.space.md,
-  position: 'relative',
-  selectors: {
-    '&::after': {
-      content: '',
-      position: 'absolute',
-      inset: '18px',
-      border: `1px dashed rgba(58, 43, 26, 0.25)`,
-      borderRadius: vars.radius.md,
-      pointerEvents: 'none',
-    },
+export const hero = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'md',
+    padding: 'xl',
+  }),
+  {
+    position: 'relative',
+    borderRadius: vars.radius.lg,
+    border: `1px solid ${vars.color.border}`,
+    background: `linear-gradient(135deg, ${vars.color.surface} 0%, ${vars.color.surfaceMuted} 100%)`,
+    boxShadow: vars.shadow.md,
   },
-});
+]);
 
 export const missionHeadline = style({
   fontSize: '2.4rem',
-  lineHeight: 1.1,
-  textTransform: 'uppercase',
   margin: 0,
+  letterSpacing: '-0.02em',
 });
 
 export const missionLead = style({
-  fontSize: '1.2rem',
+  fontSize: '1.1rem',
+  maxWidth: '60ch',
   color: vars.color.textMuted,
-  maxWidth: '56ch',
 });
 
 export const stats = style({
@@ -49,27 +45,24 @@ export const stats = style({
 export const statCard = style({
   minWidth: '180px',
   padding: vars.space.md,
-  border: `1px solid ${vars.color.border}`,
   borderRadius: vars.radius.md,
-  backgroundColor: 'rgba(255, 255, 255, 0.35)',
-  backdropFilter: 'blur(2px)',
-  selectors: {
-    '[data-theme="dark"] &': {
-      backgroundColor: 'rgba(48, 34, 21, 0.35)',
-    },
-  },
+  border: `1px solid ${vars.color.border}`,
+  backgroundColor: vars.color.surface,
+  boxShadow: vars.shadow.xs,
 });
 
 export const statNumber = style({
-  fontFamily: vars.font.display,
+  fontFamily: vars.font.heading,
   fontSize: '1.8rem',
   marginBottom: vars.space.xs,
 });
 
-export const valuesSection = style({
-  display: 'grid',
-  gap: vars.space.md,
-});
+export const valuesSection = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'md',
+  }),
+]);
 
 export const valueGrid = style({
   display: 'grid',
@@ -78,23 +71,23 @@ export const valueGrid = style({
 });
 
 export const valueCard = style({
-  backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
-  borderRadius: vars.radius.md,
   padding: vars.space.lg,
-  boxShadow: vars.shadow.card,
+  borderRadius: vars.radius.md,
+  border: `1px solid ${vars.color.border}`,
+  backgroundColor: vars.color.surface,
+  boxShadow: vars.shadow.xs,
   display: 'grid',
   gap: vars.space.sm,
 });
 
 export const timeline = style({
   listStyle: 'none',
-  margin: 0,
   padding: 0,
-  borderLeft: `3px solid ${vars.color.border}`,
-  paddingLeft: vars.space.lg,
+  margin: 0,
   display: 'grid',
   gap: vars.space.md,
+  borderLeft: `2px solid ${vars.color.border}`,
+  paddingLeft: vars.space.lg,
 });
 
 export const timelineItem = style({
@@ -103,22 +96,24 @@ export const timelineItem = style({
   selectors: {
     '&::before': {
       content: '',
+      position: 'absolute',
       width: '12px',
       height: '12px',
       borderRadius: '50%',
-      border: `2px solid ${vars.color.primary}`,
+      border: `2px solid ${vars.color.accent}`,
       backgroundColor: vars.color.surface,
-      position: 'absolute',
-      left: '-30px',
+      left: `calc(-${vars.space.lg} - 4px)`,
       top: '4px',
     },
   },
 });
 
-export const faqSection = style({
-  display: 'grid',
-  gap: vars.space.md,
-});
+export const faqSection = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'md',
+  }),
+]);
 
 export const faqList = style({
   display: 'grid',
@@ -126,21 +121,21 @@ export const faqList = style({
 });
 
 export const faqItem = style({
-  backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
   borderRadius: vars.radius.md,
-  boxShadow: vars.shadow.card,
+  border: `1px solid ${vars.color.border}`,
+  backgroundColor: vars.color.surface,
+  boxShadow: vars.shadow.xs,
   overflow: 'hidden',
 });
 
 export const faqSummary = style({
-  fontFamily: vars.font.display,
-  fontSize: '1.05rem',
   padding: `${vars.space.md} ${vars.space.lg}`,
   cursor: 'pointer',
+  fontFamily: vars.font.heading,
+  fontSize: '1rem',
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
+  justifyContent: 'space-between',
 });
 
 export const faqContent = style({
@@ -150,5 +145,6 @@ export const faqContent = style({
 });
 
 export const highlight = style({
-  color: vars.color.primary,
+  color: vars.color.accent,
+  fontWeight: 600,
 });

@@ -134,6 +134,10 @@ export default function Products() {
             ? `${p.description.slice(0, 120)}${p.description.length > 120 ? '…' : ''}`
             : 'No description yet.';
 
+          const stockLevel = typeof p.stock === 'number' ? p.stock : 0;
+          const isOutOfStock = stockLevel <= 0;
+          const isLowStock = stockLevel > 0 && stockLevel <= 5;
+
           return (
             <article key={p.id} className={card}>
               {Array.isArray(p.images) && p.images[0] && (
@@ -170,16 +174,35 @@ export default function Products() {
                 </p>
               )}
               <p style={{ margin: '4px 0 8px', fontSize: '0.95rem' }}>{descriptionPreview}</p>
+              <div style={{ margin: '4px 0 8px', fontSize: '0.9rem' }}>
+                {isOutOfStock ? (
+                  <span style={{ color: '#dc2626', fontWeight: '600' }}>⚠️ Out of Stock</span>
+                ) : isLowStock ? (
+                  <span style={{ color: '#f59e0b', fontWeight: '600' }}>
+                    ⚡ Only {stockLevel} left
+                  </span>
+                ) : (
+                  <span style={{ color: '#059669' }}>✓ {stockLevel} in stock</span>
+                )}
+              </div>
               <p style={{ margin: 0, fontWeight: 600 }}>${Number(p.price).toFixed(2)}</p>
               <button
                 className={btnPrimary}
-                style={{ marginTop: 8, width: '100%' }}
+                style={{
+                  marginTop: 8,
+                  width: '100%',
+                  opacity: isOutOfStock ? 0.6 : 1,
+                  cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                }}
+                disabled={isOutOfStock}
                 onClick={() => {
-                  setAddToCart(p, 1);
-                  setCartOpen(true);
+                  if (!isOutOfStock) {
+                    setAddToCart(p, 1);
+                    setCartOpen(true);
+                  }
                 }}
               >
-                Add to Cart
+                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
               </button>
             </article>
           );

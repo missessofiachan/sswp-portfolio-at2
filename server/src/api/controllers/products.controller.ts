@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { productsService } from '../../services/products.service';
 import type { Product } from '../../domain/product';
-import { deleteLocalFiles } from '../../utils/uploads';
+import { deleteAssetsByUrls } from '../../services/cloudinary.service';
 
 /**
  * Controller action to list products and send them as a JSON response.
@@ -89,7 +89,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     removed = prev.filter((u) => !next.includes(u));
   }
   const data = await productsService.update(id, patch);
-  if (removed.length) await deleteLocalFiles(removed);
+  if (removed.length) await deleteAssetsByUrls(removed);
   res.json({ data });
 }
 
@@ -99,7 +99,7 @@ export async function remove(req: Request, res: Response): Promise<void> {
   const existing = await productsService.getById(id);
   await productsService.remove(id);
   const images = Array.isArray(existing?.images) ? existing!.images! : [];
-  if (images.length) await deleteLocalFiles(images);
+  if (images.length) await deleteAssetsByUrls(images);
   res.status(204).send();
 }
 

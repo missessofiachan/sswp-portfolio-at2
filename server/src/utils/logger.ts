@@ -1,20 +1,10 @@
-// Firestore-backed logger (no in-memory buffering)
-// Provides simple helper functions and an Express request logging middleware.
-// Each log call writes a document directly to the Firestore `logs` collection.
-// If Firestore write fails, it falls back to console logging without throwing.
-
 import type { Request, Response, NextFunction } from 'express';
-import { getDb } from '../config/firestore';
+import fs from 'fs';
+import path from 'path';
+import { createLogger, format, transports } from 'winston';
+import { loadEnv } from '../config/env';
 
 type LogLevel = 'info' | 'error' | 'warn' | 'debug';
-
-interface BaseLogDoc {
-  level: LogLevel;
-  message: string;
-  ts: string; // ISO timestamp
-  meta?: Record<string, any>;
-  type?: string; // e.g. 'http'
-}
 
 interface HttpLogMeta {
   method: string;
@@ -26,34 +16,101 @@ interface HttpLogMeta {
   contentLength?: number | null;
 }
 
-// Environment flag to disable DB writes (e.g. during tests) while preserving interface
-const DISABLE_DB_LOGS = process.env.DISABLE_DB_LOGS === '1' || process.env.NODE_ENV === 'test';
+const env = loadEnv();
 
-function write(doc: BaseLogDoc) {
-  if (DISABLE_DB_LOGS) {
-    // Still output to console (structured) for local visibility when disabled
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify({ _local: true, ...doc }));
-    return;
-  }
+const LOG_TO_FILE = (() => {
+  const raw = env.LOG_TO_FILE;
+  if (!raw) return true;
+  const normalized = raw.trim().toLowerCase();
+  return !['0', 'false', 'no', 'off'].includes(normalized);
+})();
+
+const LOG_DIRECTORY =
+  env.LOG_DIR && env.LOG_DIR.trim().length > 0
+    ? path.resolve(process.cwd(), env.LOG_DIR)
+    : path.resolve(process.cwd(), 'logs');
+const LOG_FILENAME =
+  env.LOG_FILE && env.LOG_FILE.trim().length > 0 ? env.LOG_FILE : 'app.log';
+const LOG_PATH = path.join(LOG_DIRECTORY, LOG_FILENAME);
+const LOG_LEVEL =
+  env.LOG_LEVEL && env.LOG_LEVEL.trim().length > 0
+    ? env.LOG_LEVEL
+    : process.env.NODE_ENV === 'production'
+      ? 'info'
+      : 'debug';
+const MAX_SIZE_BYTES =
+  typeof env.LOG_MAX_SIZE === 'number' && Number.isFinite(env.LOG_MAX_SIZE) && env.LOG_MAX_SIZE > 0
+    ? env.LOG_MAX_SIZE
+    : undefined;
+const MAX_FILES =
+  typeof env.LOG_MAX_FILES === 'number' &&
+  Number.isFinite(env.LOG_MAX_FILES) &&
+  env.LOG_MAX_FILES > 0
+    ? env.LOG_MAX_FILES
+    : undefined;
+
+function ensureLogDirectory(dir: string) {
   try {
-    const db = getDb();
-    // Fire and forget; no awaiting to avoid adding latency to request lifecycle
-    void db
-      .collection('logs')
-      .add(doc)
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to persist log to Firestore:', err);
-      });
-  } catch (err) {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Logger Firestore initialization error:', err);
+    console.error('Failed to prepare log directory:', error);
   }
 }
 
+if (LOG_TO_FILE) {
+  ensureLogDirectory(LOG_DIRECTORY);
+}
+
+const loggerInstance = createLogger({
+  level: LOG_LEVEL,
+  format: format.combine(
+    format.errors({ stack: true }),
+    format.metadata({ fillExcept: ['message', 'level', 'timestamp'] }),
+    format.timestamp(),
+    format.json()
+  ),
+  transports: LOG_TO_FILE
+    ? [
+        new transports.File({
+          filename: LOG_PATH,
+          maxsize: MAX_SIZE_BYTES ?? 5 * 1024 * 1024,
+          maxFiles: MAX_FILES ?? 5,
+          tailable: true,
+        }),
+      ]
+    : [],
+});
+
+if (process.env.NODE_ENV !== 'production' || !LOG_TO_FILE) {
+  loggerInstance.add(
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        format.timestamp(),
+        format.printf(({ level, message, timestamp, ...rest }) => {
+          const { metadata, ...extra } = rest as Record<string, unknown>;
+          const mergedMeta = {
+            ...(typeof metadata === 'object' && metadata !== null ? metadata : {}),
+            ...extra,
+          };
+          const metaString =
+            mergedMeta && Object.keys(mergedMeta).length > 0
+              ? ` ${JSON.stringify(mergedMeta)}`
+              : '';
+          return `${timestamp as string} ${level}: ${message as string}${metaString}`;
+        })
+      ),
+    })
+  );
+}
+
 function base(level: LogLevel, message: string, meta?: Record<string, any>) {
-  write({ level, message, meta, ts: new Date().toISOString() });
+  if (meta && Object.keys(meta).length > 0) {
+    loggerInstance.log(level, message, meta);
+  } else {
+    loggerInstance.log(level, message);
+  }
 }
 
 export function logInfo(message: string, meta?: Record<string, any>) {
@@ -83,13 +140,7 @@ export function logError(message: string, error?: unknown, meta?: Record<string,
 }
 
 export function logHttp(meta: HttpLogMeta) {
-  write({
-    level: 'info',
-    message: `${meta.method} ${meta.path} ${meta.status}`,
-    ts: new Date().toISOString(),
-    meta,
-    type: 'http',
-  });
+  loggerInstance.info(`${meta.method} ${meta.path} ${meta.status}`, { type: 'http', ...meta });
 }
 
 // Express middleware for request logging (replaces morgan). Adds no in-memory queue.
@@ -117,6 +168,8 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export const logger = { logInfo, logWarn, logDebug, logError };
+export const logger = { logInfo, logWarn, logDebug, logError, logHttp };
+
+export const winstonLogger = loggerInstance;
 
 export default logger;

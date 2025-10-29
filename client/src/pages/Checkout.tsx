@@ -97,11 +97,13 @@ export function Checkout() {
 
       const order = await ordersApi.createOrder(orderData);
       clearCart();
-  showToast('Order placed successfully!', { type: 'success' });
+      showToast('Order placed successfully!', { type: 'success' });
       navigate(`/orders/${order.id}`);
     } catch (error) {
       console.error('Order creation failed:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Failed to place order');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
+      setSubmitError(errorMessage);
+      showToast(errorMessage, { type: 'error' });
     } finally {
       setIsSubmitting(false);
     }

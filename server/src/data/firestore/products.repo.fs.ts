@@ -4,6 +4,47 @@ import type { ProductsRepo } from '../ports/products.repo';
 
 const COLLECTION = 'products';
 
+function mapDocToProduct(id: string, data: FirebaseFirestore.DocumentData): Product {
+  const createdAtRaw = data.createdAt;
+  const createdAt =
+    typeof createdAtRaw === 'number'
+      ? createdAtRaw
+      : createdAtRaw && typeof createdAtRaw.toMillis === 'function'
+        ? createdAtRaw.toMillis()
+        : Date.now();
+
+  const priceValue = Number(data.price ?? 0);
+  const price = Number.isFinite(priceValue) ? priceValue : 0;
+
+  const ratingValue = Number(data.rating ?? 0);
+  const rating = Number.isFinite(ratingValue) ? Math.min(5, Math.max(0, ratingValue)) : 0;
+
+  const rawStock = Number(
+    typeof data.stock === 'number' ? data.stock : typeof data.stock === 'string' ? data.stock : 0
+  );
+  let stock = Math.floor(rawStock);
+  if (!Number.isFinite(stock) || stock < 0) stock = 0;
+
+  const images =
+    Array.isArray(data.images) && data.images.every((v) => typeof v === 'string')
+      ? (data.images as string[])
+      : Array.isArray(data.imageUrls) && data.imageUrls.every((v) => typeof v === 'string')
+        ? (data.imageUrls as string[])
+        : [];
+
+  return {
+    id,
+    name: typeof data.name === 'string' ? data.name : 'Untitled product',
+    price,
+    description: typeof data.description === 'string' ? data.description : undefined,
+    category: typeof data.category === 'string' ? data.category : 'uncategorised',
+    rating,
+    stock,
+    createdAt,
+    images,
+  };
+}
+
 /**
  * Firestore-backed implementation of the ProductsRepo interface.
  *
@@ -70,7 +111,10 @@ export const fsProductsRepo: ProductsRepo = {
     if (sort) q = q.orderBy(sort.field as string, sort.dir);
     const snap = await q.get();
     let items = snap.docs
-      .map((d) => d.data() && ({ id: d.id, ...(d.data() as any) } as Product))
+      .map((d) => {
+        const data = d.data();
+        return data ? mapDocToProduct(d.id, data) : null;
+      })
       .filter((p): p is Product => Boolean(p));
     // Client text filter fallback
     if (filter?.q) {
@@ -89,30 +133,50 @@ export const fsProductsRepo: ProductsRepo = {
 
   async getById(id) {
     const d = await getDb().collection(COLLECTION).doc(id).get();
-    return d.exists ? ({ id: d.id, ...(d.data() as any) } as Product) : null;
+    return d.exists ? mapDocToProduct(d.id, d.data()!) : null;
   },
 
   async create(input) {
     const now = Date.now();
+    const imagesInput =
+      Array.isArray((input as any)?.images) &&
+      (input as any).images.every((value: unknown) => typeof value === 'string')
+        ? ((input as any).images as string[])
+        : [];
+    const stockRaw = Number((input as any)?.stock ?? 0);
+    let stock = Math.floor(stockRaw);
+    if (!Number.isFinite(stock) || stock < 0) stock = 0;
     const payload: Omit<Product, 'id'> = {
-      // ensure images defaults to [] if omitted
       ...(input as any),
-      images: (input as any)?.images ?? [],
+      images: imagesInput,
+      stock,
       createdAt: now,
     } as any;
     const ref = await getDb()
       .collection(COLLECTION)
       .add(payload as any);
-    return { id: ref.id, ...(payload as any) } as Product;
+    return mapDocToProduct(ref.id, payload as any);
   },
 
   async update(id, patch) {
     const ref = getDb().collection(COLLECTION).doc(id);
     const snap = await ref.get();
     if (!snap.exists) throw new Error(`Product with id ${id} does not exist.`);
+    if (patch.stock != null) {
+      const numericStock = Number(patch.stock);
+      if (!Number.isFinite(numericStock) || numericStock < 0) {
+        throw new Error('Stock must be a non-negative integer');
+      }
+      (patch as any).stock = Math.floor(numericStock);
+    }
+    if (patch.images) {
+      (patch as any).images = Array.isArray(patch.images)
+        ? patch.images.filter((value): value is string => typeof value === 'string')
+        : [];
+    }
     await ref.update(patch);
     const updated = await ref.get();
-    return { id: updated.id, ...(updated.data() as any) } as Product;
+    return mapDocToProduct(updated.id, updated.data()!);
   },
 
   async remove(id) {
@@ -122,7 +186,9 @@ export const fsProductsRepo: ProductsRepo = {
   async stats() {
     // Fetch and compute; avoids referencing this.list to keep types simple
     const snap = await getDb().collection(COLLECTION).get();
-    const products: Product[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    const products: Product[] = snap.docs
+      .map((d) => mapDocToProduct(d.id, d.data()))
+      .filter((p): p is Product => Boolean(p));
     const count = products.length;
     const avgPrice = count ? products.reduce((sum, p) => sum + (p.price || 0), 0) / count : 0;
     return { count, avgPrice };
@@ -136,7 +202,9 @@ export const fsProductsRepo: ProductsRepo = {
       .where('createdAt', '>=', since)
       .orderBy('createdAt', 'asc')
       .get();
-    const items: Product[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    const items: Product[] = snap.docs
+      .map((d) => mapDocToProduct(d.id, d.data()))
+      .filter((p): p is Product => Boolean(p));
     const buckets = new Map<number, { count: number; sum: number }>();
     function bucketKey(ts: number): number {
       const d = new Date(ts);

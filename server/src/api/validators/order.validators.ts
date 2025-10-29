@@ -77,6 +77,7 @@ export const updateOrderSchema = Joi.object({
     .description('New payment status'),
   tracking: orderTrackingSchema.optional().description('Updated tracking information'),
   notes: Joi.string().trim().max(500).optional().description('Updated order notes'),
+  shippingAddress: shippingAddressSchema.optional().description('Updated shipping address'),
 });
 
 /**

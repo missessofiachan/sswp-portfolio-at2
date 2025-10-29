@@ -12,6 +12,7 @@
  * @property description - Optional longer description or details about the product.
  * @property category - Category or classification the product belongs to.
  * @property rating - Average rating for the product, from 1.0 to 5.0 (inclusive). Decimals are allowed.
+ * @property stock - Current available stock count (non-negative integer).
  * @property createdAt - Creation timestamp as a Unix epoch in milliseconds.
  *
  * @example
@@ -23,6 +24,7 @@
  * //   description: "Over-ear, noise-cancelling headphones.",
  * //   category: "electronics",
  * //   rating: 4.7,
+ * //   stock: 25,
  * //   createdAt: 1625247600000
  * // }
  */
@@ -33,6 +35,7 @@ export type Product = {
   description?: string;
   category: string;
   rating: number; // rating from 1.0 to 5.0 (inclusive), decimals allowed
+  stock: number; // available inventory count (>= 0)
   createdAt: number; // Unix timestamp in milliseconds
   /**
    * One or more image URLs associated with the product. URLs should be absolute (http/https).

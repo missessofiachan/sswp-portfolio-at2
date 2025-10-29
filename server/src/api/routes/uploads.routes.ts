@@ -2,10 +2,27 @@ import { Router, type Router as ExpressRouter } from 'express';
 import { requireAuth } from '../middleware/auth';
 import type { UploadedFile } from 'express-fileupload';
 import path from 'path';
-import fs from 'fs';
-import { getUploadsDir } from '../../utils/uploads';
+import { uploadImageBuffer } from '../../services/cloudinary.service';
+import { loadEnv } from '../../config/env';
 
 export const router: ExpressRouter = Router();
+
+const IMAGE_TYPE_MAP = [
+  { mime: 'image/png', ext: '.png' },
+  { mime: 'image/jpeg', ext: '.jpeg' },
+  { mime: 'image/jpeg', ext: '.jpg' },
+  { mime: 'image/webp', ext: '.webp' },
+  { mime: 'image/gif', ext: '.gif' },
+  { mime: 'image/heic', ext: '.heic' },
+  { mime: 'image/heif', ext: '.heif' },
+  { mime: 'image/avif', ext: '.avif' },
+] as const;
+
+const ALLOWED_MIME_TYPES = new Set(IMAGE_TYPE_MAP.map((item) => item.mime));
+const ALLOWED_EXTENSIONS = new Set(IMAGE_TYPE_MAP.map((item) => item.ext));
+
+const { UPLOAD_MAX_MB } = loadEnv();
+const UPLOAD_MAX_BYTES = UPLOAD_MAX_MB * 1024 * 1024;
 
 /**
  * POST /api/v1/uploads
@@ -13,11 +30,11 @@ export const router: ExpressRouter = Router();
  * Handles file upload for authenticated users. Accepts multipart/form-data with
  * files under the field name "files" or "file" (single or multiple files).
  *
- * **Security Features:**
+ * **Security & Compliance Features:**
  * - Requires authentication via JWT token
  * - Validates file types (only allows common image formats)
  * - Enforces file size limits (configurable via UPLOAD_MAX_MB env var)
- * - Generates unique filenames to prevent conflicts
+ * - Streams binaries directly to Cloudinary (no local persistence)
  *
  * **Supported File Types:**
  * - PNG, JPEG, JPG, WebP, GIF, HEIC, HEIF, AVIF
@@ -36,8 +53,7 @@ export const router: ExpressRouter = Router();
  * ```json
  * {
  *   "urls": [
- *     "/api/v1/files/1234567890-abc123.jpg",
- *     "/api/v1/files/1234567890-def456.png"
+ *     "https://res.cloudinary.com/<cloud>/image/upload/v1234567890/product-abc.png"
  *   ]
  * }
  * ```
@@ -56,9 +72,6 @@ export const router: ExpressRouter = Router();
  */
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const filesRoot = getUploadsDir();
-    await fs.promises.mkdir(filesRoot, { recursive: true });
-
     // Type-safe access to uploaded files
     const anyFiles = (req as any).files as
       | undefined
@@ -71,80 +84,33 @@ router.post('/', requireAuth, async (req, res) => {
     }
     files = Array.isArray(payload) ? payload : [payload];
 
-    // Whitelist of allowed MIME types and file extensions
-    const allowed = new Set([
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'image/webp',
-      'image/gif',
-      'image/heic',
-      'image/heif',
-      'image/avif',
-    ]);
-    const allowedExts = new Set([
-      '.png',
-      '.jpg',
-      '.jpeg',
-      '.webp',
-      '.gif',
-      '.heic',
-      '.heif',
-      '.avif',
-    ]);
-    const maxMb = Number(process.env.UPLOAD_MAX_MB || 5);
-    const maxBytes = maxMb * 1024 * 1024;
-
     const urls: string[] = [];
     for (const f of files) {
       const extFromName = path.extname(f.name).toLowerCase();
-      const mimeAllowed = allowed.has(f.mimetype);
-      const extAllowed = extFromName ? allowedExts.has(extFromName) : false;
+      const mimeAllowed = ALLOWED_MIME_TYPES.has(
+        f.mimetype as (typeof IMAGE_TYPE_MAP)[number]['mime']
+      );
+      const extAllowed = extFromName
+        ? ALLOWED_EXTENSIONS.has(extFromName as (typeof IMAGE_TYPE_MAP)[number]['ext'])
+        : false;
 
       // Reject files that don't match allowed types
-      if (!mimeAllowed && !extAllowed) {
+      if (!mimeAllowed || !extAllowed) {
         return res
           .status(400)
           .json({ error: { message: `Unsupported file type: ${f.mimetype || extFromName}` } });
       }
 
       // Reject files that exceed size limit
-      if (typeof f.size === 'number' && f.size > maxBytes) {
-        return res.status(413).json({ error: { message: `File too large (max ${maxMb}MB)` } });
+      if (typeof f.size === 'number' && f.size > UPLOAD_MAX_BYTES) {
+        return res
+          .status(413)
+          .json({ error: { message: `File too large (max ${UPLOAD_MAX_MB}MB)` } });
       }
 
-      // Generate file extension based on MIME type or filename
-      const ext =
-        extFromName ||
-        (f.mimetype === 'image/png'
-          ? '.png'
-          : f.mimetype === 'image/jpeg'
-            ? '.jpg'
-            : f.mimetype === 'image/jpg'
-              ? '.jpg'
-              : f.mimetype === 'image/webp'
-                ? '.webp'
-                : f.mimetype === 'image/gif'
-                  ? '.gif'
-                  : f.mimetype === 'image/heic'
-                    ? '.heic'
-                    : f.mimetype === 'image/heif'
-                      ? '.heif'
-                      : f.mimetype === 'image/avif'
-                        ? '.avif'
-                        : '.bin');
-
-      // Generate unique filename with timestamp and random string
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-      const dest = path.join(filesRoot, filename);
-
-      // Move uploaded file to permanent location
-      await new Promise<void>((resolve, reject) => {
-        (f as UploadedFile).mv(dest, (err: any) => (err ? reject(err) : resolve()));
-      });
-
-      // Return URLs under API prefix so Vite dev proxy forwards to server
-      urls.push(`/api/v1/files/${filename}`);
+      const buffer = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data as any);
+      const { url } = await uploadImageBuffer(buffer, f.name);
+      urls.push(url);
     }
 
     return res.status(201).json({ urls });

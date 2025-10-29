@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react';
 import * as s from './contact.css';
-import { input as inputClass, btnPrimary } from '@client/app/ui.css';
+import { input as inputClass } from '@client/app/ui.css';
+import { Button } from '@client/components/ui/Button';
 
 const CHANNELS = [
   {
@@ -159,9 +160,7 @@ export default function Contact() {
             </p>
           </div>
           <div>
-            <button type="submit" className={btnPrimary}>
-              Compose email
-            </button>
+            <Button type="submit">Compose email</Button>
           </div>
         </form>
       </section>

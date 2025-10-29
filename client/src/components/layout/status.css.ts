@@ -10,14 +10,15 @@ export const wrap = style({
 export const pill = style({
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
-  paddingInline: '8px',
-  paddingBlock: '2px',
-  borderRadius: vars.radius.sm,
+  gap: vars.space.xs,
+  paddingInline: vars.space.sm,
+  paddingBlock: '4px',
+  borderRadius: vars.radius.pill,
   border: `1px solid ${vars.color.border}`,
-  backgroundColor: vars.color.surface,
+  backgroundColor: vars.color.surfaceMuted,
+  fontSize: '0.75rem',
+  fontWeight: 600,
   color: vars.color.text,
-  fontSize: '12px',
 });
 
 export const dot = style({
@@ -26,8 +27,8 @@ export const dot = style({
   borderRadius: '50%',
 });
 
-export const ok = style({ backgroundColor: vars.color.primary });
+export const ok = style({ backgroundColor: vars.color.success });
 export const bad = style({ backgroundColor: vars.color.danger });
-export const idle = style({ backgroundColor: vars.color.textMuted });
+export const idle = style({ backgroundColor: vars.color.warning });
 
 export const muted = style({ color: vars.color.textMuted });

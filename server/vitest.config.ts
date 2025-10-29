@@ -13,7 +13,10 @@ export default defineConfig({
       },
     },
     coverage: {
-      enabled: false,
+      enabled: true,
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
     },
   },
 });

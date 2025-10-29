@@ -1,10 +1,22 @@
 // JWT verification and role guard middleware
 
 import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { loadEnv } from '../../config/env';
 
 const env = loadEnv();
+
+interface DecodedToken extends JwtPayload {
+  id?: unknown;
+  email?: unknown;
+  role?: unknown;
+}
+
+interface AuthenticatedUser {
+  id: string;
+  role: string;
+  email?: string;
+}
 
 /**
  * Express middleware that enforces authentication via a JSON Web Token (JWT).
@@ -31,9 +43,28 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET) as any;
-    // Store payload on request (use any to avoid type augmentation)
-    (req as any).user = payload;
+    const payload = jwt.verify(token, env.JWT_SECRET) as DecodedToken;
+    const idFromToken =
+      typeof payload.id === 'string'
+        ? payload.id
+        : typeof payload.sub === 'string'
+          ? payload.sub
+          : undefined;
+    const role = typeof payload.role === 'string' ? payload.role : undefined;
+
+    if (!idFromToken || !role) {
+      res.status(401).json({ error: { message: 'Invalid token' } });
+      return;
+    }
+
+    const user: AuthenticatedUser = {
+      id: idFromToken,
+      role,
+      email: typeof payload.email === 'string' ? payload.email : undefined,
+    };
+
+    // Store normalized payload on request (use any to avoid type augmentation)
+    (req as any).user = user;
     next();
     return;
   } catch {
@@ -44,7 +75,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 
 export function requireRole(role: 'admin' | 'user') {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
+    const user = (req as any).user as AuthenticatedUser | undefined;
     if (!user || user.role !== role) {
       res.status(403).json({ error: { message: 'Forbidden' } });
       return;

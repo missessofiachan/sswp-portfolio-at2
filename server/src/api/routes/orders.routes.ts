@@ -12,11 +12,11 @@ import { Router } from 'express';
 import { OrderController } from '../controllers/order.controller';
 import { OrderService } from '../../services/order.service';
 import { FirestoreOrderRepository } from '../../data/firestore/FirestoreOrderRepository';
-import { ProductRepositoryAdapter } from '../../data/adapters/ProductRepositoryAdapter';
-import { fsProductsRepo } from '../../data/firestore/products.repo.fs';
+import { InMemoryOrderRepository } from '../../data/memory/orders.repo.mem';
+import { memProductsRepo } from '../../data/memory/products.repo.mem';
+import { loadEnv } from '../../config/env';
 import { requireAuth, requireRole } from '../middleware/auth';
-import { validate } from '../middleware/validate';
-import { validateParams } from '../middleware/validation';
+import { validateBody, validateParams, validateQuery } from '../middleware/validation';
 import {
   createOrderSchema,
   updateOrderSchema,
@@ -34,8 +34,11 @@ export function createOrderRoutes(): Router {
   const router = Router();
 
   // Initialize dependencies
-  const productRepository = new ProductRepositoryAdapter(fsProductsRepo);
-  const orderRepository = new FirestoreOrderRepository(productRepository);
+  const { DATA_STORE } = loadEnv();
+  const orderRepository =
+    DATA_STORE === 'memory'
+      ? new InMemoryOrderRepository(memProductsRepo)
+      : new FirestoreOrderRepository();
   const orderService = new OrderService(orderRepository);
   const orderController = new OrderController(orderService);
 
@@ -48,7 +51,7 @@ export function createOrderRoutes(): Router {
     '/stats',
     requireAuth,
     requireRole('admin'),
-    validate(orderStatsQuerySchema),
+    validateQuery(orderStatsQuerySchema),
     (req, res) => orderController.getOrderStats(req, res)
   );
 
@@ -57,7 +60,7 @@ export function createOrderRoutes(): Router {
    * @desc Get current user's orders
    * @access Private
    */
-  router.get('/my', requireAuth, validate(orderQuerySchema), (req, res) =>
+  router.get('/my', requireAuth, validateQuery(orderQuerySchema), (req, res) =>
     orderController.getMyOrders(req, res)
   );
 
@@ -66,7 +69,7 @@ export function createOrderRoutes(): Router {
    * @desc Create a new order
    * @access Private
    */
-  router.post('/', requireAuth, validate(createOrderSchema), (req, res) =>
+  router.post('/', requireAuth, validateBody(createOrderSchema), (req, res) =>
     orderController.createOrder(req, res)
   );
 
@@ -75,7 +78,7 @@ export function createOrderRoutes(): Router {
    * @desc Get all orders (admin only)
    * @access Private (Admin only)
    */
-  router.get('/', requireAuth, requireRole('admin'), validate(orderQuerySchema), (req, res) =>
+  router.get('/', requireAuth, requireRole('admin'), validateQuery(orderQuerySchema), (req, res) =>
     orderController.getAllOrders(req, res)
   );
 
@@ -97,7 +100,7 @@ export function createOrderRoutes(): Router {
     '/:id',
     requireAuth,
     validateParams(orderIdSchema), // Validate route parameter
-    validate(updateOrderSchema), // Validate request body
+    validateBody(updateOrderSchema), // Validate request body
     (req, res) => orderController.updateOrder(req, res)
   );
 
@@ -105,7 +108,9 @@ export function createOrderRoutes(): Router {
    * @desc Cancel an order
    * @access Private
    */
-  router.post('/:id/cancel', requireAuth, (req, res) => orderController.cancelOrder(req, res));
+  router.post('/:id/cancel', requireAuth, validateParams(orderIdSchema), (req, res) =>
+    orderController.cancelOrder(req, res)
+  );
 
   /**
    * @route DELETE /api/orders/:id

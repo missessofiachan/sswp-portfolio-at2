@@ -47,7 +47,20 @@ export function validate(schema: Joi.Schema, part: RequestPart = 'body') {
     }
 
     // Replace the request part with validated and sanitized data
-    (req as any)[part] = value;
+    if (part === 'query' || part === 'params') {
+      const target = (req as any)[part] as Record<string, unknown>;
+      if (target && typeof target === 'object') {
+        // Remove existing keys to avoid stale values
+        for (const key of Object.keys(target)) {
+          delete target[key];
+        }
+        Object.assign(target, value);
+      } else {
+        (req as any)[part] = value;
+      }
+    } else {
+      (req as any)[part] = value;
+    }
     next();
   };
 }

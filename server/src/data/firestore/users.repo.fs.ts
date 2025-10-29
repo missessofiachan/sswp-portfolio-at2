@@ -23,9 +23,11 @@ export const fsUsersRepo: UsersRepo = {
     const db = getDb();
     const norm = normalizeEmail(email);
     const out = await db.runTransaction(async (tx) => {
-      // If any user exists, abort and return null (will fallback to normal createUser)
-      const existingUserSnap = await tx.get(db.collection(USERS_COL).limit(1));
-      if (!existingUserSnap.empty) return null;
+      // Only promote to admin when no existing admin users are present.
+      const adminSnap = await tx.get(
+        db.collection(USERS_COL).where('role', '==', 'admin').limit(1)
+      );
+      if (!adminSnap.empty) return null;
       // Ensure email not reserved
       const emailRef = db.collection(EMAILS_COL).doc(norm);
       const emailSnap = await tx.get(emailRef);

@@ -9,6 +9,7 @@ import { axiosInstance } from '@client/lib/axios';
  * @property {string} [description] - Optional product description
  * @property {string} category - Product category (required, min 2 characters)
  * @property {number} [rating] - Product rating (optional, 0-5 scale)
+ * @property {number} [stock] - Available stock count (optional, non-negative integer)
  * @property {string[]} [images] - Optional array of image URLs
  */
 type ProductInput = {
@@ -17,6 +18,7 @@ type ProductInput = {
   description?: string;
   category: string;
   rating?: number;
+  stock?: number;
   images?: string[];
 };
 

@@ -10,7 +10,8 @@ import Joi from 'joi';
  *   to ensure no more than two decimal places are provided.
  * - description: optional string; empty string is explicitly allowed.
  * - category: required string.
- * - rating: number constrained to the range 0–5 (inclusive); defaults to 0 when not provided.
+ * - rating: number constrained to the range 0-5 (inclusive); defaults to 0 when not provided.
+ * - stock: required integer >= 0 representing available inventory.
  *
  * Remarks:
  * - Intended for validating product creation payloads (e.g., request bodies).
@@ -45,6 +46,7 @@ export const productCreateSchema = Joi.object({
   description: Joi.string().allow(''),
   category: Joi.string().required(),
   rating: Joi.number().min(0).max(5).default(0),
+  stock: Joi.number().integer().min(0).required(),
   images: Joi.array()
     .items(
       Joi.string().custom((value, helpers) => {
@@ -70,6 +72,7 @@ export const productUpdateSchema = Joi.object({
   description: Joi.string().allow(''),
   category: Joi.string(),
   rating: Joi.number().min(0).max(5),
+  stock: Joi.number().integer().min(0),
   images: Joi.array().items(
     Joi.string().custom((value, helpers) => {
       const v = String(value);

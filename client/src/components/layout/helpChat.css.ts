@@ -3,65 +3,71 @@ import { vars } from '@client/app/theme.css';
 
 export const container = style({
   position: 'fixed',
-  bottom: '20px',
-  right: '20px',
-  zIndex: 1000,
+  bottom: vars.space.lg,
+  right: vars.space.lg,
+  zIndex: 80,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: vars.space.sm,
 });
 
 export const chatButton = style({
-  width: '60px',
-  height: '60px',
-  borderRadius: '50%',
-  border: `2px solid ${vars.color.border}`,
-  backgroundColor: vars.color.primary,
-  color: vars.color.primaryText,
-  fontSize: '24px',
+  width: '56px',
+  height: '56px',
+  borderRadius: vars.radius.pill,
+  border: 'none',
+  background: `linear-gradient(135deg, ${vars.color.accent} 0%, ${vars.color.accentMuted} 100%)`,
+  color: vars.color.accentText,
+  fontSize: '1.5rem',
+  boxShadow: vars.shadow.md,
   cursor: 'pointer',
-  boxShadow: vars.shadow.card,
-  display: 'flex',
+  display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  transition: 'all 0.2s ease',
+  transition: 'transform 160ms ease, box-shadow 160ms ease',
   selectors: {
     '&:hover': {
-      transform: 'scale(1.1)',
-      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)',
+      transform: 'translateY(-2px)',
+      boxShadow: vars.shadow.lg,
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 3px ${vars.color.focus}`,
     },
   },
 });
 
 export const helpPanel = style({
-  position: 'absolute',
-  bottom: '80px',
-  right: '0',
   width: '320px',
+  maxWidth: 'calc(100vw - 32px)',
+  borderRadius: vars.radius.lg,
+  border: `1px solid ${vars.color.border}`,
   backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
-  borderRadius: vars.radius.md,
-  boxShadow: vars.shadow.card,
+  boxShadow: vars.shadow.lg,
   overflow: 'hidden',
-  animation: 'fadeInUp 0.3s ease',
+  display: 'flex',
+  flexDirection: 'column',
 });
 
 export const header = style({
-  padding: vars.space.md,
-  borderBottom: `1px solid ${vars.color.border}`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  backgroundColor: vars.color.secondary,
+  padding: `${vars.space.sm} ${vars.space.md}`,
+  borderBottom: `1px solid ${vars.color.border}`,
+  backgroundColor: vars.color.surfaceMuted,
 });
 
 export const closeBtn = style({
-  background: 'none',
+  width: '32px',
+  height: '32px',
+  borderRadius: vars.radius.pill,
   border: 'none',
-  fontSize: '24px',
-  cursor: 'pointer',
+  background: 'transparent',
   color: vars.color.textMuted,
-  padding: '0',
-  width: '24px',
-  height: '24px',
-  display: 'flex',
+  fontSize: '1.2rem',
+  cursor: 'pointer',
+  display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   selectors: {
@@ -72,128 +78,115 @@ export const closeBtn = style({
 });
 
 export const options = style({
-  padding: vars.space.sm,
+  padding: vars.space.md,
   display: 'grid',
-  gap: vars.space.xs,
+  gap: vars.space.sm,
 });
 
 export const option = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.space.sm,
+  display: 'grid',
+  gap: vars.space.xs,
   padding: vars.space.sm,
-  borderRadius: vars.radius.sm,
-  textDecoration: 'none',
-  color: vars.color.text,
-  transition: 'background-color 0.2s ease',
+  borderRadius: vars.radius.md,
+  border: `1px solid transparent`,
+  backgroundColor: vars.color.surface,
+  transition: 'border-color 120ms ease, background-color 120ms ease',
   selectors: {
     '&:hover': {
-      backgroundColor: 'rgba(91, 207, 251, 0.1)',
+      borderColor: vars.color.accent,
+      backgroundColor: vars.color.surfaceMuted,
     },
   },
 });
 
 export const icon = style({
-  fontSize: '20px',
-  minWidth: '24px',
-  textAlign: 'center',
+  fontSize: '1.2rem',
+  color: vars.color.accent,
 });
 
 export const footer = style({
-  padding: vars.space.sm,
   borderTop: `1px solid ${vars.color.border}`,
-  backgroundColor: 'rgba(91, 207, 251, 0.05)',
+  padding: vars.space.sm,
   textAlign: 'center',
+  backgroundColor: vars.color.surfaceMuted,
 });
 
 export const footerText = style({
   margin: 0,
-  fontSize: '12px',
+  fontSize: '0.75rem',
   color: vars.color.textMuted,
 });
 
 export const footerLink = style({
-  color: vars.color.link,
-  textDecoration: 'none',
-  selectors: {
-    '&:hover': {
-      textDecoration: 'underline',
-    },
-  },
+  color: vars.color.accent,
 });
 
 export const section = style({
-  padding: `0 ${vars.space.sm} ${vars.space.sm}`,
+  padding: `${vars.space.sm} ${vars.space.md}`,
+  display: 'grid',
+  gap: vars.space.sm,
 });
 
 export const sectionTitle = style({
-  margin: `${vars.space.sm} 0 ${vars.space.xs} 0`,
-  fontSize: '13px',
+  fontSize: '0.75rem',
   fontWeight: 600,
-  color: vars.color.textMuted,
   textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  padding: `0 ${vars.space.sm}`,
+  color: vars.color.textMuted,
 });
 
 export const quickActions = style({
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: vars.space.xs,
-  padding: `0 ${vars.space.sm}`,
 });
 
 export const actionBtn = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.space.xs,
-  padding: `${vars.space.xs} ${vars.space.sm}`,
+  borderRadius: vars.radius.md,
   border: `1px solid ${vars.color.border}`,
-  borderRadius: vars.radius.sm,
+  padding: `${vars.space.xs} ${vars.space.sm}`,
   backgroundColor: vars.color.surface,
   color: vars.color.text,
-  fontSize: '12px',
+  fontSize: '0.8rem',
+  textAlign: 'left',
   cursor: 'pointer',
-  transition: 'background-color 0.2s ease',
+  transition: 'background-color 120ms ease, border-color 120ms ease',
   selectors: {
     '&:hover': {
-      backgroundColor: 'rgba(91, 207, 251, 0.1)',
+      backgroundColor: vars.color.surfaceMuted,
+      borderColor: vars.color.accent,
     },
   },
 });
 
 export const optionTitle = style({
-  margin: '0 0 4px 0',
-  fontSize: '14px',
   fontWeight: 600,
+  margin: 0,
 });
 
 export const optionDescription = style({
   margin: 0,
-  fontSize: '12px',
+  fontSize: '0.85rem',
   color: vars.color.textMuted,
 });
 
 export const chatModes = style({
   display: 'flex',
   borderBottom: `1px solid ${vars.color.border}`,
-  backgroundColor: vars.color.secondary,
 });
 
 export const modeBtn = style({
   flex: 1,
   padding: `${vars.space.sm} ${vars.space.md}`,
   border: 'none',
-  backgroundColor: 'transparent',
+  background: 'transparent',
   color: vars.color.textMuted,
-  fontSize: '13px',
   fontWeight: 600,
   cursor: 'pointer',
-  transition: 'all 0.2s ease',
+  transition: 'color 120ms ease, background-color 120ms ease',
   selectors: {
     '&:hover': {
-      backgroundColor: 'rgba(91, 207, 251, 0.1)',
       color: vars.color.text,
+      backgroundColor: vars.color.surfaceMuted,
     },
   },
 });
@@ -201,125 +194,91 @@ export const modeBtn = style({
 export const activeModeBtn = style([
   modeBtn,
   {
-    backgroundColor: vars.color.primary,
-    color: vars.color.primaryText,
-    selectors: {
-      '&:hover': {
-        backgroundColor: vars.color.primary,
-        color: vars.color.primaryText,
-      },
-    },
+    color: vars.color.accentText,
+    backgroundColor: vars.color.accent,
   },
 ]);
 
 export const aiChatContainer = style({
-  padding: vars.space.sm,
-  minHeight: '200px',
+  padding: vars.space.md,
   display: 'flex',
   flexDirection: 'column',
   gap: vars.space.sm,
 });
 
 export const messagesContainer = style({
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.space.xs,
-  maxHeight: '150px',
+  maxHeight: '200px',
   overflowY: 'auto',
-  padding: `0 ${vars.space.xs}`,
+  display: 'grid',
+  gap: vars.space.xs,
 });
 
 export const message = style({
   padding: `${vars.space.xs} ${vars.space.sm}`,
-  borderRadius: vars.radius.sm,
-  fontSize: '12px',
+  borderRadius: vars.radius.md,
+  fontSize: '0.85rem',
   lineHeight: 1.4,
 });
 
 export const userMessage = style([
   message,
   {
-    backgroundColor: vars.color.primary,
-    color: vars.color.primaryText,
-    alignSelf: 'flex-end',
-    maxWidth: '80%',
+    backgroundColor: vars.color.accent,
+    color: vars.color.accentText,
+    justifySelf: 'end',
   },
 ]);
 
 export const aiMessage = style([
   message,
   {
-    backgroundColor: 'rgba(91, 207, 251, 0.1)',
+    backgroundColor: vars.color.surfaceMuted,
     color: vars.color.text,
-    alignSelf: 'flex-start',
-    maxWidth: '85%',
+    justifySelf: 'start',
   },
 ]);
 
 export const chatInput = style({
   display: 'flex',
   gap: vars.space.xs,
-  padding: `${vars.space.xs} 0`,
 });
 
 export const inputField = style({
   flex: 1,
-  padding: `${vars.space.xs} ${vars.space.sm}`,
+  borderRadius: vars.radius.md,
   border: `1px solid ${vars.color.border}`,
-  borderRadius: vars.radius.sm,
-  fontSize: '12px',
+  padding: `${vars.space.xs} ${vars.space.sm}`,
   backgroundColor: vars.color.surface,
   color: vars.color.text,
-  selectors: {
-    '&:focus': {
-      outline: 'none',
-      borderColor: vars.color.primary,
-      boxShadow: `0 0 0 2px rgba(146, 63, 43, 0.2)`,
-    },
-  },
 });
 
 export const sendBtn = style({
+  borderRadius: vars.radius.md,
+  border: 'none',
   padding: `${vars.space.xs} ${vars.space.sm}`,
-  border: `1px solid ${vars.color.border}`,
-  borderRadius: vars.radius.sm,
-  backgroundColor: vars.color.primary,
-  color: vars.color.primaryText,
-  fontSize: '12px',
+  backgroundColor: vars.color.accent,
+  color: vars.color.accentText,
   cursor: 'pointer',
-  transition: 'background-color 0.2s ease',
-  selectors: {
-    '&:hover': {
-      backgroundColor: 'rgba(146, 63, 43, 0.9)',
-    },
-    '&:disabled': {
-      opacity: 0.5,
-      cursor: 'not-allowed',
-    },
-  },
 });
 
 export const aiSuggestions = style({
   display: 'flex',
   flexWrap: 'wrap',
   gap: vars.space.xs,
-  marginBottom: vars.space.sm,
 });
 
 export const suggestionBtn = style({
-  padding: `${vars.space.xs} ${vars.space.sm}`,
+  borderRadius: vars.radius.md,
   border: `1px solid ${vars.color.border}`,
-  borderRadius: vars.radius.sm,
+  padding: `${vars.space.xs} ${vars.space.sm}`,
   backgroundColor: 'transparent',
   color: vars.color.text,
-  fontSize: '11px',
   cursor: 'pointer',
-  transition: 'all 0.2s ease',
+  transition: 'border-color 120ms ease, background-color 120ms ease',
   selectors: {
     '&:hover': {
-      backgroundColor: 'rgba(91, 207, 251, 0.1)',
-      borderColor: vars.color.primary,
+      borderColor: vars.color.accent,
+      backgroundColor: vars.color.surfaceMuted,
     },
   },
 });

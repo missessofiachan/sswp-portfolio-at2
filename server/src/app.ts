@@ -12,7 +12,6 @@
  * - File upload support via express-fileupload
  * - JWT-based authentication
  * - Request/response logging
- * - Static file serving for uploaded images
  * - Comprehensive error handling
  *
  * **Environment Configuration:**
@@ -27,8 +26,6 @@
  * - `/api/v1/uploads` - File upload handling
  * - `/api/v1/health` - Health check endpoint
  * - `/api/v1/maintenance` - Maintenance operations (admin only)
- * - `/uploads` - Static file serving for uploaded images
- * - `/api/v1/files` - Alternative static file serving path for dev proxy
  *
  * **Security:**
  * - Helmet for security headers
@@ -48,7 +45,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 // Removed morgan in favor of custom Firestore-backed logger
 import fileUpload from 'express-fileupload';
-import path from 'path';
 import { router as authRoutes } from './api/routes/auth.routes';
 import { router as productRoutes } from './api/routes/products.routes';
 import { router as adminRoutes } from './api/routes/admin.routes';
@@ -59,6 +55,9 @@ import { createOrderRoutes } from './api/routes/orders.routes';
 import { maintenanceGuard } from './api/middleware/maintenanceAuth';
 import { errorHandler } from './api/middleware/error';
 import { requestLogger } from './utils/logger';
+import { loadEnv } from './config/env';
+
+const env = loadEnv();
 
 /**
  * Express application instance created by calling express().
@@ -82,7 +81,7 @@ app.use(helmet());
 // Allow all origins for development; restrict in production for security.
 // CORS: allow any origin in dev; restrict in production via CORS_ORIGIN env
 const corsOrigin =
-  process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : true);
+  env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : true);
 app.use(
   cors({
     origin: corsOrigin ?? 'http://localhost:5173',
@@ -92,17 +91,13 @@ app.use(
 app.use(express.json());
 app.use(requestLogger);
 // Enable multipart/form-data for file uploads
-const MAX_MB = Number(process.env.UPLOAD_MAX_MB || 5);
+const { UPLOAD_MAX_MB } = env;
 app.use(
   fileUpload({
     createParentPath: true,
-    limits: { fileSize: MAX_MB * 1024 * 1024 },
+    limits: { fileSize: UPLOAD_MAX_MB * 1024 * 1024 },
   })
 );
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
-// Also serve under the API prefix so dev proxy forwards correctly
-app.use('/api/v1/files', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);

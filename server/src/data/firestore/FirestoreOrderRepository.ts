@@ -19,7 +19,6 @@ import {
   OrderStatus,
   PaymentStatus,
 } from '../../domain/orders';
-import { ProductRepository } from '../ports/ProductRepository';
 
 /**
  * Firestore implementation of the order repository
@@ -29,20 +28,11 @@ import { ProductRepository } from '../ports/ProductRepository';
  */
 export class FirestoreOrderRepository implements OrderRepository {
   private readonly collectionName = 'orders';
-  private productRepository: ProductRepository;
+  private readonly productsCollectionName = 'products';
 
   // Shipping configuration (can be injected or loaded from config in future)
   private readonly freeShippingThreshold = 100;
   private readonly defaultShippingCost = 10;
-
-  /**
-   * Create a new FirestoreOrderRepository instance
-   *
-   * @param {ProductRepository} productRepository - Product repository for order validation
-   */
-  constructor(productRepository: ProductRepository) {
-    this.productRepository = productRepository;
-  }
   async getStats(startDate?: Date, endDate?: Date): Promise<OrderStats> {
     const db = getDb();
     let baseQuery: admin.firestore.Query = db.collection(this.collectionName);
@@ -55,26 +45,24 @@ export class FirestoreOrderRepository implements OrderRepository {
       baseQuery = baseQuery.where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate));
     }
 
-    // Total orders using Firestore count() aggregation
-    const totalOrdersAgg = await baseQuery.count().get();
+    const statusValues = Object.values(OrderStatus) as OrderStatus[];
+    const countsPromise = Promise.all([
+      baseQuery.count().get(),
+      ...statusValues.map((status) => baseQuery.where('status', '==', status).count().get()),
+    ]);
+    const revenuePromise = baseQuery.select('totalAmount').get();
+
+    const [countResults, revenueSnapshot] = await Promise.all([countsPromise, revenuePromise]);
+    const [totalOrdersAgg, ...statusAggs] = countResults;
     const totalOrders = totalOrdersAgg.data()?.count ?? 0;
 
-    // Pending orders count
-    const pendingOrdersAgg = await baseQuery
-      .where('status', '==', OrderStatus.PENDING)
-      .count()
-      .get();
-    const pendingOrders = pendingOrdersAgg.data()?.count ?? 0;
-
-    // Status breakdown
     const statusBreakdown: Record<OrderStatus, number> = {} as Record<OrderStatus, number>;
-    for (const status of Object.values(OrderStatus) as OrderStatus[]) {
-      const statusAgg = await baseQuery.where('status', '==', status).count().get();
-      statusBreakdown[status] = statusAgg.data()?.count ?? 0;
-    }
+    statusValues.forEach((status, index) => {
+      const count = statusAggs[index]?.data()?.count ?? 0;
+      statusBreakdown[status] = count;
+    });
+    const pendingOrders = statusBreakdown[OrderStatus.PENDING] ?? 0;
 
-    // Calculate revenue and average order value by selecting only totalAmount
-    const revenueSnapshot = await baseQuery.select('totalAmount').get();
     let totalRevenue = 0;
     revenueSnapshot.forEach((doc) => {
       const data = doc.data();
@@ -106,80 +94,108 @@ export class FirestoreOrderRepository implements OrderRepository {
    */
   async create(orderData: CreateOrderInput, userId: string, userEmail: string): Promise<Order> {
     const db = getDb();
-    const batch = db.batch();
     const orderDocRef = db.collection(this.collectionName).doc();
-
-    // Validate products and calculate pricing
-    const orderItems = [];
-    let subtotal = 0;
-
-    // Fetch all products in parallel
-    const products = await Promise.all(
-      orderData.items.map((item) => this.productRepository.findById(item.productId))
-    );
-
-    for (let i = 0; i < orderData.items.length; i++) {
-      const item = orderData.items[i];
-      const product = products[i];
-      if (!product) {
-        throw new Error(`Product not found: ${item.productId}`);
-      }
-
-      if (item.quantity <= 0) {
-        throw new Error(`Invalid quantity for product ${product.name}: ${item.quantity}`);
-      }
-
-      const itemTotal = product.price * item.quantity;
-      orderItems.push({
-        productId: product.id,
-        productName: product.name,
-        quantity: item.quantity,
-        unitPrice: product.price,
-        totalPrice: itemTotal,
-        productImage: product.imageUrls?.[0],
-      });
-
-      subtotal += itemTotal;
-    }
-
-    // Calculate tax and shipping (shipping logic is now configurable)
-    const taxRate = 0.1; // 10% tax
-    const taxAmount = subtotal * taxRate;
-    const shippingCost = this.calculateShippingCost(subtotal);
-    const totalAmount = subtotal + taxAmount + shippingCost;
-
     const now = new Date();
-    const order: Omit<Order, 'id'> = {
-      userId,
-      userEmail,
-      items: orderItems,
-      subtotal,
-      taxAmount,
-      shippingCost,
-      totalAmount,
-      status: OrderStatus.PENDING,
-      paymentStatus: PaymentStatus.PENDING,
-      paymentMethod: orderData.paymentMethod,
-      shippingAddress: orderData.shippingAddress,
-      notes: orderData.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
 
-    // Convert dates to Firestore timestamps for storage
-    const firestoreOrder = {
-      ...order,
-      createdAt: admin.firestore.Timestamp.fromDate(order.createdAt),
-      updatedAt: admin.firestore.Timestamp.fromDate(order.updatedAt),
-    };
+    await db.runTransaction(async (tx) => {
+      const orderItems: Order['items'] = [];
+      let subtotal = 0;
 
-    batch.set(orderDocRef, firestoreOrder);
-    await batch.commit();
+      for (const item of orderData.items) {
+        const quantity = Math.floor(item.quantity);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          throw new Error(`Invalid quantity for product ${item.productId}: ${item.quantity}`);
+        }
 
-    return {
-      id: orderDocRef.id,
-      ...order,
-    };
+        const productRef = db.collection(this.productsCollectionName).doc(item.productId);
+        const productSnap = await tx.get(productRef);
+
+        if (!productSnap.exists) {
+          throw this.createProductNotFoundError(item.productId);
+        }
+
+        const productData = productSnap.data() || {};
+        const productName =
+          typeof productData.name === 'string' ? productData.name : 'Unnamed product';
+        const unitPriceRaw = Number(productData.price ?? 0);
+        const unitPrice = Number.isFinite(unitPriceRaw) && unitPriceRaw >= 0 ? unitPriceRaw : 0;
+
+        const stockRaw =
+          typeof productData.stock === 'number'
+            ? productData.stock
+            : typeof productData.stock === 'string'
+              ? Number(productData.stock)
+              : 0;
+        const availableStock =
+          Number.isFinite(stockRaw) && stockRaw >= 0 ? Math.floor(stockRaw) : 0;
+
+        if (quantity > availableStock) {
+          throw this.createInsufficientStockError(
+            item.productId,
+            productName,
+            availableStock,
+            quantity
+          );
+        }
+
+        const itemTotal = unitPrice * quantity;
+        subtotal += itemTotal;
+
+        const productImageCandidate =
+          Array.isArray(productData.images) && typeof productData.images[0] === 'string'
+            ? (productData.images[0] as string)
+            : Array.isArray(productData.imageUrls) && typeof productData.imageUrls[0] === 'string'
+              ? (productData.imageUrls[0] as string)
+              : undefined;
+
+        const orderItem: Order['items'][number] = {
+          productId: item.productId,
+          productName,
+          quantity,
+          unitPrice,
+          totalPrice: itemTotal,
+        };
+
+        if (typeof productImageCandidate === 'string') {
+          orderItem.productImage = productImageCandidate;
+        }
+
+        orderItems.push(orderItem);
+
+        tx.update(productRef, {
+          stock: admin.firestore.FieldValue.increment(-quantity),
+        });
+      }
+
+      const taxRate = 0.1;
+      const taxAmount = subtotal * taxRate;
+      const shippingCost = this.calculateShippingCost(subtotal);
+      const totalAmount = subtotal + taxAmount + shippingCost;
+
+      const firestoreOrder = {
+        userId,
+        userEmail,
+        items: orderItems,
+        subtotal,
+        taxAmount,
+        shippingCost,
+        totalAmount,
+        status: OrderStatus.PENDING,
+        paymentStatus: PaymentStatus.PENDING,
+        paymentMethod: orderData.paymentMethod,
+        shippingAddress: orderData.shippingAddress,
+        notes: orderData.notes,
+        createdAt: admin.firestore.Timestamp.fromDate(now),
+        updatedAt: admin.firestore.Timestamp.fromDate(now),
+        inventoryReleased: false,
+      };
+
+      tx.set(orderDocRef, firestoreOrder);
+    });
+
+    // Fetch the created order to return complete data
+    const createdDoc = await orderDocRef.get();
+    return this.mapFirestoreDocToOrder(createdDoc.id, createdDoc.data()!);
   }
 
   /**
@@ -209,26 +225,27 @@ export class FirestoreOrderRepository implements OrderRepository {
    */
   async findByUserId(userId: string, limit?: number, lastOrderId?: string): Promise<Order[]> {
     const db = getDb();
-    let query = db
+    let query: admin.firestore.Query = db
       .collection(this.collectionName)
       .where('userId', '==', userId)
       .orderBy('createdAt', 'desc');
 
-    if (limit) {
-      query = query.limit(limit);
-    }
-
     if (lastOrderId) {
-      const lastOrderDoc = await db.collection(this.collectionName).doc(lastOrderId).get();
-      if (lastOrderDoc.exists) {
-        query = query.startAfter(lastOrderDoc);
+      const cursorDoc = await db.collection(this.collectionName).doc(lastOrderId).get();
+      if (cursorDoc.exists) {
+        const data = cursorDoc.data();
+        if (data?.userId === userId) {
+          query = query.startAfter(cursorDoc);
+        }
       }
     }
 
+    if (limit && Number.isFinite(limit)) {
+      query = query.limit(limit);
+    }
+
     const snapshot = await query.get();
-    return snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) =>
-      this.mapFirestoreDocToOrder(doc.id, doc.data())
-    );
+    return snapshot.docs.map((doc) => this.mapFirestoreDocToOrder(doc.id, doc.data()));
   }
 
   /**
@@ -241,30 +258,30 @@ export class FirestoreOrderRepository implements OrderRepository {
    */
   async findAll(limit?: number, lastOrderId?: string, status?: OrderStatus): Promise<Order[]> {
     const db = getDb();
-    let query = db.collection(this.collectionName).orderBy('createdAt', 'desc');
+    let query: admin.firestore.Query = db.collection(this.collectionName);
 
     if (status) {
-      query = db
-        .collection(this.collectionName)
-        .where('status', '==', status)
-        .orderBy('createdAt', 'desc');
+      query = query.where('status', '==', status);
     }
 
-    if (limit) {
-      query = query.limit(limit);
-    }
+    query = query.orderBy('createdAt', 'desc');
 
     if (lastOrderId) {
-      const lastOrderDoc = await db.collection(this.collectionName).doc(lastOrderId).get();
-      if (lastOrderDoc.exists) {
-        query = query.startAfter(lastOrderDoc);
+      const cursorDoc = await db.collection(this.collectionName).doc(lastOrderId).get();
+      if (cursorDoc.exists) {
+        const data = cursorDoc.data();
+        if (!status || data?.status === status) {
+          query = query.startAfter(cursorDoc);
+        }
       }
     }
 
+    if (limit && Number.isFinite(limit)) {
+      query = query.limit(limit);
+    }
+
     const snapshot = await query.get();
-    return snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) =>
-      this.mapFirestoreDocToOrder(doc.id, doc.data())
-    );
+    return snapshot.docs.map((doc) => this.mapFirestoreDocToOrder(doc.id, doc.data()));
   }
 
   /**
@@ -278,35 +295,61 @@ export class FirestoreOrderRepository implements OrderRepository {
   async update(id: string, updateData: UpdateOrderInput): Promise<Order> {
     const db = getDb();
     const orderRef = db.collection(this.collectionName).doc(id);
-    const orderDoc = await orderRef.get();
+    const now = new Date();
 
-    if (!orderDoc.exists) {
-      throw new Error(`Order not found: ${id}`);
-    }
+    await db.runTransaction(async (tx) => {
+      const orderDoc = await tx.get(orderRef);
 
-    const updatePayload: any = {
-      ...updateData,
-      updatedAt: admin.firestore.Timestamp.fromDate(new Date()),
-    };
+      if (!orderDoc.exists) {
+        throw this.createOrderNotFoundError(id);
+      }
 
-    // Convert tracking dates to Firestore timestamps if present
-    if (updateData.tracking?.shippedAt) {
-      updatePayload.tracking = {
-        ...updateData.tracking,
-        shippedAt: admin.firestore.Timestamp.fromDate(updateData.tracking.shippedAt),
+      const existing = orderDoc.data() || {};
+      const updatePayload: Record<string, unknown> = {
+        updatedAt: admin.firestore.Timestamp.fromDate(now),
       };
-    }
 
-    if (updateData.tracking?.estimatedDelivery) {
-      updatePayload.tracking = {
-        ...updatePayload.tracking,
-        estimatedDelivery: admin.firestore.Timestamp.fromDate(
-          updateData.tracking.estimatedDelivery
-        ),
-      };
-    }
+      if (updateData.status !== undefined) {
+        updatePayload.status = updateData.status;
+      }
+      if (updateData.paymentStatus !== undefined) {
+        updatePayload.paymentStatus = updateData.paymentStatus;
+      }
+      if (updateData.notes !== undefined) {
+        updatePayload.notes = updateData.notes;
+      }
+      if (updateData.shippingAddress !== undefined) {
+        updatePayload.shippingAddress = updateData.shippingAddress;
+      }
+      if (updateData.tracking) {
+        const tracking: Record<string, unknown> = { ...updateData.tracking };
+        if (updateData.tracking.shippedAt) {
+          tracking.shippedAt = admin.firestore.Timestamp.fromDate(updateData.tracking.shippedAt);
+        }
+        if (updateData.tracking.estimatedDelivery) {
+          tracking.estimatedDelivery = admin.firestore.Timestamp.fromDate(
+            updateData.tracking.estimatedDelivery
+          );
+        }
+        updatePayload.tracking = tracking;
+      }
 
-    await orderRef.update(updatePayload);
+      const currentStatus = existing.status as OrderStatus;
+      const inventoryReleased = existing.inventoryReleased === true;
+      const willReleaseInventory =
+        updateData.status !== undefined &&
+        [OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(updateData.status) &&
+        !inventoryReleased &&
+        ![OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(currentStatus as OrderStatus);
+
+      if (willReleaseInventory) {
+        const items = Array.isArray(existing.items) ? existing.items : [];
+        await this.restoreInventory(tx, db, items);
+        updatePayload.inventoryReleased = true;
+      }
+
+      tx.update(orderRef, updatePayload);
+    });
 
     const updatedDoc = await orderRef.get();
     return this.mapFirestoreDocToOrder(updatedDoc.id, updatedDoc.data()!);
@@ -322,13 +365,22 @@ export class FirestoreOrderRepository implements OrderRepository {
   async delete(id: string): Promise<void> {
     const db = getDb();
     const orderRef = db.collection(this.collectionName).doc(id);
-    const orderDoc = await orderRef.get();
 
-    if (!orderDoc.exists) {
-      throw new Error(`Order not found: ${id}`);
-    }
+    await db.runTransaction(async (tx) => {
+      const orderDoc = await tx.get(orderRef);
 
-    await orderRef.delete();
+      if (!orderDoc.exists) {
+        throw this.createOrderNotFoundError(id);
+      }
+
+      const data = orderDoc.data() || {};
+      if (data.inventoryReleased !== true) {
+        const items = Array.isArray(data.items) ? data.items : [];
+        await this.restoreInventory(tx, db, items);
+      }
+
+      tx.delete(orderRef);
+    });
   }
 
   /**
@@ -341,6 +393,55 @@ export class FirestoreOrderRepository implements OrderRepository {
   async isOwnedByUser(orderId: string, userId: string): Promise<boolean> {
     const order = await this.findById(orderId);
     return order?.userId === userId;
+  }
+
+  private createInsufficientStockError(
+    productId: string,
+    productName: string,
+    available: number,
+    requested: number
+  ): Error {
+    const error = new Error(
+      `Insufficient stock for ${productName}. Requested ${requested}, but only ${available} left.`
+    );
+    (error as any).code = 'INSUFFICIENT_STOCK';
+    (error as any).productId = productId;
+    (error as any).available = available;
+    (error as any).requested = requested;
+    return error;
+  }
+
+  private createProductNotFoundError(productId: string): Error {
+    const error = new Error(`Product not found: ${productId}`);
+    (error as any).code = 'PRODUCT_NOT_FOUND';
+    (error as any).productId = productId;
+    return error;
+  }
+
+  private createOrderNotFoundError(orderId: string): Error {
+    const error = new Error(`Order not found: ${orderId}`);
+    (error as any).status = 404;
+    return error;
+  }
+
+  private async restoreInventory(
+    tx: admin.firestore.Transaction,
+    db: admin.firestore.Firestore,
+    items: Array<{ productId?: string; quantity?: number }>
+  ): Promise<void> {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      const productId = typeof item.productId === 'string' ? item.productId : null;
+      const qtyRaw = Number(item?.quantity ?? 0);
+      const quantity = Number.isFinite(qtyRaw) ? Math.floor(qtyRaw) : 0;
+      if (!productId || quantity <= 0) continue;
+      const productRef = db.collection(this.productsCollectionName).doc(productId);
+      const productDoc = await tx.get(productRef);
+      if (!productDoc.exists) continue;
+      tx.update(productRef, {
+        stock: admin.firestore.FieldValue.increment(quantity),
+      });
+    }
   }
 
   /**

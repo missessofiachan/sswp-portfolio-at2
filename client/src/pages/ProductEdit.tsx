@@ -12,6 +12,7 @@ const Schema = z.object({
   description: z.string().optional(),
   category: z.string().min(2),
   rating: z.coerce.number().min(0).max(5).default(0),
+  stock: z.coerce.number().int().nonnegative().default(0),
   imagesText: z.string().optional().default(''),
 });
 
@@ -86,6 +87,7 @@ export default function ProductEdit() {
         description: p.description ?? '',
         category: p.category ?? '',
         rating: p.rating ?? 0,
+        stock: p.stock ?? 0,
         imagesText: Array.isArray(p.images) ? p.images.join('\n') : '',
       })
     );
@@ -103,6 +105,7 @@ export default function ProductEdit() {
       description: values.description,
       category: values.category,
       rating: values.rating,
+      stock: values.stock,
       images,
     });
     nav(`/products/${id}`);
@@ -173,7 +176,9 @@ export default function ProductEdit() {
           <small>
             Selected files upload immediately; their URLs are added above.
             {uploadStatus && (
-              <span style={{ marginLeft: '8px', fontWeight: 'bold', color: uploadStatus.color }}>{uploadStatus.text}</span>
+              <span style={{ marginLeft: '8px', fontWeight: 'bold', color: uploadStatus.color }}>
+                {uploadStatus.text}
+              </span>
             )}
           </small>
         </div>
@@ -198,6 +203,18 @@ export default function ProductEdit() {
             {...register('rating')}
           />
           <ErrorMessage message={formState.errors.rating?.message} />
+        </div>
+        <div className={field}>
+          <label className={label}>Stock</label>
+          <input
+            className={input}
+            type="number"
+            min={0}
+            step={1}
+            {...register('stock')}
+            placeholder="Available inventory count"
+          />
+          <ErrorMessage message={formState.errors.stock?.message} />
         </div>
         <div className={field}>
           <label className={label}>Description</label>

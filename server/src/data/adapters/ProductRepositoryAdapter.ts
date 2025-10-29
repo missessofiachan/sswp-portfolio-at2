@@ -43,6 +43,7 @@ export class ProductRepositoryAdapter implements ProductRepository {
       id: product.id,
       name: product.name,
       price: product.price,
+      stock: product.stock,
       imageUrls: product.images || [],
     };
   }

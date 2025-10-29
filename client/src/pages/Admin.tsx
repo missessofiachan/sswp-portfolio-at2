@@ -149,50 +149,66 @@ export default function Admin() {
             gap: 16,
           }}
         >
-          {products.map((p) => (
-            <article key={p.id} className={card}>
-              {Array.isArray(p.images) && p.images[0] && (
-                <img
-                  src={resolveImageUrl(p.images[0])}
-                  alt={p.name}
-                  className={`${photoFrame} ${sepiaPhoto}`}
-                  style={{
-                    height: 140,
-                    objectFit: 'cover',
-                    marginBottom: 12,
-                  }}
-                  loading="lazy"
-                  onError={(e) => {
-                    const t = e.currentTarget as HTMLImageElement;
-                    if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
-                  }}
-                />
-              )}
-              <h3 style={{ marginTop: 0 }}>{p.name}</h3>
-              <p style={{ margin: '4px 0 12px' }}>${p.price}</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <a className={btnOutline} href={`/products/${p.id}/edit`}>
-                  Edit
-                </a>
-                <button
-                  className={btnPrimary}
-                  onClick={async () => {
-                    if (!confirm(`Delete product ${p.name}?`)) return;
-                    try {
-                      await deleteProduct(p.id);
-                      await refreshProducts();
-                      await refreshStats();
-                    } catch (e) {
-                      alert('Failed to delete product');
-                      console.error(e);
-                    }
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </article>
-          ))}
+          {products.map((p) => {
+            const stockLevel = typeof p.stock === 'number' ? p.stock : 0;
+            const isOutOfStock = stockLevel <= 0;
+            const isLowStock = stockLevel > 0 && stockLevel <= 5;
+            return (
+              <article key={p.id} className={card}>
+                {Array.isArray(p.images) && p.images[0] && (
+                  <img
+                    src={resolveImageUrl(p.images[0])}
+                    alt={p.name}
+                    className={`${photoFrame} ${sepiaPhoto}`}
+                    style={{
+                      height: 140,
+                      objectFit: 'cover',
+                      marginBottom: 12,
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      const t = e.currentTarget as HTMLImageElement;
+                      if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+                    }}
+                  />
+                )}
+                <h3 style={{ marginTop: 0 }}>{p.name}</h3>
+                <p style={{ margin: '4px 0' }}>${p.price}</p>
+                <div style={{ margin: '4px 0 12px', fontSize: '0.9rem' }}>
+                  {isOutOfStock ? (
+                    <span style={{ color: '#dc2626', fontWeight: '600' }}>⚠️ Out of Stock</span>
+                  ) : isLowStock ? (
+                    <span style={{ color: '#f59e0b', fontWeight: '600' }}>
+                      ⚡ Low Stock ({stockLevel})
+                    </span>
+                  ) : (
+                    <span style={{ color: '#059669' }}>✓ {stockLevel} in stock</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <a className={btnOutline} href={`/products/${p.id}/edit`}>
+                    Edit
+                  </a>
+                  <button
+                    className={btnPrimary}
+                    onClick={async () => {
+                      if (!confirm(`Delete product ${p.name}?`)) return;
+                      try {
+                        await deleteProduct(p.id);
+                        await refreshProducts();
+                        await refreshStats();
+                      } catch (e) {
+                        alert('Failed to delete product');
+                        console.error(e);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
         {products.length === 0 && !productsError && <p>No products found.</p>}
       </div>

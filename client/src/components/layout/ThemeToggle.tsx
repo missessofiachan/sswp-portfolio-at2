@@ -1,18 +1,7 @@
-import { useEffect, useState, type KeyboardEvent } from 'react';
-import { vars } from '@client/app/theme.css';
+import { useEffect, useMemo, useState } from 'react';
+import * as Toggle from '@radix-ui/react-toggle';
+import { applyTheme, persistTheme, readStoredTheme, type ThemeMode } from '@client/app/theme';
 import { icon, toggle } from './themeToggle.css';
-
-function getInitial(): 'light' | 'dark' {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || saved === 'light') return saved;
-    // Prefer system preference if available
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-  }
-  return 'light';
-}
 
 /**
  * ThemeToggle
@@ -42,89 +31,54 @@ function getInitial(): 'light' | 'dark' {
  * @returns A JSX button element that toggles the application's theme between "light" and "dark".
  */
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<'light' | 'dark'>(() => getInitial());
+  const [mode, setMode] = useState<ThemeMode>(() => readStoredTheme());
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-
-    const html = document.documentElement;
-
-    // Persist to localStorage when it changes
-    try {
-      localStorage.setItem('theme', mode);
-    } catch {}
-
-    // Apply classes/attributes
-    if (mode === 'dark') {
-      html.classList.add('dark');
-      html.setAttribute('data-theme', 'dark');
-    } else {
-      html.classList.remove('dark');
-      html.removeAttribute('data-theme');
-    }
+    applyTheme(mode);
+    persistTheme(mode);
   }, [mode]);
 
-  const toggleMode = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
+  const label = mode === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      toggleMode();
-    }
-  };
+  const { sunIcon, moonIcon } = useMemo(() => {
+    const sun = (
+      <svg className={icon} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="5" fill="currentColor" />
+        <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="10" y1="1" x2="10" y2="3" />
+          <line x1="10" y1="17" x2="10" y2="19" />
+          <line x1="1" y1="10" x2="3" y2="10" />
+          <line x1="17" y1="10" x2="19" y2="10" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="14.36" y1="14.36" x2="15.78" y2="15.78" />
+          <line x1="4.22" y1="15.78" x2="5.64" y2="14.36" />
+          <line x1="14.36" y1="5.64" x2="15.78" y2="4.22" />
+        </g>
+      </svg>
+    );
 
-  const label = mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+    const moon = (
+      <svg className={icon} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path
+          d="M17.293 13.293A8 8 0 016.707 2.707a.75.75 0 00-.832-.832A8 8 0 1018 14.125a.75.75 0 00-.707-.832z"
+          fill="currentColor"
+        />
+      </svg>
+    );
 
-  const sunIcon = (
-    <svg
-      className={icon}
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: vars.color.primary }}
-    >
-      <circle cx="10" cy="10" r="5" fill="currentColor" />
-      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <line x1="10" y1="1" x2="10" y2="3" />
-        <line x1="10" y1="17" x2="10" y2="19" />
-        <line x1="1" y1="10" x2="3" y2="10" />
-        <line x1="17" y1="10" x2="19" y2="10" />
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-        <line x1="14.36" y1="14.36" x2="15.78" y2="15.78" />
-        <line x1="4.22" y1="15.78" x2="5.64" y2="14.36" />
-        <line x1="14.36" y1="5.64" x2="15.78" y2="4.22" />
-      </g>
-    </svg>
-  );
-
-  const moonIcon = (
-    <svg
-      className={icon}
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: vars.color.link }}
-    >
-      <path
-        d="M17.293 13.293A8 8 0 016.707 2.707a.75.75 0 00-.832-.832A8 8 0 1018 14.125a.75.75 0 00-.707-.832z"
-        fill="currentColor"
-      />
-    </svg>
-  );
+    return { sunIcon: sun, moonIcon: moon };
+  }, []);
 
   return (
-    <span
-      role="button"
-      tabIndex={0}
-      aria-pressed={mode === 'dark'}
+    <Toggle.Root
+      className={toggle}
       aria-label={label}
       title={label}
-      className={toggle}
-      onClick={toggleMode}
-      onKeyDown={handleKeyDown}
+      pressed={mode === 'dark'}
+      onPressedChange={(pressed: boolean) => setMode(pressed ? 'dark' : 'light')}
     >
       {mode === 'dark' ? moonIcon : sunIcon}
       <span className="sr-only">{label}</span>
-    </span>
+    </Toggle.Root>
   );
 }

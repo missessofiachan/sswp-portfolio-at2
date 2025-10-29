@@ -80,6 +80,9 @@ export default function Navbar() {
           )}
           {token && (
             <>
+              <NavLink to="/orders" className={getLinkClassName}>
+                My Orders
+              </NavLink>
               {isAdmin && (
                 <NavLink to="/admin" className={getLinkClassName}>
                   Admin
@@ -91,13 +94,12 @@ export default function Navbar() {
             </>
           )}
           <div
-            style={{ position: 'relative', display: 'inline-block' }}
+            className={s.cartContainer}
             onMouseEnter={() => setShowCartPreview(true)}
             onMouseLeave={() => setShowCartPreview(false)}
           >
             <button
-              className={s.link}
-              style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
+              className={`${s.link} ${s.cartButton}`}
               aria-label="View cart"
               onClick={() => navigate('/checkout')}
             >
@@ -114,105 +116,32 @@ export default function Navbar() {
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
-              {cartCount > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: -4,
-                    right: -8,
-                    background: '#d49a6a',
-                    color: '#fff',
-                    borderRadius: '50%',
-                    padding: '2px 6px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    minWidth: 18,
-                    textAlign: 'center',
-                    lineHeight: '1.2',
-                  }}
-                >
-                  {cartCount}
-                </span>
-              )}
+              {cartCount > 0 && <span className={s.cartBadge}>{cartCount}</span>}
             </button>
             {showCartPreview && (
-              <div
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '110%',
-                  minWidth: 260,
-                  background: '#fff',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                  borderRadius: 8,
-                  zIndex: 100,
-                  padding: 12,
-                  color: '#2d1c0b',
-                }}
-              >
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Cart Preview</div>
+              <div className={s.cartPreview}>
+                <div className={s.cartPreviewTitle}>Cart Preview</div>
                 {cartItems.length === 0 ? (
-                  <div style={{ color: '#888', fontSize: 14 }}>Cart is empty</div>
+                  <div className={s.cartEmpty}>Cart is empty</div>
                 ) : (
-                  <ul
-                    style={{
-                      listStyle: 'none',
-                      margin: 0,
-                      padding: 0,
-                      maxHeight: 180,
-                      overflowY: 'auto',
-                    }}
-                  >
+                  <ul className={s.cartItemsList}>
                     {cartItems.map((item) => (
-                      <li
-                        key={item.id}
-                        style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}
-                      >
+                      <li key={item.id} className={s.cartItem}>
                         {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              objectFit: 'cover',
-                              borderRadius: 4,
-                              marginRight: 8,
-                            }}
-                          />
+                          <img src={item.image} alt={item.name} className={s.cartItemImage} />
                         )}
-                        <span style={{ flex: 1 }}>{item.name}</span>
-                        <span style={{ marginLeft: 8 }}>x{item.quantity}</span>
-                        <span style={{ marginLeft: 8, fontWeight: 500 }}>
+                        <span className={s.cartItemName}>{item.name}</span>
+                        <span className={s.cartItemQuantity}>x{item.quantity}</span>
+                        <span className={s.cartItemPrice}>
                           ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </li>
                     ))}
                   </ul>
                 )}
-                <div
-                  style={{
-                    borderTop: '1px solid #eee',
-                    marginTop: 8,
-                    paddingTop: 8,
-                    fontWeight: 600,
-                    textAlign: 'right',
-                  }}
-                >
-                  Total: ${cartSummary.total.toFixed(2)}
-                </div>
+                <div className={s.cartTotal}>Total: ${cartSummary.total.toFixed(2)}</div>
                 <button
-                  style={{
-                    marginTop: 10,
-                    width: '100%',
-                    background: '#d49a6a',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 4,
-                    padding: '6px 0',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
+                  className={s.cartCheckoutButton}
                   onClick={() => {
                     setCartOpen(false);
                     navigate('/checkout');

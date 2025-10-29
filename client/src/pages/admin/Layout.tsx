@@ -19,6 +19,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/products/new" className={cls}>
             Create Product
           </NavLink>
+          <NavLink to="/admin/orders" className={cls}>
+            Orders
+          </NavLink>
         </nav>
       </aside>
       <section className={s.main}>

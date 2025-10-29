@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 
 import Navbar from '@client/components/layout/Navbar';
 import Footer from '@client/components/layout/Footer';
-import { container as containerClass } from './theme.css';
+import { containerClass } from './theme.css';
 
 // ProductCreate is now embedded in Admin; keep legacy route redirected
 import ProductEdit from '@client/pages/ProductEdit';
@@ -17,20 +17,22 @@ import AdminOverview from '@client/pages/admin/Overview';
 import AdminProductNew from '@client/pages/admin/ProductNew';
 import AdminProducts from '@client/pages/admin/Products';
 import AdminUsers from '@client/pages/admin/Users';
+import AdminOrders from '@client/pages/admin/Orders';
 import Contact from '@client/pages/Contact';
 import Home from '@client/pages/Home';
-import LegacyClock from '@client/pages/LegacyClock';
 import Login from '@client/pages/Login';
 import NotFound from '@client/pages/NotFound';
 import Products from '@client/pages/Products';
 import ProductShow from '@client/pages/ProductShow';
 import Register from '@client/pages/Register';
+import { Orders } from '@client/pages/Orders';
+import OrderDetail from '@client/pages/OrderDetail';
 
 function Shell() {
   return (
     <>
       <Navbar />
-      <main className={containerClass.class}>
+      <main className={containerClass.className}>
         <Outlet />
       </main>
       <Footer />
@@ -98,7 +100,6 @@ export const routes: RouteObject[] = [
     errorElement: <NotFound />,
     children: [
       { index: true, element: <Home />, errorElement: <NotFound /> },
-      { path: 'legacy', element: <LegacyClock />, errorElement: <NotFound /> },
       { path: 'about', element: <About />, errorElement: <NotFound /> },
       { path: 'contact', element: <Contact />, errorElement: <NotFound /> },
       { path: 'register', element: <Register />, errorElement: <NotFound /> },
@@ -107,6 +108,24 @@ export const routes: RouteObject[] = [
       { path: 'products', element: <Products />, errorElement: <NotFound /> },
       { path: 'products/:id', element: <ProductShow />, errorElement: <NotFound /> },
       { path: 'checkout', element: <Checkout />, errorElement: <NotFound /> },
+      {
+        path: 'orders',
+        element: (
+          <RequireAuth>
+            <Orders />
+          </RequireAuth>
+        ),
+        errorElement: <NotFound />,
+      },
+      {
+        path: 'orders/:id',
+        element: (
+          <RequireAuth>
+            <OrderDetail />
+          </RequireAuth>
+        ),
+        errorElement: <NotFound />,
+      },
       {
         path: 'products/new',
         element: (
@@ -140,6 +159,7 @@ export const routes: RouteObject[] = [
           { path: 'users', element: <AdminUsers />, errorElement: <NotFound /> },
           { path: 'products', element: <AdminProducts />, errorElement: <NotFound /> },
           { path: 'products/new', element: <AdminProductNew />, errorElement: <NotFound /> },
+          { path: 'orders', element: <AdminOrders />, errorElement: <NotFound /> },
         ],
       },
     ],
