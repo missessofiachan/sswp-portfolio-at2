@@ -1,1 +1,0 @@
-# diagrams, tradeoffs, scaling

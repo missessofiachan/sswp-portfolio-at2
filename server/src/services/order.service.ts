@@ -15,7 +15,11 @@ import {
   UpdateOrderInput,
   OrderStats,
   OrderStatus,
+  ShippingAddress,
 } from '../domain/orders';
+import { emailService } from './email.service';
+import { logError } from '../utils/logger';
+import { orderEvents } from './order.events';
 
 /**
  * Service class for order business logic
@@ -28,7 +32,16 @@ export class OrderService {
   /**
    * Fields that non-admin users are allowed to update on their orders
    */
-  private static readonly USER_ALLOWED_UPDATE_FIELDS = ['notes'];
+  private static readonly USER_ALLOWED_UPDATE_FIELDS = ['notes', 'shippingAddress'];
+
+  private static readonly SHIPPING_ADDRESS_REQUIRED_FIELDS: Array<keyof ShippingAddress> = [
+    'fullName',
+    'street',
+    'city',
+    'state',
+    'postalCode',
+    'country',
+  ];
 
   /**
    * Create a new OrderService instance
@@ -55,37 +68,52 @@ export class OrderService {
   ): Promise<Order> {
     // Validate order data
     if (!orderData.items || orderData.items.length === 0) {
-      throw new Error('Order must contain at least one item');
+      throw OrderService.badRequest('Order must contain at least one item');
     }
 
     if (!orderData.shippingAddress) {
-      throw new Error('Shipping address is required');
+      throw OrderService.badRequest('Shipping address is required');
     }
 
-    // Validate shipping address completeness
-    const { shippingAddress } = orderData;
-    if (
-      !shippingAddress.fullName ||
-      !shippingAddress.street ||
-      !shippingAddress.city ||
-      !shippingAddress.state ||
-      !shippingAddress.postalCode ||
-      !shippingAddress.country
-    ) {
-      throw new Error('Incomplete shipping address provided');
-    }
+    this.assertShippingAddressComplete(orderData.shippingAddress);
 
     // Validate quantities
     for (const item of orderData.items) {
       if (item.quantity <= 0) {
-        throw new Error(`Invalid quantity: ${item.quantity}`);
+        throw OrderService.badRequest(`Invalid quantity: ${item.quantity}`);
       }
       if (!item.productId) {
-        throw new Error('Product ID is required for all items');
+        throw OrderService.badRequest('Product ID is required for all items');
       }
     }
 
-    return await this.orderRepository.create(orderData, userId, userEmail);
+    try {
+      return await this.orderRepository.create(orderData, userId, userEmail);
+    } catch (error) {
+      const err = error as any;
+      if (err?.code === 'INSUFFICIENT_STOCK') {
+        const conflictError = new Error(err.message);
+        (conflictError as any).status = 409;
+        (conflictError as any).code = err.code;
+        (conflictError as any).details = {
+          productId: err.productId,
+          available: err.available,
+          requested: err.requested,
+        };
+        throw conflictError;
+      }
+      if (err?.code === 'PRODUCT_NOT_FOUND') {
+        const notFoundError = new Error(err.message);
+        (notFoundError as any).status = 404;
+        (notFoundError as any).code = err.code;
+        (notFoundError as any).details = { productId: err.productId };
+        throw notFoundError;
+      }
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Failed to create order');
+    }
   }
 
   /**
@@ -106,7 +134,7 @@ export class OrderService {
 
     // Allow admins to view any order, otherwise check ownership
     if (!isAdmin && order.userId !== userId) {
-      throw new Error('Access denied: You can only view your own orders');
+      throw OrderService.forbidden('Access denied: You can only view your own orders');
     }
 
     return order;
@@ -121,7 +149,8 @@ export class OrderService {
    * @returns {Promise<Order[]>} Array of user orders
    */
   async getUserOrders(userId: string, limit?: number, lastOrderId?: string): Promise<Order[]> {
-    return await this.orderRepository.findByUserId(userId, limit, lastOrderId);
+    const fetchLimit = limit ? limit + 1 : undefined;
+    return await this.orderRepository.findByUserId(userId, fetchLimit, lastOrderId);
   }
 
   /**
@@ -133,7 +162,8 @@ export class OrderService {
    * @returns {Promise<Order[]>} Array of all orders
    */
   async getAllOrders(limit?: number, lastOrderId?: string, status?: OrderStatus): Promise<Order[]> {
-    return await this.orderRepository.findAll(limit, lastOrderId, status);
+    const fetchLimit = limit ? limit + 1 : undefined;
+    return await this.orderRepository.findAll(fetchLimit, lastOrderId, status);
   }
 
   /**
@@ -155,18 +185,18 @@ export class OrderService {
     const existingOrder = await this.orderRepository.findById(orderId);
 
     if (!existingOrder) {
-      throw new Error(`Order not found: ${orderId}`);
+      throw OrderService.notFound(`Order not found: ${orderId}`);
     }
 
     // For non-admin users, only allow limited updates and only on their own orders
     if (!isAdmin) {
       if (existingOrder.userId !== userId) {
-        throw new Error('Access denied: You can only update your own orders');
+        throw OrderService.forbidden('Access denied: You can only update your own orders');
       }
 
       // Non-admin users can only update shipping address and notes, and only for pending orders
       if (existingOrder.status !== OrderStatus.PENDING) {
-        throw new Error('Cannot modify order after it has been processed');
+        throw OrderService.badRequest('Cannot modify order after it has been processed');
       }
 
       // Restrict what non-admin users can update
@@ -176,8 +206,12 @@ export class OrderService {
       );
 
       if (restrictedFields.length > 0) {
-        throw new Error(`Unauthorized field updates: ${restrictedFields.join(', ')}`);
+        throw OrderService.forbidden(`Unauthorized field updates: ${restrictedFields.join(', ')}`);
       }
+    }
+
+    if (updateData.shippingAddress) {
+      this.assertShippingAddressComplete(updateData.shippingAddress);
     }
 
     // Validate status transitions
@@ -185,12 +219,15 @@ export class OrderService {
       updateData.status &&
       !this.isValidStatusTransition(existingOrder.status, updateData.status)
     ) {
-      throw new Error(
+      throw OrderService.badRequest(
         `Invalid status transition from ${existingOrder.status} to ${updateData.status}`
       );
     }
 
-    return await this.orderRepository.update(orderId, updateData);
+    const updatedOrder = await this.orderRepository.update(orderId, updateData);
+    await this.handleStatusChangeIfNeeded(existingOrder, updatedOrder);
+
+    return updatedOrder;
   }
 
   /**
@@ -206,23 +243,26 @@ export class OrderService {
     const existingOrder = await this.orderRepository.findById(orderId);
 
     if (!existingOrder) {
-      throw new Error(`Order not found: ${orderId}`);
+      throw OrderService.notFound(`Order not found: ${orderId}`);
     }
 
     // Check ownership for non-admin users
     if (!isAdmin && existingOrder.userId !== userId) {
-      throw new Error('Access denied: You can only cancel your own orders');
+      throw OrderService.forbidden('Access denied: You can only cancel your own orders');
     }
 
     // Check if order can be cancelled
     const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
     if (!cancellableStatuses.includes(existingOrder.status)) {
-      throw new Error(`Cannot cancel order with status: ${existingOrder.status}`);
+      throw OrderService.badRequest(`Cannot cancel order with status: ${existingOrder.status}`);
     }
 
-    return await this.orderRepository.update(orderId, {
+    const updatedOrder = await this.orderRepository.update(orderId, {
       status: OrderStatus.CANCELLED,
     });
+    await this.handleStatusChangeIfNeeded(existingOrder, updatedOrder);
+
+    return updatedOrder;
   }
 
   /**
@@ -278,5 +318,61 @@ export class OrderService {
     };
 
     return validTransitions[currentStatus]?.includes(newStatus) || false;
+  }
+
+  private assertShippingAddressComplete(address: ShippingAddress): void {
+    const missing = OrderService.SHIPPING_ADDRESS_REQUIRED_FIELDS.filter((field) => {
+      const value = address[field];
+      return typeof value !== 'string' || value.trim().length === 0;
+    });
+
+    if (missing.length > 0) {
+      throw OrderService.badRequest('Incomplete shipping address provided');
+    }
+  }
+
+  private async handleStatusChangeIfNeeded(previous: Order, updated: Order): Promise<void> {
+    if (previous.status === updated.status) {
+      return;
+    }
+
+    try {
+      await emailService.sendOrderStatusUpdate({
+        to: updated.userEmail,
+        orderId: updated.id,
+        newStatus: updated.status,
+        previousStatus: previous.status,
+      });
+    } catch (error) {
+      logError('Failed to send order status update email', error, {
+        orderId: updated.id,
+        previousStatus: previous.status,
+        newStatus: updated.status,
+      });
+    }
+
+    orderEvents.emit('orderStatusChanged', {
+      order: updated,
+      previousStatus: previous.status,
+      newStatus: updated.status,
+    });
+  }
+
+  private static httpError(message: string, status: number): Error {
+    const error = new Error(message);
+    (error as any).status = status;
+    return error;
+  }
+
+  private static badRequest(message: string): Error {
+    return OrderService.httpError(message, 400);
+  }
+
+  private static forbidden(message: string): Error {
+    return OrderService.httpError(message, 403);
+  }
+
+  private static notFound(message: string): Error {
+    return OrderService.httpError(message, 404);
   }
 }

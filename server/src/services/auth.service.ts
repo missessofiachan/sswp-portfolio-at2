@@ -1,10 +1,11 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { randomBytes, createHash } from 'crypto';
 import { loadEnv } from '../config/env';
 import { fsUsersRepo } from '../data/firestore/users.repo.fs';
 import { getDb } from '../config/firestore';
 import { emailService } from './email.service';
+import { tokenRevocationService } from './tokenRevocation.service';
 
 /**
  * Authentication Service
@@ -87,10 +88,14 @@ export const authService = {
     if (!user) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
-    const token = jwt.sign({ sub: user.id, role: user.role }, loadEnv().JWT_SECRET, {
-      expiresIn: '15m',
-    });
-    return { token, user: { id: user.id, role: user.role } };
+    const env = loadEnv();
+    // Include explicit id/email for downstream middleware while preserving standard sub claim.
+    const payload = { sub: user.id, id: user.id, email: user.email, role: user.role };
+    const signOptions: SignOptions = {
+      expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
+    };
+    const token = jwt.sign(payload, env.JWT_SECRET, signOptions);
+    return { token, user: { id: user.id, email: user.email, role: user.role } };
   },
 
   /**
@@ -132,10 +137,12 @@ export const authService = {
   async requestPasswordReset(email: string): Promise<void | { token: string }> {
     const user = await fsUsersRepo.findByEmail(email);
     if (!user) return; // Do not leak existence
+    const env = loadEnv();
     const db = getDb();
     const rlRef = db.collection('password_reset_rl').doc(user.id);
     const rlSnap = await rlRef.get();
     const now = Date.now();
+    const rateLimitMs = env.PASSWORD_RESET_RATE_LIMIT_MINUTES * 60_000;
     if (rlSnap.exists) {
       const { nextAllowedAt } = rlSnap.data() as { nextAllowedAt: number };
       if (now < nextAllowedAt) return; // silently ignore - rate limited
@@ -143,9 +150,10 @@ export const authService = {
     const raw = randomBytes(32).toString('hex');
     const hash = createHash('sha256').update(raw).digest('hex');
     const ref = db.collection('password_resets').doc(hash);
+    const tokenTtlMs = env.PASSWORD_RESET_TTL_MINUTES * 60_000;
     await Promise.all([
-      ref.set({ userId: user.id, createdAt: now, expiresAt: now + 3600_000 }),
-      rlRef.set({ nextAllowedAt: now + 5 * 60_000 }),
+      ref.set({ userId: user.id, createdAt: now, expiresAt: now + tokenTtlMs }),
+      rlRef.set({ nextAllowedAt: now + rateLimitMs }),
     ]);
     if (process.env.NODE_ENV !== 'test') {
       // Fire and forget email (do not await to keep endpoint fast)
@@ -155,6 +163,7 @@ export const authService = {
   },
   /**
    * Complete password reset given a raw token and new password.
+   * Revokes all existing tokens for the user after password change.
    */
   async resetPassword(token: string, newPassword: string) {
     const hash = createHash('sha256').update(token).digest('hex');
@@ -171,5 +180,8 @@ export const authService = {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await fsUsersRepo.updatePassword(data.userId, passwordHash);
     await ref.delete().catch(() => {});
+
+    // Revoke all existing tokens for security
+    await tokenRevocationService.revokeAllTokens(data.userId, 'password_change');
   },
 };

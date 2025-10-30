@@ -12,6 +12,7 @@ import {
   requestResetSchema,
   resetPasswordSchema,
 } from '../validators/auth.schema';
+import { authRateLimit } from '../middleware/rateLimit';
 /**
  * Express router that groups authentication-related endpoints.
  *
@@ -28,7 +29,9 @@ import {
  * app.use('/auth', authRouter);
  */
 export const router: ExpressRouter = Router();
-router.post('/register', validate(registerSchema), register);
-router.post('/login', validate(loginSchema), login);
-router.post('/password/request', validate(requestResetSchema), requestPasswordReset);
-router.post('/password/reset', validate(resetPasswordSchema), resetPassword);
+
+// Apply auth rate limiting to all authentication endpoints
+router.post('/register', authRateLimit, validate(registerSchema), register);
+router.post('/login', authRateLimit, validate(loginSchema), login);
+router.post('/password/request', authRateLimit, validate(requestResetSchema), requestPasswordReset);
+router.post('/password/reset', authRateLimit, validate(resetPasswordSchema), resetPassword);

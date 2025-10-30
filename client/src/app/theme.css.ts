@@ -1,114 +1,199 @@
-// design tokens (vanilla-extract)
-import { createGlobalTheme, globalStyle } from '@vanilla-extract/css';
+import { createTheme, createThemeContract, globalStyle } from '@vanilla-extract/css';
 
-// Design tokens – modern light theme focused on white, light blue and light pink
-export const vars = createGlobalTheme(':root', {
+export const vars = createThemeContract({
   color: {
-    // Aged paper palette
-    bg: '#f6ecd6',
-    surface: '#fcf3e0',
-    text: '#3a2b1a',
-    textMuted: '#6d5b45',
-    // Accents inspired by vintage inks
-    primary: '#923f2b',
-    primaryText: '#fef8ec',
-    secondary: '#d7b48b',
-    secondaryText: '#3a2b1a',
-    border: '#c7a57a',
-    link: '#8b3a29',
-    linkHover: '#62281d',
-    danger: '#8c1c13',
+    background: null,
+    surface: null,
+    surfaceMuted: null,
+    text: null,
+    textMuted: null,
+    accent: null,
+    accentMuted: null,
+    accentText: null,
+    border: null,
+    focus: null,
+    danger: null,
+    success: null,
+    warning: null,
   },
   space: {
-    xs: '4px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    xl: '32px',
+    none: null,
+    xs: null,
+    sm: null,
+    md: null,
+    lg: null,
+    xl: null,
+    '2xl': null,
   },
   radius: {
-    sm: '4px',
-    md: '6px',
-    lg: '10px',
-  },
-  shadow: {
-    card: '4px 4px 0 rgba(82, 52, 27, 0.25)',
+    none: null,
+    sm: null,
+    md: null,
+    lg: null,
+    pill: null,
   },
   font: {
-    body: '"Libre Baskerville", "Times New Roman", serif',
-    display: '"Playfair Display", "Libre Baskerville", serif',
+    body: null,
+    heading: null,
+    mono: null,
   },
-  layout: {
-    maxWidth: '1120px',
+  shadow: {
+    xs: null,
+    sm: null,
+    md: null,
+    lg: null,
+  },
+  size: {
+    container: null,
   },
 });
 
-// Dark theme overrides (enabled when <html data-theme="dark"> is present)
-export const dark = createGlobalTheme('[data-theme="dark"]', {
+const sharedSpace = {
+  none: '0px',
+  xs: '4px',
+  sm: '8px',
+  md: '16px',
+  lg: '24px',
+  xl: '32px',
+  '2xl': '48px',
+} as const;
+
+const sharedRadius = {
+  none: '0px',
+  sm: '6px',
+  md: '10px',
+  lg: '16px',
+  pill: '999px',
+} as const;
+
+const sharedFonts = {
+  body: '"Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+  heading: '"Plus Jakarta Sans", "Inter", system-ui, sans-serif',
+  mono: '"JetBrains Mono", "SFMono-Regular", ui-monospace, monospace',
+} as const;
+
+const sharedSize = {
+  container: '1120px',
+} as const;
+
+export const lightThemeClass = createTheme(vars, {
   color: {
-    // Deep sepia night mode
-    bg: '#1f1811',
-    surface: '#2a2118',
-    text: '#f0e7d6',
-    textMuted: '#bda988',
-    primary: '#c46d4c',
-    primaryText: '#1f1811',
-    secondary: '#aa8a5f',
-    secondaryText: '#1f1811',
-    border: '#5c4733',
-    link: '#d9a074',
-    linkHover: '#f2b894',
-    danger: '#f87171',
+    background: '#f8fafc',
+    surface: '#ffffff',
+    surfaceMuted: '#eef2f6',
+    text: '#0f172a',
+    textMuted: '#475569',
+    accent: '#2563eb',
+    accentMuted: '#3b82f6',
+    accentText: '#ffffff',
+    border: '#d0d7e2',
+    focus: 'rgba(37, 99, 235, 0.35)',
+    danger: '#dc2626',
+    success: '#16a34a',
+    warning: '#f59e0b',
   },
-  space: vars.space,
-  radius: vars.radius,
-  shadow: vars.shadow,
-  font: vars.font,
-  layout: vars.layout,
+  space: sharedSpace,
+  radius: sharedRadius,
+  font: sharedFonts,
+  shadow: {
+    xs: '0 1px 2px rgba(15, 23, 42, 0.08)',
+    sm: '0 4px 12px rgba(15, 23, 42, 0.08)',
+    md: '0 12px 30px rgba(15, 23, 42, 0.08)',
+    lg: '0 32px 60px rgba(15, 23, 42, 0.10)',
+  },
+  size: sharedSize,
 });
 
-// Global defaults
-globalStyle('*,*::before,*::after', { boxSizing: 'border-box' });
-globalStyle('html,body,#root', { height: '100%' });
-globalStyle('body', {
-  margin: 0,
-  backgroundColor: vars.color.bg,
-  backgroundImage:
-    'radial-gradient(circle at 1px 1px, rgba(89, 63, 38, 0.08) 1px, transparent 0), linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(198, 167, 128, 0.12) 100%)',
-  backgroundSize: '12px 12px, 100% 100%',
+export const darkThemeClass = createTheme(vars, {
+  color: {
+    background: '#0b1120',
+    surface: '#111827',
+    surfaceMuted: '#1e293b',
+    text: '#e2e8f0',
+    textMuted: '#94a3b8',
+    accent: '#3b82f6',
+    accentMuted: '#60a5fa',
+    accentText: '#0b1120',
+    border: '#1f2937',
+    focus: 'rgba(96, 165, 250, 0.4)',
+    danger: '#f87171',
+    success: '#22c55e',
+    warning: '#fbbf24',
+  },
+  space: sharedSpace,
+  radius: sharedRadius,
+  font: sharedFonts,
+  shadow: {
+    xs: '0 1px 2px rgba(15, 23, 42, 0.45)',
+    sm: '0 6px 18px rgba(15, 23, 42, 0.45)',
+    md: '0 20px 45px rgba(15, 23, 42, 0.45)',
+    lg: '0 40px 80px rgba(15, 23, 42, 0.55)',
+  },
+  size: sharedSize,
+});
+
+globalStyle(':root', {
   color: vars.color.text,
+  background: vars.color.background,
   fontFamily: vars.font.body,
+  lineHeight: 1.5,
   WebkitFontSmoothing: 'antialiased',
   MozOsxFontSmoothing: 'grayscale',
 });
-globalStyle('[data-theme="dark"] body', {
-  backgroundColor: vars.color.bg,
-  backgroundImage:
-    'radial-gradient(circle at 1px 1px, rgba(255, 219, 173, 0.06) 1px, transparent 0), linear-gradient(180deg, rgba(48, 34, 21, 0.85) 0%, rgba(32, 23, 15, 0.95) 100%)',
-  backgroundSize: '12px 12px, 100% 100%',
+
+globalStyle('body', {
+  margin: 0,
+  minHeight: '100vh',
+  background: vars.color.background,
   color: vars.color.text,
+  transition: 'background 180ms ease, color 180ms ease',
 });
-globalStyle('a', { color: vars.color.link, textDecoration: 'none' });
-globalStyle('a:hover', { color: vars.color.linkHover, textDecoration: 'underline' });
+
+globalStyle('*, *::before, *::after', {
+  boxSizing: 'border-box',
+});
+
+globalStyle('a', {
+  color: vars.color.accent,
+  textDecoration: 'none',
+});
+
+globalStyle('a:hover', {
+  textDecoration: 'underline',
+});
 
 globalStyle('h1, h2, h3, h4, h5, h6', {
-  fontFamily: vars.font.display,
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
+  fontFamily: vars.font.heading,
+  fontWeight: 600,
+  letterSpacing: '-0.02em',
+  color: vars.color.text,
 });
 
-globalStyle('h1', {
-  borderBottom: `4px double ${vars.color.border}`,
-  paddingBottom: '0.35rem',
+globalStyle('code, pre', {
+  fontFamily: vars.font.mono,
 });
 
-// Shared layout class (container)
-export const container = {
-  class: 'container',
+globalStyle('.sr-only', {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+});
+
+export const containerClass = {
+  className: 'app-container',
 };
-globalStyle(`.${container.class}`, {
-  maxWidth: vars.layout.maxWidth,
+
+globalStyle(`.${containerClass.className}`, {
+  maxWidth: vars.size.container,
   marginInline: 'auto',
   paddingInline: vars.space.lg,
   paddingBlock: vars.space.lg,
+  width: '100%',
 });
+export {};

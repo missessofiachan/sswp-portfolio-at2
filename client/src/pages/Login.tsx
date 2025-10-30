@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,14 +50,36 @@ export default function Login() {
     reset,
   } = useForm<FormData>({ resolver: zodResolver(schema) });
   const { login } = useAuth();
-  const from = (location.state as LocationState | null)?.from?.pathname || '/';
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  // Check for session expiration on mount
+  useEffect(() => {
+    try {
+      const sessionExpired = sessionStorage.getItem('sessionExpired');
+      const returnTo = sessionStorage.getItem('returnTo');
+      if (sessionExpired === 'true') {
+        setInfoMessage('Your session has expired. Please log in again.');
+        sessionStorage.removeItem('sessionExpired');
+        // Keep returnTo for navigation after login
+      }
+    } catch (error) {
+      console.error('Error checking session expiration:', error);
+    }
+  }, []);
 
   async function onSubmit(values: FormData) {
     try {
       setErrorMessage(null);
+      setInfoMessage(null);
       await login(values);
+
+      // Check if we should return to a saved location
+      const returnTo = sessionStorage.getItem('returnTo');
+      sessionStorage.removeItem('returnTo');
+      const from = returnTo || (location.state as LocationState | null)?.from?.pathname || '/';
+
       navigate(from, { replace: true });
     } catch (e: any) {
       setErrorMessage(e?.response?.data?.error?.message || 'Login failed');
@@ -68,6 +90,19 @@ export default function Login() {
     <div className={card}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
+        {infoMessage && (
+          <div
+            style={{
+              color: '#0066cc',
+              marginBottom: 8,
+              padding: 8,
+              backgroundColor: '#e3f2fd',
+              borderRadius: 4,
+            }}
+          >
+            {infoMessage}
+          </div>
+        )}
         {errorMessage && <div style={{ color: 'crimson', marginBottom: 8 }}>{errorMessage}</div>}
 
         <div className={field}>

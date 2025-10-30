@@ -3,7 +3,7 @@ import { vars } from '@client/app/theme.css';
 export default function MiniArea({
   data,
   height = 80,
-  stroke = vars.color.primary,
+  stroke = vars.color.accent,
   fill = 'rgba(91,207,251,0.2)',
 }: {
   data: number[];

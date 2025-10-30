@@ -12,7 +12,6 @@
  * - File upload support via express-fileupload
  * - JWT-based authentication
  * - Request/response logging
- * - Static file serving for uploaded images
  * - Comprehensive error handling
  *
  * **Environment Configuration:**
@@ -27,8 +26,6 @@
  * - `/api/v1/uploads` - File upload handling
  * - `/api/v1/health` - Health check endpoint
  * - `/api/v1/maintenance` - Maintenance operations (admin only)
- * - `/uploads` - Static file serving for uploaded images
- * - `/api/v1/files` - Alternative static file serving path for dev proxy
  *
  * **Security:**
  * - Helmet for security headers
@@ -48,7 +45,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 // Removed morgan in favor of custom Firestore-backed logger
 import fileUpload from 'express-fileupload';
-import path from 'path';
 import { router as authRoutes } from './api/routes/auth.routes';
 import { router as productRoutes } from './api/routes/products.routes';
 import { router as adminRoutes } from './api/routes/admin.routes';
@@ -59,6 +55,15 @@ import { createOrderRoutes } from './api/routes/orders.routes';
 import { maintenanceGuard } from './api/middleware/maintenanceAuth';
 import { errorHandler } from './api/middleware/error';
 import { requestLogger } from './utils/logger';
+import { loadEnv } from './config/env';
+import { correlationIdMiddleware } from './api/middleware/correlationId';
+import { monitoring } from './utils/monitoring';
+import { apiRateLimit } from './api/middleware/rateLimit';
+
+const env = loadEnv();
+
+// Initialize error monitoring early
+monitoring.init();
 
 /**
  * Express application instance created by calling express().
@@ -79,30 +84,50 @@ import { requestLogger } from './utils/logger';
  */
 export const app: Application = express();
 app.use(helmet());
-// Allow all origins for development; restrict in production for security.
-// CORS: allow any origin in dev; restrict in production via CORS_ORIGIN env
-const corsOrigin =
-  process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : true);
+
+// CORS Configuration
+// - Production: MUST set CORS_ORIGIN env var with comma-separated allowed origins
+// - Development: Defaults to true (allows all origins)
+// - Never use wildcard (*) in production
+let corsOrigin: string | string[] | boolean;
+if (process.env.NODE_ENV === 'production') {
+  if (!env.CORS_ORIGIN) {
+    console.error('⚠️  WARNING: CORS_ORIGIN not set in production. This is a security risk!');
+    corsOrigin = false; // Block all CORS in production if not configured
+  } else {
+    // Support comma-separated list of origins
+    corsOrigin = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+    console.log('✓ CORS origins configured:', corsOrigin);
+  }
+} else {
+  corsOrigin = env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map((origin) => origin.trim()) : true; // Allow all in development
+}
+
 app.use(
   cors({
-    origin: corsOrigin ?? 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // 24 hours
   })
 );
 app.use(express.json());
+app.use(correlationIdMiddleware);
 app.use(requestLogger);
+
+// Apply general API rate limiting
+// Auth routes have their own stricter rate limits
+app.use('/api/v1', apiRateLimit);
+
 // Enable multipart/form-data for file uploads
-const MAX_MB = Number(process.env.UPLOAD_MAX_MB || 5);
+const { UPLOAD_MAX_MB } = env;
 app.use(
   fileUpload({
     createParentPath: true,
-    limits: { fileSize: MAX_MB * 1024 * 1024 },
+    limits: { fileSize: UPLOAD_MAX_MB * 1024 * 1024 },
   })
 );
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
-// Also serve under the API prefix so dev proxy forwards correctly
-app.use('/api/v1/files', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);

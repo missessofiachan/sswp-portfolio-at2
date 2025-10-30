@@ -1,20 +1,25 @@
 import { style } from '@vanilla-extract/css';
+import { sprinkles } from '@client/app/sprinkles.css';
 import { vars } from '@client/app/theme.css';
 
-export const page = style({
-  display: 'grid',
-  gap: vars.space.xl,
-});
+export const page = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'xl',
+  }),
+]);
 
-export const header = style({
-  display: 'grid',
-  gap: vars.space.sm,
-});
+export const header = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'sm',
+  }),
+]);
 
 export const intro = style({
-  fontSize: '1.1rem',
-  color: vars.color.textMuted,
+  fontSize: '1.05rem',
   maxWidth: '60ch',
+  color: vars.color.textMuted,
 });
 
 export const grid = style({
@@ -24,26 +29,26 @@ export const grid = style({
 });
 
 export const card = style({
+  borderRadius: vars.radius.lg,
+  border: `1px solid ${vars.color.border}`,
   backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
-  borderRadius: vars.radius.md,
+  boxShadow: vars.shadow.xs,
   padding: vars.space.lg,
-  boxShadow: vars.shadow.card,
   display: 'grid',
   gap: vars.space.sm,
 });
 
 export const list = style({
+  listStyle: 'none',
   margin: 0,
   padding: 0,
-  listStyle: 'none',
   display: 'grid',
   gap: vars.space.sm,
 });
 
 export const emphasis = style({
-  fontFamily: vars.font.display,
-  fontSize: '1.05rem',
+  fontFamily: vars.font.heading,
+  fontWeight: 600,
 });
 
 export const subtle = style({
@@ -51,15 +56,19 @@ export const subtle = style({
   fontSize: '0.95rem',
 });
 
-export const form = style({
-  display: 'grid',
-  gap: vars.space.md,
-});
+export const form = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'md',
+  }),
+]);
 
-export const field = style({
-  display: 'grid',
-  gap: vars.space.xs,
-});
+export const field = style([
+  sprinkles({
+    display: 'grid',
+    gap: 'xs',
+  }),
+]);
 
 export const note = style({
   fontSize: '0.85rem',

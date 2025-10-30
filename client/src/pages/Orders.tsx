@@ -8,11 +8,12 @@
  * @module pages/Orders
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
+import ErrorAlert from '../components/ui/ErrorAlert';
 import { showToast } from '../lib/toast';
-import { ORDER_STATUS_INFO, PAYMENT_METHOD_INFO, type Order } from '../types/orders';
+import { ORDER_STATUS_INFO, PAYMENT_METHOD_INFO, OrderStatus, type Order } from '../types/orders';
 
 /**
  * Orders page component
@@ -21,6 +22,13 @@ export function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [errorIndexUrl, setErrorIndexUrl] = useState<string | undefined>(undefined);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -28,8 +36,12 @@ export function Orders() {
         setLoading(true);
         const result = await ordersApi.getMyOrders();
         setOrders(result.orders);
+        setHasMore(result.hasMore);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load orders');
+        const e: any = err;
+        setError(e?.message || 'Failed to load orders');
+        setErrorDetails(e?.details);
+        setErrorIndexUrl(e?.indexUrl);
       } finally {
         setLoading(false);
       }
@@ -44,15 +56,59 @@ export function Orders() {
     }
 
     try {
+      setCancellingOrderId(orderId);
       await ordersApi.cancelOrder(orderId);
       // Refresh orders list
       const result = await ordersApi.getMyOrders();
       setOrders(result.orders);
-  showToast('Order cancelled successfully', { type: 'success' });
+      setHasMore(result.hasMore);
+      showToast('Order cancelled successfully', { type: 'success' });
     } catch (err) {
-  showToast(err instanceof Error ? err.message : 'Failed to cancel order', { type: 'error' });
+      showToast(err instanceof Error ? err.message : 'Failed to cancel order', { type: 'error' });
+    } finally {
+      setCancellingOrderId(null);
     }
   };
+
+  const handleLoadMore = async () => {
+    if (!hasMore || loadingMore || orders.length === 0) return;
+
+    try {
+      setLoadingMore(true);
+      const lastOrderId = orders[orders.length - 1].id;
+      const result = await ordersApi.getMyOrders({ lastOrderId });
+      setOrders((prev) => [...prev, ...result.orders]);
+      setHasMore(result.hasMore);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to load more orders', {
+        type: 'error',
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Filter and search orders
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      result = result.filter((order) => order.status === statusFilter);
+    }
+
+    // Filter by search query (order ID or items)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (order) =>
+          order.id.toLowerCase().includes(query) ||
+          order.items.some((item) => item.productName.toLowerCase().includes(query))
+      );
+    }
+
+    return result;
+  }, [orders, statusFilter, searchQuery]);
 
   if (loading) {
     return (
@@ -67,16 +123,17 @@ export function Orders() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Orders</h1>
-          <p className="text-red-600 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-2xl w-full space-y-4">
+          <ErrorAlert message={error} details={errorDetails} indexUrl={errorIndexUrl} />
+          <div className="text-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -107,8 +164,100 @@ export function Orders() {
           <p className="mt-2 text-gray-600">Track and manage your orders</p>
         </div>
 
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label
+                htmlFor="status-filter"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Filter by Status
+              </label>
+              <select
+                id="status-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'all')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Orders</option>
+                <option value={OrderStatus.PENDING}>Pending</option>
+                <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                <option value={OrderStatus.PROCESSING}>Processing</option>
+                <option value={OrderStatus.SHIPPED}>Shipped</option>
+                <option value={OrderStatus.DELIVERED}>Delivered</option>
+                <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                <option value={OrderStatus.REFUNDED}>Refunded</option>
+              </select>
+            </div>
+
+            {/* Search */}
+            <div>
+              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+                Search Orders
+              </label>
+              <input
+                id="search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by order ID or product name..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Active Filters Summary */}
+          {(statusFilter !== 'all' || searchQuery.trim()) && (
+            <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+              <span className="font-medium">Active filters:</span>
+              {statusFilter !== 'all' && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                  Status: {ORDER_STATUS_INFO[statusFilter].label}
+                </span>
+              )}
+              {searchQuery.trim() && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                  Search: "{searchQuery}"
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setStatusFilter('all');
+                  setSearchQuery('');
+                }}
+                className="ml-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Results Count */}
+        <div className="mb-4 text-sm text-gray-600">
+          Showing {filteredOrders.length} of {orders.length} orders
+        </div>
+
+        {/* No Results */}
+        {filteredOrders.length === 0 && orders.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <p className="text-gray-600">No orders match your filters.</p>
+            <button
+              onClick={() => {
+                setStatusFilter('all');
+                setSearchQuery('');
+              }}
+              className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
         <div className="space-y-6">
-          {orders.map((order) => {
+          {filteredOrders.map((order) => {
             const statusInfo = ORDER_STATUS_INFO[order.status];
             const paymentInfo = PAYMENT_METHOD_INFO[order.paymentMethod];
             const canCancel = order.status === 'pending' || order.status === 'confirmed';
@@ -150,9 +299,10 @@ export function Orders() {
                       {canCancel && (
                         <button
                           onClick={() => handleCancelOrder(order.id)}
-                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          disabled={cancellingOrderId === order.id}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Cancel Order
+                          {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
                         </button>
                       )}
                     </div>
@@ -169,11 +319,13 @@ export function Orders() {
                         {order.items.slice(0, 3).map((item, index) => (
                           <div key={index} className="flex items-center space-x-3">
                             {item.productImage && (
-                              <img
-                                src={item.productImage}
-                                alt={item.productName}
-                                className="w-12 h-12 object-cover rounded-lg"
-                              />
+                              <div className="w-12 h-12 flex-shrink-0">
+                                <img
+                                  src={item.productImage}
+                                  alt={item.productName}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              </div>
                             )}
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">
@@ -285,6 +437,19 @@ export function Orders() {
             );
           })}
         </div>
+
+        {/* Load More Button */}
+        {hasMore && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loadingMore ? 'Loading...' : 'Load More Orders'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

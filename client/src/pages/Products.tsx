@@ -13,59 +13,219 @@ import {
 import { useAuth } from '@client/features/auth/AuthProvider';
 import { useSetAtom } from 'jotai';
 import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
+import type { Product } from '@client/types/product';
+import { ProductSkeleton } from '@client/components/ui/Skeleton';
+import { useDebounce } from '@client/lib/hooks/useDebounce';
 
 /**
  * Products component
  *
  * Fetches and displays a list of products sorted by price (ascending).
- *
- * On mount, this component invokes `listProducts({ sort: { field: 'price', dir: 'asc' } })`
- * and stores the returned items in local state. It uses `useAuth()` to determine whether
- * a user is authenticated; when a `token` is present, a "Create Product" action link is shown.
- *
- * Render:
- * - A section containing a header and (conditionally) a "Create Product" link for authenticated users.
- * - A responsive grid of product cards. Each card links to the product detail page and displays
- *   the product name and price.
- *
- * Expectations:
- * - Each product object in `items` should include at least `id`, `name`, and `price` properties.
- * - The effect runs once on mount (empty dependency array).
- *
- * Notes:
- * - State uses `any[]` for items; consider replacing with a typed Product interface for stronger typing.
- * - Network errors from `listProducts` are not handled in this component and should be considered
- *   for robustness (loading and error states).
- *
- * @returns {JSX.Element} The rendered Products section
+ * Incorporates loading and error feedback to improve perceived performance.
  */
 export default function Products() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Product[]>([]);
   const setAddToCart = useSetAtom(addToCartAtom);
   const setCartOpen = useSetAtom(isCartOpenAtom);
   const [q, setQ] = useState('');
+  const debouncedQ = useDebounce(q, 300); // Debounce search by 300ms
   const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>(
     'price-asc'
   );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState(0);
   const { isAdmin } = useAuth();
-  async function load() {
-    const [field, dir] = sort.split('-') as [string, 'asc' | 'desc'];
-    const res = await listProductsPaged({
-      sort: { field, dir },
-      filter: q ? { q } : undefined,
-      page,
-      pageSize,
-    });
-    setItems(res.data);
-    setTotal(res.meta.total);
-  }
+
+  const pageCount = Math.max(1, Math.ceil(total / (pageSize || 1)));
+  const isLoading = status === 'loading';
+  const isError = status === 'error';
+  const hasProducts = items.length > 0;
+
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, sort, page, pageSize]);
+    let cancelled = false;
+
+    async function fetchProducts() {
+      setStatus('loading');
+      setErrorMessage(null);
+      const [field, dir] = sort.split('-') as [string, 'asc' | 'desc'];
+
+      try {
+        const response = await listProductsPaged({
+          sort: { field, dir },
+          filter: debouncedQ ? { q: debouncedQ } : undefined,
+          page,
+          pageSize,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        const nextPageCount = Math.max(1, Math.ceil(response.meta.total / (pageSize || 1)));
+        if (page > nextPageCount) {
+          setPage(nextPageCount);
+          return;
+        }
+
+        setItems(response.data);
+        setTotal(response.meta.total);
+        setStatus('success');
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        setStatus('error');
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to load products. Please try again.'
+        );
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQ, sort, page, pageSize, requestId]);
+
+  const handleRetry = () => setRequestId((id) => id + 1);
+
+  const gridContent = (() => {
+    if (isLoading && !hasProducts) {
+      // Show skeleton loaders while loading initial data
+      return Array.from({ length: pageSize }).map((_, i) => <ProductSkeleton key={i} />);
+    }
+
+    if (isError && !hasProducts) {
+      return (
+        <div
+          style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '40px 0',
+            color: '#991b1b',
+            display: 'grid',
+            gap: 12,
+          }}
+        >
+          <span>{errorMessage ?? 'Failed to load products.'}</span>
+          <button className={btnOutline} style={{ margin: '0 auto' }} onClick={handleRetry}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    if (!isLoading && !isError && items.length === 0) {
+      return (
+        <div
+          style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '40px 0',
+            color: '#64748b',
+          }}
+        >
+          No products found. Adjust your filters or try again later.
+        </div>
+      );
+    }
+
+    return items.map((product) => {
+      const hasRating = typeof product.rating === 'number' && !Number.isNaN(product.rating);
+      const clampedRating = hasRating ? Math.max(0, Math.min(5, Number(product.rating))) : null;
+      const roundedStars = clampedRating !== null ? Math.round(clampedRating) : null;
+      const filledStars = roundedStars ?? 0;
+      const emptyStars = 5 - filledStars;
+
+      const descriptionPreview = product.description
+        ? `${product.description.slice(0, 120)}${product.description.length > 120 ? '...' : ''}`
+        : 'No description yet.';
+
+      const stockLevel = typeof product.stock === 'number' ? product.stock : 0;
+      const isOutOfStock = stockLevel <= 0;
+      const isLowStock = stockLevel > 0 && stockLevel <= 5;
+
+      const primaryImage =
+        (Array.isArray(product.images) && product.images[0]) ||
+        (Array.isArray(product.imageUrls) && product.imageUrls[0]) ||
+        null;
+
+      return (
+        <article key={product.id} className={card}>
+          {primaryImage && (
+            <Link to={`/products/${product.id}`} style={{ display: 'block', marginBottom: 12 }}>
+              <img
+                src={resolveImageUrl(primaryImage)}
+                alt={product.name}
+                className={`${photoFrame} ${sepiaPhoto}`}
+                style={{
+                  height: 160,
+                  objectFit: 'cover',
+                }}
+                loading="lazy"
+                onError={(event) => {
+                  const target = event.currentTarget as HTMLImageElement;
+                  if (target.src !== PLACEHOLDER_SRC) {
+                    target.src = PLACEHOLDER_SRC;
+                  }
+                }}
+              />
+            </Link>
+          )}
+          <h3 style={{ marginTop: 0 }}>
+            <Link to={`/products/${product.id}`}>{product.name}</Link>
+          </h3>
+          <p style={{ margin: '4px 0', color: '#6d5b45', fontSize: '0.95rem' }}>
+            {product.category ? `Category: ${product.category}` : 'Category: Uncategorised'}
+          </p>
+          {clampedRating !== null && (
+            <p style={{ margin: '4px 0', fontSize: '0.95rem' }}>
+              Rating: {clampedRating.toFixed(1)} / 5{' '}
+              <span aria-hidden="true" style={{ color: '#d49a6a' }}>
+                {'★'.repeat(filledStars)}
+                {'☆'.repeat(emptyStars)}
+              </span>
+            </p>
+          )}
+          <p style={{ margin: '4px 0 8px', fontSize: '0.95rem' }}>{descriptionPreview}</p>
+          <div style={{ margin: '4px 0 8px', fontSize: '0.9rem' }}>
+            {isOutOfStock ? (
+              <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ Out of Stock</span>
+            ) : isLowStock ? (
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}>⚡ Only {stockLevel} left</span>
+            ) : (
+              <span style={{ color: '#059669' }}>✓ {stockLevel} in stock</span>
+            )}
+          </div>
+          <p style={{ margin: 0, fontWeight: 600 }}>${Number(product.price).toFixed(2)}</p>
+          <button
+            className={btnPrimary}
+            style={{
+              marginTop: 8,
+              width: '100%',
+              opacity: isOutOfStock ? 0.6 : 1,
+              cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+            }}
+            disabled={isOutOfStock}
+            onClick={() => {
+              if (!isOutOfStock) {
+                setAddToCart(product, 1);
+                setCartOpen(true);
+              }
+            }}
+          >
+            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        </article>
+      );
+    });
+  })();
+
   return (
     <section>
       <div
@@ -83,12 +243,34 @@ export default function Products() {
           </Link>
         )}
       </div>
+      {isError && hasProducts && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: '12px 16px',
+            borderRadius: 12,
+            backgroundColor: '#fef2f2',
+            color: '#b91c1c',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            justifyContent: 'space-between',
+          }}
+        >
+          <span style={{ flex: 1 }}>
+            {errorMessage ?? 'There was a problem refreshing the product list.'}
+          </span>
+          <button className={btnOutline} onClick={handleRetry}>
+            Retry
+          </button>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <input
           value={q}
-          onChange={(e) => {
+          onChange={(event) => {
             setPage(1);
-            setQ(e.target.value);
+            setQ(event.target.value);
           }}
           placeholder="Search..."
           className={inputField}
@@ -96,7 +278,7 @@ export default function Products() {
         />
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
+          onChange={(event) => setSort(event.target.value as typeof sort)}
           className={inputField}
           style={{ width: 'auto' }}
         >
@@ -107,9 +289,9 @@ export default function Products() {
         </select>
         <select
           value={pageSize}
-          onChange={(e) => {
+          onChange={(event) => {
             setPage(1);
-            setPageSize(Number(e.target.value));
+            setPageSize(Number(event.target.value));
           }}
           className={inputField}
           style={{ width: 'auto' }}
@@ -126,80 +308,23 @@ export default function Products() {
           gap: 16,
         }}
       >
-        {items.map((p) => {
-          const hasRating = typeof p.rating === 'number' && !Number.isNaN(p.rating);
-          const clampedRating = hasRating ? Math.max(0, Math.min(5, Number(p.rating))) : null;
-          const roundedStars = clampedRating !== null ? Math.round(clampedRating) : null;
-          const descriptionPreview = p.description
-            ? `${p.description.slice(0, 120)}${p.description.length > 120 ? '…' : ''}`
-            : 'No description yet.';
-
-          return (
-            <article key={p.id} className={card}>
-              {Array.isArray(p.images) && p.images[0] && (
-                <Link to={`/products/${p.id}`} style={{ display: 'block', marginBottom: 12 }}>
-                  <img
-                    src={resolveImageUrl(p.images[0])}
-                    alt={p.name}
-                    className={`${photoFrame} ${sepiaPhoto}`}
-                    style={{
-                      height: 160,
-                      objectFit: 'cover',
-                    }}
-                    loading="lazy"
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
-                    }}
-                  />
-                </Link>
-              )}
-              <h3 style={{ marginTop: 0 }}>
-                <Link to={`/products/${p.id}`}>{p.name}</Link>
-              </h3>
-              <p style={{ margin: '4px 0', color: '#6d5b45', fontSize: '0.95rem' }}>
-                {p.category ? `Category: ${p.category}` : 'Category: Uncategorised'}
-              </p>
-              {clampedRating !== null && (
-                <p style={{ margin: '4px 0', fontSize: '0.95rem' }}>
-                  Rating: {clampedRating.toFixed(1)} / 5{' '}
-                  <span aria-hidden="true" style={{ color: '#d49a6a' }}>
-                    {'★'.repeat(roundedStars!)}
-                    {'☆'.repeat(5 - roundedStars!)}
-                  </span>
-                </p>
-              )}
-              <p style={{ margin: '4px 0 8px', fontSize: '0.95rem' }}>{descriptionPreview}</p>
-              <p style={{ margin: 0, fontWeight: 600 }}>${Number(p.price).toFixed(2)}</p>
-              <button
-                className={btnPrimary}
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={() => {
-                  setAddToCart(p, 1);
-                  setCartOpen(true);
-                }}
-              >
-                Add to Cart
-              </button>
-            </article>
-          );
-        })}
+        {gridContent}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
         <button
           className={btnOutline}
-          disabled={page <= 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page <= 1 || isLoading}
+          onClick={() => setPage((current) => Math.max(1, current - 1))}
         >
           Prev
         </button>
         <span>
-          Page {page} / {Math.max(1, Math.ceil(total / pageSize))}
+          Page {Math.min(page, pageCount)} / {pageCount}
         </span>
         <button
           className={btnOutline}
-          disabled={page >= Math.ceil(total / pageSize)}
-          onClick={() => setPage((p) => p + 1)}
+          disabled={page >= pageCount || isLoading}
+          onClick={() => setPage((current) => current + 1)}
         >
           Next
         </button>

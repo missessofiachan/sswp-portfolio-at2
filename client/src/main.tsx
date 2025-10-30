@@ -5,6 +5,7 @@ import { AuthProvider } from '@client/features/auth/AuthProvider';
 import AppErrorBoundary from './AppErrorBoundary';
 import { routes } from './app/routes';
 import { ToastContainer } from './components/ui/ToastContainer';
+import { applyTheme, readStoredTheme } from './app/theme';
 
 // Create the router once and reuse it.
 const router = createBrowserRouter(routes);
@@ -47,6 +48,9 @@ function bootstrap(): void {
   if (!root) {
     root = createRoot(container);
   }
+
+  // Ensure theme class is present before first paint.
+  applyTheme(readStoredTheme());
   // Boot instrumentation to help diagnose white screen:
   // eslint-disable-next-line no-console
   console.log('[BOOT] Mounting React application');

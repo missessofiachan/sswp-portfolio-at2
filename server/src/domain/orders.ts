@@ -178,6 +178,7 @@ export interface UpdateOrderInput {
   paymentStatus?: PaymentStatus;
   tracking?: OrderTracking;
   notes?: string;
+  shippingAddress?: ShippingAddress;
 }
 
 /**

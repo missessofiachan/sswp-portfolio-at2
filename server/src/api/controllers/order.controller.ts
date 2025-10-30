@@ -11,6 +11,7 @@
 import { Request, Response } from 'express';
 import { OrderService } from '../../services/order.service';
 import { CreateOrderInput, UpdateOrderInput, OrderStatus } from '../../domain/orders';
+import { logError } from '../../utils/logger';
 
 /**
  * Interface for authenticated request with user data
@@ -21,6 +22,46 @@ interface AuthenticatedRequest extends Request {
     email: string;
     role: string;
   };
+}
+
+function parseOptionalLimit(value: unknown): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(String(value), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return undefined;
+  }
+  return parsed;
+}
+
+function extractStatus(error: Error, fallback: number): number {
+  const status = (error as any)?.status;
+  return typeof status === 'number' && status >= 100 && status < 600 ? status : fallback;
+}
+
+function inferStatusFromMessage(message: string | undefined): number | undefined {
+  if (!message) return undefined;
+  const normalized = message.toLowerCase();
+  if (normalized.includes('access denied') || normalized.includes('forbidden')) {
+    return 403;
+  }
+  if (normalized.includes('not found')) {
+    return 404;
+  }
+  if (normalized.includes('unauthenticated') || normalized.includes('invalid token')) {
+    return 401;
+  }
+  return undefined;
+}
+
+function respondWithError(res: Response, error: Error, fallback: number): void {
+  const inferred = inferStatusFromMessage(error.message);
+  const status = extractStatus(error, inferred ?? fallback);
+  res.status(status).json({
+    success: false,
+    message: error.message,
+  });
 }
 
 /**
@@ -63,10 +104,13 @@ export class OrderController {
         message: 'Order created successfully',
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to create order',
+      const err = error instanceof Error ? error : new Error('Failed to create order');
+      const status = extractStatus(err, 400);
+      logError('Failed to create order', err, {
+        userId: req.user?.id,
+        status,
       });
+      respondWithError(res, err, 400);
     }
   }
 
@@ -100,18 +144,12 @@ export class OrderController {
         data: order,
       });
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Access denied')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to get order',
+      const err = error instanceof Error ? error : new Error('Failed to get order');
+      logError('Failed to get order', err, {
+        orderId: req.params.id,
+        userId: req.user?.id,
       });
+      respondWithError(res, err, 500);
     }
   }
 
@@ -127,24 +165,27 @@ export class OrderController {
   async getMyOrders(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const limit = parseOptionalLimit(req.query.limit);
       const lastOrderId = req.query.lastOrderId as string;
 
       const orders = await this.orderService.getUserOrders(userId, limit, lastOrderId);
+      const hasMore = limit ? orders.length > limit : false;
+      const data = limit ? orders.slice(0, limit) : orders;
 
       res.json({
         success: true,
-        data: orders,
+        data,
         meta: {
-          count: orders.length,
-          hasMore: limit ? orders.length === limit : false,
+          count: data.length,
+          hasMore,
         },
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to get orders',
+      const err = error instanceof Error ? error : new Error('Failed to get orders');
+      logError('Failed to get my orders', err, {
+        userId: req.user?.id,
       });
+      respondWithError(res, err, 500);
     }
   }
 
@@ -159,25 +200,29 @@ export class OrderController {
    */
   async getAllOrders(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const limit = parseOptionalLimit(req.query.limit);
       const lastOrderId = req.query.lastOrderId as string;
       const status = req.query.status as OrderStatus;
 
       const orders = await this.orderService.getAllOrders(limit, lastOrderId, status);
+      const hasMore = limit ? orders.length > limit : false;
+      const data = limit ? orders.slice(0, limit) : orders;
 
       res.json({
         success: true,
-        data: orders,
+        data,
         meta: {
-          count: orders.length,
-          hasMore: limit ? orders.length === limit : false,
+          count: data.length,
+          hasMore,
         },
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to get orders',
+      const err = error instanceof Error ? error : new Error('Failed to get orders');
+      logError('Failed to get all orders', err, {
+        userId: req.user?.id,
+        status: req.query.status,
       });
+      respondWithError(res, err, 500);
     }
   }
 
@@ -205,26 +250,12 @@ export class OrderController {
         message: 'Order updated successfully',
       });
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Access denied')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      if (error instanceof Error && error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      res.status(400).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to update order',
+      const err = error instanceof Error ? error : new Error('Failed to update order');
+      logError('Failed to update order', err, {
+        orderId: req.params.id,
+        userId: req.user?.id,
       });
+      respondWithError(res, err, 400);
     }
   }
 
@@ -251,26 +282,12 @@ export class OrderController {
         message: 'Order cancelled successfully',
       });
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Access denied')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      if (error instanceof Error && error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      res.status(400).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to cancel order',
+      const err = error instanceof Error ? error : new Error('Failed to cancel order');
+      logError('Failed to cancel order', err, {
+        orderId: req.params.id,
+        userId: req.user?.id,
       });
+      respondWithError(res, err, 400);
     }
   }
 
@@ -294,18 +311,12 @@ export class OrderController {
         message: 'Order deleted successfully',
       });
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to delete order',
+      const err = error instanceof Error ? error : new Error('Failed to delete order');
+      logError('Failed to delete order', err, {
+        orderId: req.params.id,
+        userId: req.user?.id,
       });
+      respondWithError(res, err, 500);
     }
   }
 
@@ -330,10 +341,13 @@ export class OrderController {
         data: stats,
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to get order statistics',
+      const err = error instanceof Error ? error : new Error('Failed to get order statistics');
+      logError('Failed to get order statistics', err, {
+        userId: req.user?.id,
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
       });
+      respondWithError(res, err, 500);
     }
   }
 }

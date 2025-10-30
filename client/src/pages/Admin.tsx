@@ -4,6 +4,7 @@ import { getProductStats, listProducts, deleteProduct } from '@client/api/client
 import { listUsers, deleteUser, type AdminUser } from '@client/api/clients/admin.api';
 import { card, btnOutline, btnPrimary, photoFrame, sepiaPhoto } from '@client/app/ui.css';
 import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
+import ErrorAlert from '@client/components/ui/ErrorAlert';
 
 /**
  * Admin Dashboard
@@ -15,43 +16,61 @@ import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 export default function Admin() {
   const [stats, setStats] = useState<{ count: number; avgPrice: number } | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsErrorDetails, setStatsErrorDetails] = useState<any>(null);
+  const [statsErrorIndexUrl, setStatsErrorIndexUrl] = useState<string | undefined>(undefined);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [usersErrorDetails, setUsersErrorDetails] = useState<any>(null);
+  const [usersErrorIndexUrl, setUsersErrorIndexUrl] = useState<string | undefined>(undefined);
 
   const [products, setProducts] = useState<any[]>([]);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [productsErrorDetails, setProductsErrorDetails] = useState<any>(null);
+  const [productsErrorIndexUrl, setProductsErrorIndexUrl] = useState<string | undefined>(undefined);
 
   async function refreshStats() {
     try {
       setStatsError(null);
+      setStatsErrorDetails(null);
+      setStatsErrorIndexUrl(undefined);
       const s = await getProductStats();
       setStats(s);
     } catch (e: any) {
       console.error('Error fetching product stats:', e);
-      setStatsError(e?.response?.data?.error?.message || 'Error');
+      setStatsError(e?.message || 'Error');
+      setStatsErrorDetails(e?.details);
+      setStatsErrorIndexUrl(e?.indexUrl);
     }
   }
 
   async function refreshUsers() {
     try {
       setUsersError(null);
+      setUsersErrorDetails(null);
+      setUsersErrorIndexUrl(undefined);
       const u = await listUsers();
       setUsers(u);
     } catch (e: any) {
       console.error('Error fetching users:', e);
-      setUsersError(e?.response?.data?.error?.message || 'Error');
+      setUsersError(e?.message || 'Error');
+      setUsersErrorDetails(e?.details);
+      setUsersErrorIndexUrl(e?.indexUrl);
     }
   }
 
   async function refreshProducts() {
     try {
       setProductsError(null);
+      setProductsErrorDetails(null);
+      setProductsErrorIndexUrl(undefined);
       const p = await listProducts();
       setProducts(p);
     } catch (e: any) {
       console.error('Error fetching products:', e);
-      setProductsError(e?.response?.data?.error?.message || 'Error');
+      setProductsError(e?.message || 'Error');
+      setProductsErrorDetails(e?.details);
+      setProductsErrorIndexUrl(e?.indexUrl);
     }
   }
 
@@ -70,7 +89,13 @@ export default function Admin() {
             Refresh
           </button>
         </div>
-        {statsError && <p style={{ color: 'crimson' }}>{statsError}</p>}
+        {statsError && (
+          <ErrorAlert
+            message={statsError}
+            details={statsErrorDetails}
+            indexUrl={statsErrorIndexUrl}
+          />
+        )}
         {stats ? (
           <ul>
             <li>Total products: {stats.count}</li>
@@ -88,7 +113,13 @@ export default function Admin() {
             Refresh
           </button>
         </div>
-        {usersError && <p style={{ color: 'crimson' }}>{usersError}</p>}
+        {usersError && (
+          <ErrorAlert
+            message={usersError}
+            details={usersErrorDetails}
+            indexUrl={usersErrorIndexUrl}
+          />
+        )}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -141,7 +172,13 @@ export default function Admin() {
             </button>
           </div>
         </div>
-        {productsError && <p style={{ color: 'crimson' }}>{productsError}</p>}
+        {productsError && (
+          <ErrorAlert
+            message={productsError}
+            details={productsErrorDetails}
+            indexUrl={productsErrorIndexUrl}
+          />
+        )}
         <div
           style={{
             display: 'grid',
@@ -149,50 +186,66 @@ export default function Admin() {
             gap: 16,
           }}
         >
-          {products.map((p) => (
-            <article key={p.id} className={card}>
-              {Array.isArray(p.images) && p.images[0] && (
-                <img
-                  src={resolveImageUrl(p.images[0])}
-                  alt={p.name}
-                  className={`${photoFrame} ${sepiaPhoto}`}
-                  style={{
-                    height: 140,
-                    objectFit: 'cover',
-                    marginBottom: 12,
-                  }}
-                  loading="lazy"
-                  onError={(e) => {
-                    const t = e.currentTarget as HTMLImageElement;
-                    if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
-                  }}
-                />
-              )}
-              <h3 style={{ marginTop: 0 }}>{p.name}</h3>
-              <p style={{ margin: '4px 0 12px' }}>${p.price}</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <a className={btnOutline} href={`/products/${p.id}/edit`}>
-                  Edit
-                </a>
-                <button
-                  className={btnPrimary}
-                  onClick={async () => {
-                    if (!confirm(`Delete product ${p.name}?`)) return;
-                    try {
-                      await deleteProduct(p.id);
-                      await refreshProducts();
-                      await refreshStats();
-                    } catch (e) {
-                      alert('Failed to delete product');
-                      console.error(e);
-                    }
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </article>
-          ))}
+          {products.map((p) => {
+            const stockLevel = typeof p.stock === 'number' ? p.stock : 0;
+            const isOutOfStock = stockLevel <= 0;
+            const isLowStock = stockLevel > 0 && stockLevel <= 5;
+            return (
+              <article key={p.id} className={card}>
+                {Array.isArray(p.images) && p.images[0] && (
+                  <img
+                    src={resolveImageUrl(p.images[0])}
+                    alt={p.name}
+                    className={`${photoFrame} ${sepiaPhoto}`}
+                    style={{
+                      height: 140,
+                      objectFit: 'cover',
+                      marginBottom: 12,
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      const t = e.currentTarget as HTMLImageElement;
+                      if (t.src !== PLACEHOLDER_SRC) t.src = PLACEHOLDER_SRC;
+                    }}
+                  />
+                )}
+                <h3 style={{ marginTop: 0 }}>{p.name}</h3>
+                <p style={{ margin: '4px 0' }}>${p.price}</p>
+                <div style={{ margin: '4px 0 12px', fontSize: '0.9rem' }}>
+                  {isOutOfStock ? (
+                    <span style={{ color: '#dc2626', fontWeight: '600' }}>⚠️ Out of Stock</span>
+                  ) : isLowStock ? (
+                    <span style={{ color: '#f59e0b', fontWeight: '600' }}>
+                      ⚡ Low Stock ({stockLevel})
+                    </span>
+                  ) : (
+                    <span style={{ color: '#059669' }}>✓ {stockLevel} in stock</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <a className={btnOutline} href={`/products/${p.id}/edit`}>
+                    Edit
+                  </a>
+                  <button
+                    className={btnPrimary}
+                    onClick={async () => {
+                      if (!confirm(`Delete product ${p.name}?`)) return;
+                      try {
+                        await deleteProduct(p.id);
+                        await refreshProducts();
+                        await refreshStats();
+                      } catch (e) {
+                        alert('Failed to delete product');
+                        console.error(e);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
         {products.length === 0 && !productsError && <p>No products found.</p>}
       </div>

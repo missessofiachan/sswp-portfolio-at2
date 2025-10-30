@@ -33,11 +33,20 @@ export const memProductsRepo: ProductsRepo = {
     return mem.find((p) => p.id === id) ?? null;
   },
   async create(input: Omit<Product, 'id' | 'createdAt'>) {
+    const sanitizedImages =
+      Array.isArray((input as any)?.images) &&
+      (input as any).images.every((value: unknown) => typeof value === 'string')
+        ? ((input as any).images as string[])
+        : [];
+    const stockRaw = Number((input as any)?.stock ?? 0);
+    let stock = Math.floor(stockRaw);
+    if (!Number.isFinite(stock) || stock < 0) stock = 0;
     const p: Product = {
       id: crypto.randomUUID(),
       createdAt: Date.now(),
-      images: (input as any)?.images ?? [],
       ...input,
+      images: sanitizedImages,
+      stock,
     } as Product;
     mem.push(p);
     return p;
@@ -45,7 +54,20 @@ export const memProductsRepo: ProductsRepo = {
   async update(id, patch) {
     const i = mem.findIndex((p) => p.id === id);
     if (i < 0) throw new Error('not found');
-    mem[i] = { ...mem[i], ...patch };
+    const next: Product = { ...mem[i], ...patch };
+    if (patch.stock != null) {
+      const numericStock = Number(patch.stock);
+      if (!Number.isFinite(numericStock) || numericStock < 0) {
+        throw new Error('Stock must be a non-negative number');
+      }
+      next.stock = Math.floor(numericStock);
+    }
+    if (patch.images) {
+      next.images = Array.isArray(patch.images)
+        ? patch.images.filter((value): value is string => typeof value === 'string')
+        : [];
+    }
+    mem[i] = next;
     return mem[i];
   },
   async remove(id) {

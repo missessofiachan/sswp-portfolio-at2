@@ -40,10 +40,25 @@ async function main() {
         price: 19.99,
         category: 'tools',
         rating: 4.2,
+        stock: 50,
         createdAt: Date.now(),
       },
-      { name: 'Pro Wrench', price: 39.5, category: 'tools', rating: 4.7, createdAt: Date.now() },
-      { name: 'Oil Filter', price: 15.0, category: 'parts', rating: 4.1, createdAt: Date.now() },
+      {
+        name: 'Pro Wrench',
+        price: 39.5,
+        category: 'tools',
+        rating: 4.7,
+        stock: 35,
+        createdAt: Date.now(),
+      },
+      {
+        name: 'Oil Filter',
+        price: 15.0,
+        category: 'parts',
+        rating: 4.1,
+        stock: 120,
+        createdAt: Date.now(),
+      },
     ];
 
     for (const it of items) {

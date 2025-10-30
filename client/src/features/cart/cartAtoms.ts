@@ -12,6 +12,7 @@ import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import type { CartItem } from '../../types/orders';
 import type { Product } from '../../types/product';
+import { showToast } from '../../lib/toast';
 
 /**
  * Cart items stored in localStorage
@@ -63,11 +64,32 @@ export const cartSummaryAtom = atom((get) => {
  * Action atom to add item to cart
  */
 export const addToCartAtom = atom(null, (get, set, product: Product, quantity: number = 1) => {
+  const stockLevel = typeof product.stock === 'number' ? Math.max(0, Math.floor(product.stock)) : 0;
+  if (stockLevel <= 0) {
+    showToast('This item is out of stock', { type: 'warning' });
+    return;
+  }
+
   const currentItems = get(cartItemsAtom);
   const existingItemIndex = currentItems.findIndex((item) => item.id === product.id);
+  const existingQty = existingItemIndex >= 0 ? currentItems[existingItemIndex].quantity : 0;
+  const desiredQty = existingQty + quantity;
+
+  if (desiredQty > stockLevel) {
+    const allowed = Math.max(0, stockLevel - existingQty);
+    if (allowed <= 0) {
+      showToast(`You already have the maximum available (${stockLevel}) in your cart`, {
+        type: 'warning',
+      });
+      return;
+    }
+    showToast(`Only ${allowed} more available. Updated quantity to ${existingQty + allowed}.`, {
+      type: 'info',
+    });
+    quantity = allowed;
+  }
 
   if (existingItemIndex >= 0) {
-    // Update existing item quantity
     const updatedItems = [...currentItems];
     updatedItems[existingItemIndex] = {
       ...updatedItems[existingItemIndex],
@@ -75,7 +97,6 @@ export const addToCartAtom = atom(null, (get, set, product: Product, quantity: n
     };
     set(cartItemsAtom, updatedItems);
   } else {
-    // Add new item
     const newItem: CartItem = {
       id: product.id,
       name: product.name,
@@ -94,6 +115,7 @@ export const removeFromCartAtom = atom(null, (get, set, productId: string) => {
   const currentItems = get(cartItemsAtom);
   const updatedItems = currentItems.filter((item) => item.id !== productId);
   set(cartItemsAtom, updatedItems);
+  showToast('Item removed from cart', { type: 'success' });
 });
 
 /**
@@ -123,6 +145,7 @@ export const updateCartItemQuantityAtom = atom(
  */
 export const clearCartAtom = atom(null, (_get, set) => {
   set(cartItemsAtom, []);
+  showToast('Cart cleared', { type: 'info' });
 });
 
 /**

@@ -18,6 +18,7 @@ export interface Product {
   description?: string;
   category: string;
   rating: number;
+  stock: number; // Available inventory count (>= 0)
   createdAt: number; // Unix timestamp in milliseconds
   images?: string[];
   imageUrls?: string[]; // Alternative property name for compatibility
@@ -32,6 +33,7 @@ export interface ProductInput {
   description?: string;
   category: string;
   rating?: number;
+  stock?: number; // Available inventory count (>= 0)
   images?: string[];
 }
 

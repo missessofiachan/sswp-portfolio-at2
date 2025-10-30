@@ -7,25 +7,23 @@ export const toggle = style({
   justifyContent: 'center',
   width: '40px',
   height: '40px',
-  borderRadius: '9999px',
-  cursor: 'pointer',
+  borderRadius: vars.radius.pill,
+  border: `1px solid ${vars.color.border}`,
   backgroundColor: vars.color.surface,
-  border: `2px solid ${vars.color.border}`,
-  boxShadow: vars.shadow.card,
   color: vars.color.text,
-  transition: 'transform 0.2s ease, filter 0.2s ease',
-  userSelect: 'none',
+  boxShadow: vars.shadow.xs,
+  cursor: 'pointer',
+  transition: 'transform 120ms ease, box-shadow 120ms ease',
   selectors: {
     '&:hover': {
-      transform: 'translate(-1px, -1px)',
-      filter: 'brightness(1.05)',
-    },
-    '&:active': {
-      transform: 'translate(0, 0)',
+      transform: 'translateY(-1px)',
     },
     '&:focus-visible': {
       outline: 'none',
-      boxShadow: `0 0 0 3px rgba(146, 63, 43, 0.2)`,
+      boxShadow: `0 0 0 3px ${vars.color.focus}`,
+    },
+    '&[data-state="on"]': {
+      backgroundColor: vars.color.surfaceMuted,
     },
   },
 });

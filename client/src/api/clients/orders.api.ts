@@ -25,7 +25,7 @@ import type {
  * @class OrdersApi
  */
 export class OrdersApi {
-  private readonly baseUrl = '/api/v1/orders';
+  private readonly baseUrl = '/orders';
 
   /**
    * Create a new order

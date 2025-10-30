@@ -1,4 +1,7 @@
 import type { JSX } from 'react';
+import { motion } from 'framer-motion';
+import { sprinkles } from '@client/app/sprinkles.css';
+import { vars } from '@client/app/theme.css';
 
 /**
  * Home page component.
@@ -9,9 +12,16 @@ import type { JSX } from 'react';
  */
 export default function Home(): JSX.Element {
   return (
-    <main>
-      <h1>Welcome to Sofia&apos;s Shop</h1>
-      <p>Discover something magical today ✨</p>
-    </main>
+    <motion.main
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className={sprinkles({ display: 'grid', gap: 'lg' })}
+    >
+      <motion.h1 layout>{"Welcome to Sofia's Shop"}</motion.h1>
+      <motion.p layout style={{ fontSize: '1.05rem', color: vars.color.textMuted }}>
+        Discover something magical today ✨
+      </motion.p>
+    </motion.main>
   );
 }

@@ -144,6 +144,9 @@ export default function ProductShow() {
   if (!product) return <p>Product not found.</p>;
 
   const canEdit = Boolean(token) || isAdmin;
+  const stockLevel = typeof product.stock === 'number' ? product.stock : 0;
+  const isOutOfStock = stockLevel <= 0;
+  const isLowStock = stockLevel > 0 && stockLevel <= 5;
 
   return (
     <>
@@ -209,17 +212,34 @@ export default function ProductShow() {
             </p>
           )}
           <p style={{ margin: 0, fontWeight: 600 }}>Price: ${Number(product.price).toFixed(2)}</p>
+          <div style={{ margin: '4px 0 0', fontSize: '0.95rem' }}>
+            {isOutOfStock ? (
+              <span style={{ color: '#dc2626', fontWeight: '600' }}>⚠️ Out of Stock</span>
+            ) : isLowStock ? (
+              <span style={{ color: '#f59e0b', fontWeight: '600' }}>⚡ Only {stockLevel} left</span>
+            ) : (
+              <span style={{ color: '#059669' }}>✓ {stockLevel} in stock</span>
+            )}
+          </div>
         </div>
         {product.description && <p>{product.description}</p>}
         <button
           className={btnPrimary}
-          style={{ margin: '12px 0', width: '100%' }}
+          style={{
+            margin: '12px 0',
+            width: '100%',
+            opacity: isOutOfStock ? 0.6 : 1,
+            cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+          }}
+          disabled={isOutOfStock}
           onClick={() => {
-            setAddToCart(product, 1);
-            setCartOpen(true);
+            if (!isOutOfStock) {
+              setAddToCart(product, 1);
+              setCartOpen(true);
+            }
           }}
         >
-          Add to Cart
+          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
         </button>
         {canEdit && (
           <div className={actions}>
