@@ -1,17 +1,23 @@
 {
   "info": {
-    "name": "SSWP AT2 API",
+    "name": "Sofia's Shop API - Comprehensive Test Suite",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Auth + Products CRUD + Admin (stats, users) with tests"
+    "description": "Complete API testing suite with Auth, Products, Orders, File Uploads, and Admin functionality. Includes validation tests, error scenarios, and performance checks.",
+    "version": "2.0.0"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
     { "key": "token", "value": "" },
+    { "key": "userToken", "value": "" },
     { "key": "productId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "uploadedFileUrl", "value": "" },
     { "key": "adminEmail", "value": "admin@example.com" },
-    { "key": "adminPassword", "value": "password123" },
+    { "key": "adminPassword", "value": "Admin123!" },
+    { "key": "userEmail", "value": "" },
+    { "key": "userPassword", "value": "User123!" },
     { "key": "userIdToDelete", "value": "" },
-    { "key": "userEmail", "value": "" }
+    { "key": "timestamp", "value": "" }
   ],
   "item": [
     {

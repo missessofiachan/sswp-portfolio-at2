@@ -56,8 +56,14 @@ import { maintenanceGuard } from './api/middleware/maintenanceAuth';
 import { errorHandler } from './api/middleware/error';
 import { requestLogger } from './utils/logger';
 import { loadEnv } from './config/env';
+import { correlationIdMiddleware } from './api/middleware/correlationId';
+import { monitoring } from './utils/monitoring';
+import { apiRateLimit } from './api/middleware/rateLimit';
 
 const env = loadEnv();
+
+// Initialize error monitoring early
+monitoring.init();
 
 /**
  * Express application instance created by calling express().
@@ -78,18 +84,42 @@ const env = loadEnv();
  */
 export const app: Application = express();
 app.use(helmet());
-// Allow all origins for development; restrict in production for security.
-// CORS: allow any origin in dev; restrict in production via CORS_ORIGIN env
-const corsOrigin =
-  env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : true);
+
+// CORS Configuration
+// - Production: MUST set CORS_ORIGIN env var with comma-separated allowed origins
+// - Development: Defaults to true (allows all origins)
+// - Never use wildcard (*) in production
+let corsOrigin: string | string[] | boolean;
+if (process.env.NODE_ENV === 'production') {
+  if (!env.CORS_ORIGIN) {
+    console.error('⚠️  WARNING: CORS_ORIGIN not set in production. This is a security risk!');
+    corsOrigin = false; // Block all CORS in production if not configured
+  } else {
+    // Support comma-separated list of origins
+    corsOrigin = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+    console.log('✓ CORS origins configured:', corsOrigin);
+  }
+} else {
+  corsOrigin = env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map((origin) => origin.trim()) : true; // Allow all in development
+}
+
 app.use(
   cors({
-    origin: corsOrigin ?? 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // 24 hours
   })
 );
 app.use(express.json());
+app.use(correlationIdMiddleware);
 app.use(requestLogger);
+
+// Apply general API rate limiting
+// Auth routes have their own stricter rate limits
+app.use('/api/v1', apiRateLimit);
+
 // Enable multipart/form-data for file uploads
 const { UPLOAD_MAX_MB } = env;
 app.use(

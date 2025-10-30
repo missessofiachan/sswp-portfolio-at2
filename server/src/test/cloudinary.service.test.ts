@@ -25,7 +25,9 @@ vi.mock('cloudinary', () => ({
 describe('cloudinary.service', () => {
   let uploadImageBuffer: typeof import('../services/cloudinary.service').uploadImageBuffer;
   let deleteAssetsByUrls: typeof import('../services/cloudinary.service').deleteAssetsByUrls;
-  let extractPublicIdFromUrl: typeof import('../services/cloudinary.service').extractPublicIdFromUrl;
+  let extractPublicIdFromUrl: typeof import(
+    '../services/cloudinary.service'
+  ).extractPublicIdFromUrl;
   let lastOptions: any;
 
   beforeEach(async () => {

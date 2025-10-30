@@ -96,7 +96,7 @@ Note: For local demo/testing, the very first account you register is granted the
 - Node.js (>=18)
 - pnpm or npm
 - Firebase project + service account (for Firestore)
-- fireStore storage for pictures 
+- fireStore storage for pictures
 
 ### Clone & Install
 
@@ -118,11 +118,24 @@ VITE_API_URL=http://localhost:4000/api/v1
 # server/.env
 PORT=4000
 JWT_SECRET=supersecret
-UPLOAD_MAX_MB=5
+JWT_EXPIRES_IN=15m
+DATA_STORE=firestore
 CORS_ORIGIN=http://localhost:5173
+UPLOAD_MAX_MB=5
+PASSWORD_RESET_TTL_MINUTES=60
+PASSWORD_RESET_RATE_LIMIT_MINUTES=5
+LOG_TO_FILE=true
+LOG_DIR=logs
+LOG_FILE=app.log
+LOG_LEVEL=debug
+LOG_MAX_SIZE=5242880
+LOG_MAX_FILES=5
 FIREBASE_PROJECT_ID=...
 FIREBASE_CLIENT_EMAIL=...
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n..."
+CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud>
+CLOUDINARY_UPLOAD_FOLDER=portfolio-assets
+# MAINTENANCE_SECRET=change-me
 ```
 
 ---
@@ -264,6 +277,7 @@ Ensure these are set:
 ## 👩‍💻 Authors
 
 - Sofia's student project (Diploma of IT – Advanced Programming)
+
 ---
 
 ## 📝 License

@@ -1,5 +1,6 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import type { FocusEvent } from 'react';
 import * as s from './navbar.css';
 import ThemeToggle from './ThemeToggle';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -43,7 +44,6 @@ import { useAuth } from '@client/features/auth/AuthProvider';
  * <Navbar />
  */
 export default function Navbar() {
-  const navigate = useNavigate();
   const { token, logout, isAdmin } = useAuth();
   const getLinkClassName = ({ isActive }: { isActive: boolean }) =>
     `${s.link} ${isActive ? s.linkActive : ''}`;
@@ -52,6 +52,25 @@ export default function Navbar() {
   const cartSummary = useAtomValue(cartSummaryAtom);
   const setCartOpen = useSetAtom(isCartOpenAtom);
   const [showCartPreview, setShowCartPreview] = useState(false);
+  const handlePreviewOpen = () => setShowCartPreview(true);
+  const handlePreviewClose = () => setShowCartPreview(false);
+  const handlePreviewBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.relatedTarget || !event.currentTarget.contains(event.relatedTarget as Node)) {
+      handlePreviewClose();
+    }
+  };
+
+  useEffect(() => {
+    if (!showCartPreview) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handlePreviewClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCartPreview]);
+
   return (
     <nav className={s.bar}>
       <div className={s.inner}>
@@ -95,13 +114,20 @@ export default function Navbar() {
           )}
           <div
             className={s.cartContainer}
-            onMouseEnter={() => setShowCartPreview(true)}
-            onMouseLeave={() => setShowCartPreview(false)}
+            onMouseEnter={handlePreviewOpen}
+            onMouseLeave={handlePreviewClose}
+            onFocus={handlePreviewOpen}
+            onBlur={handlePreviewBlur}
           >
             <button
               className={`${s.link} ${s.cartButton}`}
               aria-label="View cart"
-              onClick={() => navigate('/checkout')}
+              aria-haspopup="dialog"
+              aria-expanded={showCartPreview}
+              onClick={() => {
+                setCartOpen(true);
+                handlePreviewClose();
+              }}
             >
               <svg
                 width="24"
@@ -140,15 +166,16 @@ export default function Navbar() {
                   </ul>
                 )}
                 <div className={s.cartTotal}>Total: ${cartSummary.total.toFixed(2)}</div>
-                <button
+                <Link
+                  to="/checkout"
                   className={s.cartCheckoutButton}
                   onClick={() => {
                     setCartOpen(false);
-                    navigate('/checkout');
+                    handlePreviewClose();
                   }}
                 >
                   Checkout
-                </button>
+                </Link>
               </div>
             )}
           </div>

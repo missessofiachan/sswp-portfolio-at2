@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getProduct, updateProduct, uploadImages } from '@client/api/clients/products.api';
+import ErrorAlert from '@client/components/ui/ErrorAlert';
 import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
 
 const Schema = z.object({
@@ -68,6 +69,9 @@ function ErrorMessage({ message }: { message?: string }) {
 export default function ProductEdit() {
   const { id } = useParams();
   const nav = useNavigate();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitDetails, setSubmitDetails] = useState<any>(null);
+  const [submitIndexUrl, setSubmitIndexUrl] = useState<string | undefined>(undefined);
   const [uploadStatus, setUploadStatus] = useState<{ text: string; color: string } | null>(null);
   const statusTimeout = useRef<NodeJS.Timeout | null>(null);
   const { register, handleSubmit, reset, formState, getValues, setValue } = useForm<
@@ -99,21 +103,35 @@ export default function ProductEdit() {
       .split(/\r?\n|,/)
       .map((s) => s.trim())
       .filter(Boolean);
-    await updateProduct(id, {
-      name: values.name,
-      price: values.price,
-      description: values.description,
-      category: values.category,
-      rating: values.rating,
-      stock: values.stock,
-      images,
-    });
-    nav(`/products/${id}`);
+    try {
+      setSubmitError(null);
+      setSubmitDetails(null);
+      await updateProduct(id, {
+        name: values.name,
+        price: values.price,
+        description: values.description,
+        category: values.category,
+        rating: values.rating,
+        stock: values.stock,
+        images,
+      });
+      nav(`/products/${id}`);
+    } catch (error) {
+      const e: any = error;
+      setSubmitError(e?.message || 'Failed to update product');
+      setSubmitDetails(e?.details);
+      setSubmitIndexUrl(e?.indexUrl);
+    }
   }
 
   return (
     <div className={card}>
       <h2>Edit Product</h2>
+      {submitError && (
+        <div style={{ marginBottom: '12px' }}>
+          <ErrorAlert message={submitError} details={submitDetails} indexUrl={submitIndexUrl} />
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={field}>
           <label className={label}>Name</label>

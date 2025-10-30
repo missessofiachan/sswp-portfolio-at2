@@ -1,10 +1,11 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { randomBytes, createHash } from 'crypto';
 import { loadEnv } from '../config/env';
 import { fsUsersRepo } from '../data/firestore/users.repo.fs';
 import { getDb } from '../config/firestore';
 import { emailService } from './email.service';
+import { tokenRevocationService } from './tokenRevocation.service';
 
 /**
  * Authentication Service
@@ -90,9 +91,10 @@ export const authService = {
     const env = loadEnv();
     // Include explicit id/email for downstream middleware while preserving standard sub claim.
     const payload = { sub: user.id, id: user.id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
-    });
+    const signOptions: SignOptions = {
+      expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
+    };
+    const token = jwt.sign(payload, env.JWT_SECRET, signOptions);
     return { token, user: { id: user.id, email: user.email, role: user.role } };
   },
 
@@ -161,6 +163,7 @@ export const authService = {
   },
   /**
    * Complete password reset given a raw token and new password.
+   * Revokes all existing tokens for the user after password change.
    */
   async resetPassword(token: string, newPassword: string) {
     const hash = createHash('sha256').update(token).digest('hex');
@@ -177,5 +180,8 @@ export const authService = {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await fsUsersRepo.updatePassword(data.userId, passwordHash);
     await ref.delete().catch(() => {});
+
+    // Revoke all existing tokens for security
+    await tokenRevocationService.revokeAllTokens(data.userId, 'password_change');
   },
 };

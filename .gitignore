@@ -74,6 +74,9 @@ web_modules/
 # Optional stylelint cache
 .stylelintcache
 
+# Biome cache
+.biome-cache
+
 # Optional REPL history
 .node_repl_history
 
@@ -142,7 +145,7 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
-# yarn v3
+# Yarn
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -150,6 +153,7 @@ dist
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+yarn-error.log
 
 # Vite logs files
 vite.config.js.timestamp-*

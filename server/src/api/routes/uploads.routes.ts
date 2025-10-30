@@ -4,6 +4,12 @@ import type { UploadedFile } from 'express-fileupload';
 import path from 'path';
 import { uploadImageBuffer } from '../../services/cloudinary.service';
 import { loadEnv } from '../../config/env';
+import {
+  validateImageContent,
+  sanitizeFilename,
+  validateFileSize,
+} from '../../utils/fileValidation';
+import { expensiveOperationRateLimit } from '../middleware/rateLimit';
 
 export const router: ExpressRouter = Router();
 
@@ -70,7 +76,7 @@ const UPLOAD_MAX_BYTES = UPLOAD_MAX_MB * 1024 * 1024;
  * @param {Response} res - Express response object
  * @returns {Promise<void>} JSON response with uploaded file URLs or error
  */
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', expensiveOperationRateLimit, requireAuth, async (req, res) => {
   try {
     // Type-safe access to uploaded files
     const anyFiles = (req as any).files as
@@ -86,6 +92,14 @@ router.post('/', requireAuth, async (req, res) => {
 
     const urls: string[] = [];
     for (const f of files) {
+      // 1. Validate file size
+      if (typeof f.size === 'number' && !validateFileSize(f.size, UPLOAD_MAX_MB)) {
+        return res
+          .status(413)
+          .json({ error: { message: `File too large (max ${UPLOAD_MAX_MB}MB)` } });
+      }
+
+      // 2. Validate MIME type and extension
       const extFromName = path.extname(f.name).toLowerCase();
       const mimeAllowed = ALLOWED_MIME_TYPES.has(
         f.mimetype as (typeof IMAGE_TYPE_MAP)[number]['mime']
@@ -94,22 +108,27 @@ router.post('/', requireAuth, async (req, res) => {
         ? ALLOWED_EXTENSIONS.has(extFromName as (typeof IMAGE_TYPE_MAP)[number]['ext'])
         : false;
 
-      // Reject files that don't match allowed types
       if (!mimeAllowed || !extAllowed) {
         return res
           .status(400)
           .json({ error: { message: `Unsupported file type: ${f.mimetype || extFromName}` } });
       }
 
-      // Reject files that exceed size limit
-      if (typeof f.size === 'number' && f.size > UPLOAD_MAX_BYTES) {
+      // 3. Validate file content (magic numbers)
+      const buffer = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data as any);
+      if (!validateImageContent(buffer)) {
         return res
-          .status(413)
-          .json({ error: { message: `File too large (max ${UPLOAD_MAX_MB}MB)` } });
+          .status(400)
+          .json({
+            error: { message: 'Invalid file content. File may be corrupted or not a valid image.' },
+          });
       }
 
-      const buffer = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data as any);
-      const { url } = await uploadImageBuffer(buffer, f.name);
+      // 4. Sanitize filename before upload
+      const safeFilename = sanitizeFilename(f.name);
+
+      // 5. Upload to Cloudinary
+      const { url } = await uploadImageBuffer(buffer, safeFilename);
       urls.push(url);
     }
 

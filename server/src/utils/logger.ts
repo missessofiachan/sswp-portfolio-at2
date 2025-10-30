@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { createLogger, format, transports } from 'winston';
 import { loadEnv } from '../config/env';
+import { getCorrelationId } from '../api/middleware/correlationId';
 
 type LogLevel = 'info' | 'error' | 'warn' | 'debug';
 
@@ -29,8 +30,7 @@ const LOG_DIRECTORY =
   env.LOG_DIR && env.LOG_DIR.trim().length > 0
     ? path.resolve(process.cwd(), env.LOG_DIR)
     : path.resolve(process.cwd(), 'logs');
-const LOG_FILENAME =
-  env.LOG_FILE && env.LOG_FILE.trim().length > 0 ? env.LOG_FILE : 'app.log';
+const LOG_FILENAME = env.LOG_FILE && env.LOG_FILE.trim().length > 0 ? env.LOG_FILE : 'app.log';
 const LOG_PATH = path.join(LOG_DIRECTORY, LOG_FILENAME);
 const LOG_LEVEL =
   env.LOG_LEVEL && env.LOG_LEVEL.trim().length > 0
@@ -146,6 +146,8 @@ export function logHttp(meta: HttpLogMeta) {
 // Express middleware for request logging (replaces morgan). Adds no in-memory queue.
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const start = process.hrtime.bigint();
+  const correlationId = getCorrelationId(req);
+
   res.on('finish', () => {
     try {
       const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
@@ -159,7 +161,8 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
         contentLength: res.getHeader('content-length')
           ? Number(res.getHeader('content-length'))
           : null,
-      });
+        correlationId,
+      } as any);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('requestLogger error:', err);

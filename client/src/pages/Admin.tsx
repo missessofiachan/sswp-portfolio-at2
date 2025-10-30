@@ -4,6 +4,7 @@ import { getProductStats, listProducts, deleteProduct } from '@client/api/client
 import { listUsers, deleteUser, type AdminUser } from '@client/api/clients/admin.api';
 import { card, btnOutline, btnPrimary, photoFrame, sepiaPhoto } from '@client/app/ui.css';
 import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
+import ErrorAlert from '@client/components/ui/ErrorAlert';
 
 /**
  * Admin Dashboard
@@ -15,43 +16,61 @@ import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 export default function Admin() {
   const [stats, setStats] = useState<{ count: number; avgPrice: number } | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsErrorDetails, setStatsErrorDetails] = useState<any>(null);
+  const [statsErrorIndexUrl, setStatsErrorIndexUrl] = useState<string | undefined>(undefined);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [usersErrorDetails, setUsersErrorDetails] = useState<any>(null);
+  const [usersErrorIndexUrl, setUsersErrorIndexUrl] = useState<string | undefined>(undefined);
 
   const [products, setProducts] = useState<any[]>([]);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [productsErrorDetails, setProductsErrorDetails] = useState<any>(null);
+  const [productsErrorIndexUrl, setProductsErrorIndexUrl] = useState<string | undefined>(undefined);
 
   async function refreshStats() {
     try {
       setStatsError(null);
+      setStatsErrorDetails(null);
+      setStatsErrorIndexUrl(undefined);
       const s = await getProductStats();
       setStats(s);
     } catch (e: any) {
       console.error('Error fetching product stats:', e);
-      setStatsError(e?.response?.data?.error?.message || 'Error');
+      setStatsError(e?.message || 'Error');
+      setStatsErrorDetails(e?.details);
+      setStatsErrorIndexUrl(e?.indexUrl);
     }
   }
 
   async function refreshUsers() {
     try {
       setUsersError(null);
+      setUsersErrorDetails(null);
+      setUsersErrorIndexUrl(undefined);
       const u = await listUsers();
       setUsers(u);
     } catch (e: any) {
       console.error('Error fetching users:', e);
-      setUsersError(e?.response?.data?.error?.message || 'Error');
+      setUsersError(e?.message || 'Error');
+      setUsersErrorDetails(e?.details);
+      setUsersErrorIndexUrl(e?.indexUrl);
     }
   }
 
   async function refreshProducts() {
     try {
       setProductsError(null);
+      setProductsErrorDetails(null);
+      setProductsErrorIndexUrl(undefined);
       const p = await listProducts();
       setProducts(p);
     } catch (e: any) {
       console.error('Error fetching products:', e);
-      setProductsError(e?.response?.data?.error?.message || 'Error');
+      setProductsError(e?.message || 'Error');
+      setProductsErrorDetails(e?.details);
+      setProductsErrorIndexUrl(e?.indexUrl);
     }
   }
 
@@ -70,7 +89,13 @@ export default function Admin() {
             Refresh
           </button>
         </div>
-        {statsError && <p style={{ color: 'crimson' }}>{statsError}</p>}
+        {statsError && (
+          <ErrorAlert
+            message={statsError}
+            details={statsErrorDetails}
+            indexUrl={statsErrorIndexUrl}
+          />
+        )}
         {stats ? (
           <ul>
             <li>Total products: {stats.count}</li>
@@ -88,7 +113,13 @@ export default function Admin() {
             Refresh
           </button>
         </div>
-        {usersError && <p style={{ color: 'crimson' }}>{usersError}</p>}
+        {usersError && (
+          <ErrorAlert
+            message={usersError}
+            details={usersErrorDetails}
+            indexUrl={usersErrorIndexUrl}
+          />
+        )}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -141,7 +172,13 @@ export default function Admin() {
             </button>
           </div>
         </div>
-        {productsError && <p style={{ color: 'crimson' }}>{productsError}</p>}
+        {productsError && (
+          <ErrorAlert
+            message={productsError}
+            details={productsErrorDetails}
+            indexUrl={productsErrorIndexUrl}
+          />
+        )}
         <div
           style={{
             display: 'grid',

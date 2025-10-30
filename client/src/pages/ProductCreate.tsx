@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createProduct, uploadImages } from '@client/api/clients/products.api';
+import ErrorAlert from '@client/components/ui/ErrorAlert';
 import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
 
 const Schema = z.object({
@@ -50,6 +51,9 @@ type FormValues = z.infer<typeof Schema>;
 
 export default function ProductCreate() {
   const nav = useNavigate();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitDetails, setSubmitDetails] = useState<any>(null);
+  const [submitIndexUrl, setSubmitIndexUrl] = useState<string | undefined>(undefined);
   const [uploadStatus, setUploadStatus] = useState<{ text: string; color: string } | null>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const statusTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -62,6 +66,8 @@ export default function ProductCreate() {
 
   async function onSubmit(values: FormValues) {
     try {
+      setSubmitError(null);
+      setSubmitDetails(null);
       const created = await createProduct({
         name: values.name,
         price: values.price,
@@ -74,17 +80,24 @@ export default function ProductCreate() {
       if (created && created.id) {
         nav(`/products/${created.id}`);
       } else {
-        alert('Product creation failed: Invalid response from server.');
+        setSubmitError('Product creation failed: Invalid response from server.');
       }
     } catch (error) {
-      alert('Product creation failed. Please try again.');
-      console.error(error);
+      const e: any = error;
+      setSubmitError(e?.message || 'Product creation failed. Please try again.');
+      setSubmitDetails(e?.details);
+      setSubmitIndexUrl(e?.indexUrl);
     }
   }
 
   return (
     <div className={card}>
       <h2>New Product</h2>
+      {submitError && (
+        <div style={{ marginBottom: '12px' }}>
+          <ErrorAlert message={submitError} details={submitDetails} indexUrl={submitIndexUrl} />
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={field}>
           <label className={label}>Name</label>

@@ -92,8 +92,11 @@ export function Checkout() {
         })),
         paymentMethod: data.paymentMethod,
         shippingAddress: data.shippingAddress,
-        notes: data.notes,
+        notes: data.notes || undefined, // Convert empty string to undefined
       };
+
+      console.log('Placing order as:', user?.id, '(admin)');
+      console.log('Order data:', JSON.stringify(orderData, null, 2));
 
       const order = await ordersApi.createOrder(orderData);
       clearCart();
@@ -101,7 +104,19 @@ export function Checkout() {
       navigate(`/orders/${order.id}`);
     } catch (error) {
       console.error('Order creation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
+
+      // Extract detailed error information
+      let errorMessage = 'Failed to place order';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      // If there's a response with validation errors, log them
+      if ((error as any)?.response?.data?.errors) {
+        console.error('Validation errors:', (error as any).response.data.errors);
+        errorMessage = 'Validation failed: ' + JSON.stringify((error as any).response.data.errors);
+      }
+
       setSubmitError(errorMessage);
       showToast(errorMessage, { type: 'error' });
     } finally {

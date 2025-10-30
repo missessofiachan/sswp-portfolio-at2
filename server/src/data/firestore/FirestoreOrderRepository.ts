@@ -98,17 +98,23 @@ export class FirestoreOrderRepository implements OrderRepository {
     const now = new Date();
 
     await db.runTransaction(async (tx) => {
+      // PHASE 1: Read all products first (Firestore requires all reads before writes)
+      const productReads = await Promise.all(
+        orderData.items.map((item) => {
+          const productRef = db.collection(this.productsCollectionName).doc(item.productId);
+          return tx.get(productRef).then((snap) => ({ item, productRef, snap }));
+        })
+      );
+
+      // PHASE 2: Process reads and validate
       const orderItems: Order['items'] = [];
       let subtotal = 0;
 
-      for (const item of orderData.items) {
+      for (const { item, productRef, snap: productSnap } of productReads) {
         const quantity = Math.floor(item.quantity);
         if (!Number.isFinite(quantity) || quantity <= 0) {
           throw new Error(`Invalid quantity for product ${item.productId}: ${item.quantity}`);
         }
-
-        const productRef = db.collection(this.productsCollectionName).doc(item.productId);
-        const productSnap = await tx.get(productRef);
 
         if (!productSnap.exists) {
           throw this.createProductNotFoundError(item.productId);
@@ -161,7 +167,11 @@ export class FirestoreOrderRepository implements OrderRepository {
         }
 
         orderItems.push(orderItem);
+      }
 
+      // PHASE 3: Perform all writes after all reads are complete
+      for (const { productRef, item } of productReads) {
+        const quantity = Math.floor(item.quantity);
         tx.update(productRef, {
           stock: admin.firestore.FieldValue.increment(-quantity),
         });

@@ -113,9 +113,7 @@ export const addToCartAtom = atom(null, (get, set, product: Product, quantity: n
  */
 export const removeFromCartAtom = atom(null, (get, set, productId: string) => {
   const currentItems = get(cartItemsAtom);
-  console.log('Removing item from cart:', productId, 'Current items:', currentItems);
   const updatedItems = currentItems.filter((item) => item.id !== productId);
-  console.log('Updated items after removal:', updatedItems);
   set(cartItemsAtom, updatedItems);
   showToast('Item removed from cart', { type: 'success' });
 });
@@ -147,6 +145,7 @@ export const updateCartItemQuantityAtom = atom(
  */
 export const clearCartAtom = atom(null, (_get, set) => {
   set(cartItemsAtom, []);
+  showToast('Cart cleared', { type: 'info' });
 });
 
 /**

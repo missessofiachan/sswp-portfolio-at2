@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
 import { showToast } from '../lib/toast';
 import type { Order } from '../types/orders';
@@ -22,7 +22,6 @@ import * as styles from './OrderDetail.css';
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

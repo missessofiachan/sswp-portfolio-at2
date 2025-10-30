@@ -11,6 +11,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
+import ErrorAlert from '../components/ui/ErrorAlert';
 import { showToast } from '../lib/toast';
 import { ORDER_STATUS_INFO, PAYMENT_METHOD_INFO, OrderStatus, type Order } from '../types/orders';
 
@@ -21,6 +22,8 @@ export function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [errorIndexUrl, setErrorIndexUrl] = useState<string | undefined>(undefined);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -35,7 +38,10 @@ export function Orders() {
         setOrders(result.orders);
         setHasMore(result.hasMore);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load orders');
+        const e: any = err;
+        setError(e?.message || 'Failed to load orders');
+        setErrorDetails(e?.details);
+        setErrorIndexUrl(e?.indexUrl);
       } finally {
         setLoading(false);
       }
@@ -117,16 +123,17 @@ export function Orders() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Orders</h1>
-          <p className="text-red-600 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-2xl w-full space-y-4">
+          <ErrorAlert message={error} details={errorDetails} indexUrl={errorIndexUrl} />
+          <div className="text-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -312,11 +319,13 @@ export function Orders() {
                         {order.items.slice(0, 3).map((item, index) => (
                           <div key={index} className="flex items-center space-x-3">
                             {item.productImage && (
-                              <img
-                                src={item.productImage}
-                                alt={item.productName}
-                                className="w-12 h-12 object-cover rounded-lg"
-                              />
+                              <div className="w-12 h-12 flex-shrink-0">
+                                <img
+                                  src={item.productImage}
+                                  alt={item.productName}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              </div>
                             )}
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">

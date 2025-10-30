@@ -124,12 +124,12 @@ const Env = z.object({
       message: 'CLOUDINARY_URL must begin with "cloudinary://"',
     }),
   CLOUDINARY_UPLOAD_FOLDER: z.string().optional(),
-  PASSWORD_RESET_TTL_MINUTES: z
-    .coerce.number()
+  PASSWORD_RESET_TTL_MINUTES: z.coerce
+    .number()
     .positive('PASSWORD_RESET_TTL_MINUTES must be positive')
     .default(60),
-  PASSWORD_RESET_RATE_LIMIT_MINUTES: z
-    .coerce.number()
+  PASSWORD_RESET_RATE_LIMIT_MINUTES: z.coerce
+    .number()
     .positive('PASSWORD_RESET_RATE_LIMIT_MINUTES must be positive')
     .default(5),
   LOG_TO_FILE: z.string().optional(),

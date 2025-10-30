@@ -1,0 +1,4 @@
+{
+  "recommendations": ["biomejs.biome", "dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss"],
+  "unwantedRecommendations": ["esbenp.prettier-vscode"]
+}

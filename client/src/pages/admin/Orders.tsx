@@ -16,14 +16,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi } from '../../api/clients/orders.api';
+import ErrorAlert from '../../components/ui/ErrorAlert';
+import { useAdminBanner } from './AdminBannerContext';
 import { showToast } from '../../lib/toast';
 import { ORDER_STATUS_INFO, OrderStatus, type Order, type OrderStats } from '../../types/orders';
 
 export default function AdminOrders() {
+  const { setBanner, clearBanner, indexUrl } = useAdminBanner();
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMore, setHasMore] = useState(false);
@@ -43,9 +47,13 @@ export default function AdminOrders() {
       });
       setOrders(result.orders);
       setHasMore(result.hasMore);
+      clearBanner();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load orders';
+      const e: any = err;
+      const errorMsg = e?.message || 'Failed to load orders';
       setError(errorMsg);
+      setErrorDetails(e?.details);
+      if (e?.indexUrl) setBanner({ indexUrl: e.indexUrl });
       showToast(errorMsg, { type: 'error' });
     } finally {
       setLoading(false);
@@ -196,9 +204,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Orders Table */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">{error}</div>
-      )}
+      {error && <ErrorAlert message={error} details={errorDetails} indexUrl={indexUrl} />}
 
       {filteredOrders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">

@@ -152,7 +152,7 @@ export default function Contact() {
               name="message"
               className={inputClass}
               rows={6}
-              placeholder="Share the details and we\'ll get back to you shortly."
+              placeholder="Share the details and we'll get back to you shortly."
               required
             />
             <p className={s.note}>

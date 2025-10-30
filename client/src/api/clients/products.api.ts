@@ -1,4 +1,5 @@
 import { axiosInstance } from '@client/lib/axios';
+import type { Product, ProductListParams, ProductListResponse } from '@client/types/product';
 
 /**
  * Product input data structure for creating and updating products.
@@ -29,7 +30,7 @@ type ProductInput = {
  * @param {Object} [params.sort] - Sorting configuration
  * @param {string} params.sort.field - Field to sort by (e.g., 'price', 'name', 'createdAt')
  * @param {'asc'|'desc'} params.sort.dir - Sort direction
- * @returns {Promise<any[]>} Promise resolving to array of product objects
+ * @returns {Promise<Product[]>} Promise resolving to array of product objects
  *
  * @example
  * ```typescript
@@ -38,16 +39,18 @@ type ProductInput = {
  * });
  * ```
  */
-export async function listProducts(params?: { sort?: { field: string; dir: 'asc' | 'desc' } }) {
+export async function listProducts(params?: {
+  sort?: { field: string; dir: 'asc' | 'desc' };
+}): Promise<Product[]> {
   const res = await axiosInstance.get('/products', { params });
-  return res.data.data;
+  return res.data.data as Product[];
 }
 
 /**
  * Retrieves a single product by its ID.
  *
  * @param {string} id - The unique product identifier
- * @returns {Promise<any>} Promise resolving to the product object
+ * @returns {Promise<Product>} Promise resolving to the product object
  * @throws {AxiosError} When product is not found (404) or other API errors
  *
  * @example
@@ -56,9 +59,9 @@ export async function listProducts(params?: { sort?: { field: string; dir: 'asc'
  * console.log(product.name, product.price);
  * ```
  */
-export async function getProduct(id: string) {
+export async function getProduct(id: string): Promise<Product> {
   const res = await axiosInstance.get(`/products/${id}`);
-  return res.data.data;
+  return res.data.data as Product;
 }
 
 /**
@@ -82,8 +85,7 @@ export async function getProduct(id: string) {
  * @param {number} [params.filter.maxPrice] - Maximum price filter
  * @param {number} [params.page] - Page number (1-based)
  * @param {number} [params.pageSize] - Number of items per page
- * @returns {Promise<{data: any[], meta: {total: number, page: number, pageSize: number}}>}
- *   Promise resolving to paginated product data with metadata
+ * @returns {Promise<ProductListResponse>} Promise resolving to paginated product data with metadata
  *
  * @example
  * ```typescript
@@ -96,14 +98,9 @@ export async function getProduct(id: string) {
  * console.log(`Found ${result.meta.total} products`);
  * ```
  */
-export async function listProductsPaged(params?: {
-  sort?: { field: string; dir: 'asc' | 'desc' };
-  filter?: { q?: string; category?: string; minPrice?: number; maxPrice?: number };
-  page?: number;
-  pageSize?: number;
-}): Promise<{ data: any[]; meta: { total: number; page: number; pageSize: number } }> {
+export async function listProductsPaged(params?: ProductListParams): Promise<ProductListResponse> {
   const res = await axiosInstance.get('/products', { params });
-  return res.data as { data: any[]; meta: { total: number; page: number; pageSize: number } };
+  return res.data as ProductListResponse;
 }
 
 /**
