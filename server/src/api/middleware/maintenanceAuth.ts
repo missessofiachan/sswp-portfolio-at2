@@ -24,9 +24,10 @@ export async function maintenanceGuard(
     return;
   }
   // Fallback: ensure admin auth
-  await requireAuth(req, res, (err?: any) => {
-    if (err) return; // requireAuth already responded
-    return requireRole('admin')(req, res, next);
+  // First verify authentication
+  await requireAuth(req, res, () => {
+    // If authentication succeeds, verify admin role
+    requireRole('admin')(req, res, next);
   });
 }
 
