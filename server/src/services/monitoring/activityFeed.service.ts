@@ -7,9 +7,9 @@
  */
 
 import type { Order } from '@server/domain/orders';
-import { favoritesService } from '@server/services/products';
 import { auditLogsService } from '@server/services/monitoring';
 import type { OrderService } from '@server/services/orders';
+import { favoritesService } from '@server/services/products';
 
 export type ActivityType = 'favorite' | 'order' | 'audit';
 
