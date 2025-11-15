@@ -10,15 +10,15 @@
 
 import * as admin from 'firebase-admin';
 import { getDb } from '../../config/firestore';
-import { OrderRepository } from '../ports/OrderRepository';
 import {
-  Order,
-  CreateOrderInput,
-  UpdateOrderInput,
-  OrderStats,
+  type CreateOrderInput,
+  type Order,
+  type OrderStats,
   OrderStatus,
   PaymentStatus,
+  type UpdateOrderInput,
 } from '../../domain/orders';
+import type { OrderRepository } from '../ports/OrderRepository';
 
 /**
  * Firestore implementation of the order repository

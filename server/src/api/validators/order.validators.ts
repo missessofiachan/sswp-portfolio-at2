@@ -9,7 +9,7 @@
  */
 
 import Joi from 'joi';
-import { OrderStatus, PaymentStatus, PaymentMethod } from '../../domain/orders';
+import { OrderStatus, PaymentMethod, PaymentStatus } from '../../domain/orders';
 
 /**
  * Validation schema for order item

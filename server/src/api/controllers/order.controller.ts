@@ -8,9 +8,9 @@
  * @module api/controllers/OrderController
  */
 
-import { Request, Response } from 'express';
-import { OrderService } from '../../services/order.service';
-import { CreateOrderInput, UpdateOrderInput, OrderStatus } from '../../domain/orders';
+import type { OrderService } from '@server/services/orders';
+import type { Request, Response } from 'express';
+import type { CreateOrderInput, OrderStatus, UpdateOrderInput } from '../../domain/orders';
 import { logError } from '../../utils/logger';
 
 /**

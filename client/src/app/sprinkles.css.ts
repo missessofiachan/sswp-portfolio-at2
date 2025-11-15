@@ -1,3 +1,7 @@
+/**
+ * Shared sprinkles configuration defining responsive spacing, color, border,
+ * typography, and shadow utilities for the design system.
+ */
 import { createSprinkles, defineProperties } from '@vanilla-extract/sprinkles';
 import { vars } from './theme.css';
 
@@ -55,5 +59,53 @@ const colorProperties = defineProperties({
   },
 });
 
-export const sprinkles = createSprinkles(responsiveProperties, colorProperties);
+const borderProperties = defineProperties({
+  conditions: {
+    mobile: {},
+    tablet: { '@media': 'screen and (min-width: 768px)' },
+    desktop: { '@media': 'screen and (min-width: 1024px)' },
+  },
+  defaultCondition: 'mobile',
+  properties: {
+    borderRadius: vars.radius,
+    borderWidth: ['0', '1px', '2px', '4px'],
+    borderStyle: ['solid', 'dashed', 'dotted', 'none'],
+  },
+});
+
+const typographyProperties = defineProperties({
+  conditions: {
+    mobile: {},
+    tablet: { '@media': 'screen and (min-width: 768px)' },
+    desktop: { '@media': 'screen and (min-width: 1024px)' },
+  },
+  defaultCondition: 'mobile',
+  properties: {
+    fontSize: ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl'],
+    fontWeight: ['normal', 'medium', 'semibold', 'bold'],
+    textAlign: ['left', 'center', 'right', 'justify'],
+    textDecoration: ['none', 'underline'],
+    textTransform: ['none', 'uppercase', 'lowercase', 'capitalize'],
+  },
+});
+
+const shadowProperties = defineProperties({
+  conditions: {
+    mobile: {},
+    tablet: { '@media': 'screen and (min-width: 768px)' },
+    desktop: { '@media': 'screen and (min-width: 1024px)' },
+  },
+  defaultCondition: 'mobile',
+  properties: {
+    boxShadow: vars.shadow,
+  },
+});
+
+export const sprinkles = createSprinkles(
+  responsiveProperties,
+  colorProperties,
+  borderProperties,
+  typographyProperties,
+  shadowProperties
+);
 export type Sprinkles = Parameters<typeof sprinkles>[0];

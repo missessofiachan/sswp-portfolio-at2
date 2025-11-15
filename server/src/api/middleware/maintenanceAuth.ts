@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction } from 'express';
-import { requireAuth, requireRole } from './auth';
+import type { NextFunction, Request, Response } from 'express';
 import { loadEnv } from '../../config/env';
+import { requireAuth, requireRole } from './auth';
 
 const { MAINTENANCE_SECRET } = loadEnv();
 

@@ -3,7 +3,8 @@
  * authentication failures, and security events.
  */
 
-import { logWarn, logError, logInfo } from './logger';
+import { logError, logInfo, logWarn } from './logger';
+import { monitoring } from './monitoring';
 
 export interface AuthFailureEvent {
   email: string;
@@ -40,6 +41,17 @@ export function logAuthFailure(event: AuthFailureEvent): void {
     subCategory: 'auth_failure',
     ...event,
   });
+
+  // Forward to monitoring service for alerting dashboards
+  monitoring.captureMessage(`Authentication failed: ${event.reason}`, 'warning', {
+    category: 'security',
+    subCategory: 'auth_failure',
+    email: event.email,
+    reason: event.reason,
+    ip: event.ip,
+    userAgent: event.userAgent,
+    correlationId: event.correlationId,
+  });
 }
 
 /**
@@ -51,6 +63,23 @@ export function logSuspiciousActivity(event: SuspiciousActivityEvent): void {
     subCategory: 'suspicious_activity',
     ...event,
   });
+
+  // Forward to monitoring service for alerting dashboards
+  // Determine severity level based on activity type
+  const severity: 'warning' | 'error' =
+    event.type === 'unauthorized_access' || event.type === 'invalid_token' ? 'error' : 'warning';
+
+  monitoring.captureMessage(`Suspicious activity: ${event.type}`, severity, {
+    category: 'security',
+    subCategory: 'suspicious_activity',
+    type: event.type,
+    userId: event.userId,
+    email: event.email,
+    ip: event.ip,
+    path: event.path,
+    details: event.details,
+    correlationId: event.correlationId,
+  });
 }
 
 /**
@@ -61,6 +90,17 @@ export function logSecurityEvent(event: SecurityEvent): void {
     category: 'security',
     subCategory: 'event',
     ...event,
+  });
+
+  // Forward to monitoring service for alerting dashboards
+  monitoring.captureMessage(`Security event: ${event.type}`, 'info', {
+    category: 'security',
+    subCategory: 'event',
+    type: event.type,
+    userId: event.userId,
+    performedBy: event.performedBy,
+    details: event.details,
+    correlationId: event.correlationId,
   });
 }
 

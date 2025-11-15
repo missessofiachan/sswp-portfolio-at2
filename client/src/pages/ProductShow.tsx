@@ -1,24 +1,25 @@
 // products/:id
 
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteProduct, getProduct } from '@client/api/clients/products.api';
-import { useAuth } from '@client/features/auth/AuthProvider';
-import { useSetAtom } from 'jotai';
-import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
 import {
-  card,
   actions,
-  btnOutline,
   btnDanger,
+  btnOutline,
   btnPrimary,
+  card,
   photoFrame,
   photoThumb,
   sepiaPhoto,
 } from '@client/app/ui.css';
-import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
-
+import FavoriteButton from '@client/components/ui/FavoriteButton';
+import { useAuth } from '@client/features/auth/AuthProvider';
+import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
+import { PLACEHOLDER_SRC, resolveImageUrl } from '@client/lib/images';
 import type { Product as CanonicalProduct } from '@client/types/product';
+import { useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+
 type Product = CanonicalProduct;
 
 // Simple confirmation modal component
@@ -151,7 +152,17 @@ export default function ProductShow() {
   return (
     <>
       <article className={card}>
-        <h2 style={{ marginTop: 0 }}>{product.name}</h2>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <h2 style={{ marginTop: 0, marginBottom: 0 }}>{product.name}</h2>
+          <FavoriteButton productId={product.id} size={24} />
+        </div>
         {Array.isArray(product.images) && product.images.length > 0 && (
           <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
             {/* Primary image */}

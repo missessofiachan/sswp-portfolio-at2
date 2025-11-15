@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { FormActions } from '@client/components/forms/FormActions';
+import { TextField } from '@client/components/forms/TextField';
+import { AuthCardLayout } from '@client/components/layout/AuthCardLayout';
 import { useAuth } from '@client/features/auth/AuthProvider';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
+import { useAppForm } from '@client/lib/hooks/useAppForm';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
 const schema = z.object({ email: z.string().email(), password: z.string().min(6) });
 
@@ -12,124 +13,77 @@ type FormData = z.infer<typeof schema>;
 
 type LocationState = { from?: { pathname: string } };
 
-/**
- * Login
- *
- * Renders a login form and handles user authentication.
- *
- * Behavior
- * - Initializes a controlled form using react-hook-form with a Zod schema resolver (zodResolver(schema)).
- * - Uses useAuth().login to perform authentication with the submitted FormData.
- * - On successful login navigates to the previous location (location.state.from.pathname) or to '/' by default, using useNavigate with replace: true.
- * - Maintains an errorMessage state to display server-side or network error messages returned from the login request. It extracts the message via e?.response?.data?.error?.message and falls back to 'Login failed'.
- * - Displays validation errors provided by react-hook-form (errors.*) inline beneath their corresponding inputs.
- * - Exposes a Reset button that calls react-hook-form's reset() to clear the form.
- *
- * Hooks and related types
- * - useForm<FormData>({...}) — form management; FormData represents the shape of the submitted credentials (e.g., { email, password }).
- * - zodResolver(schema) — integrates Zod validation schema for form validation.
- * - useAuth() — provides the login method to perform authentication.
- * - useNavigate() and useLocation() — handle post-login redirection and compute the 'from' fallback location; LocationState type describes the expected location.state shape.
- * - useState<string | null> — holds the current error message shown to the user.
- *
- * Accessibility & UX
- * - Inputs include htmlFor/id pairing for their labels.
- * - Submit and Reset buttons have appropriate button types.
- * - Server and validation errors are shown near the form controls and styled to indicate error state.
- *
- * @returns {JSX.Element} The rendered login form component.
- */
-
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
   const { login } = useAuth();
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  // Check for session expiration on mount
+  const form = useAppForm({
+    schema,
+    defaultValues: { email: '', password: '' },
+    successMessage: 'Logged in successfully',
+    onSubmit: async (values) => {
+      await login(values);
+      const returnTo = sessionStorage.getItem('returnTo');
+      sessionStorage.removeItem('returnTo');
+      const from = returnTo || (location.state as LocationState | null)?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    },
+  });
+
   useEffect(() => {
     try {
       const sessionExpired = sessionStorage.getItem('sessionExpired');
-      const returnTo = sessionStorage.getItem('returnTo');
       if (sessionExpired === 'true') {
         setInfoMessage('Your session has expired. Please log in again.');
         sessionStorage.removeItem('sessionExpired');
-        // Keep returnTo for navigation after login
       }
     } catch (error) {
       console.error('Error checking session expiration:', error);
     }
   }, []);
 
-  async function onSubmit(values: FormData) {
-    try {
-      setErrorMessage(null);
-      setInfoMessage(null);
-      await login(values);
-
-      // Check if we should return to a saved location
-      const returnTo = sessionStorage.getItem('returnTo');
-      sessionStorage.removeItem('returnTo');
-      const from = returnTo || (location.state as LocationState | null)?.from?.pathname || '/';
-
-      navigate(from, { replace: true });
-    } catch (e: any) {
-      setErrorMessage(e?.response?.data?.error?.message || 'Login failed');
-    }
-  }
-
   return (
-    <div className={card}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {infoMessage && (
-          <div
-            style={{
-              color: '#0066cc',
-              marginBottom: 8,
-              padding: 8,
-              backgroundColor: '#e3f2fd',
-              borderRadius: 4,
-            }}
-          >
-            {infoMessage}
-          </div>
-        )}
-        {errorMessage && <div style={{ color: 'crimson', marginBottom: 8 }}>{errorMessage}</div>}
-
-        <div className={field}>
-          <label className={label} htmlFor="email">
-            Email
-          </label>
-          <input id="email" className={input} type="email" {...register('email')} />
-          {errors.email && <small style={{ color: 'crimson' }}>{errors.email.message}</small>}
-        </div>
-
-        <div className={field}>
-          <label className={label} htmlFor="password">
-            Password
-          </label>
-          <input id="password" className={input} type="password" {...register('password')} />
-          {errors.password && <small style={{ color: 'crimson' }}>{errors.password.message}</small>}
-        </div>
-
-        <div className={actions}>
-          <button className={btnPrimary} type="submit">
-            Login
-          </button>
-          <button className={btnOutline} type="button" onClick={() => reset()}>
-            Reset
-          </button>
-        </div>
+    <AuthCardLayout
+      title="Welcome back"
+      subtitle="Log in to access your dashboard"
+      icon={
+        <span role="img" aria-label="Lock">
+          🔐
+        </span>
+      }
+      error={infoMessage ? <div style={{ color: '#0066cc' }}>{infoMessage}</div> : undefined}
+      footer={
+        <span>
+          Need an account? <Link to="/register">Create one</Link>
+        </span>
+      }
+    >
+      <form onSubmit={form.handleSubmitForm}>
+        <TextField
+          label="Email"
+          name="email"
+          type="email"
+          control={form.control}
+          required
+          prefix={<span>📧</span>}
+          placeholder="you@example.com"
+        />
+        <TextField
+          label="Password"
+          name="password"
+          type="password"
+          control={form.control}
+          required
+          showPasswordToggle
+        />
+        <FormActions
+          submitLabel="Login"
+          isSubmitting={form.formState.isSubmitting}
+          onCancel={() => form.reset()}
+        />
       </form>
-    </div>
+    </AuthCardLayout>
   );
 }

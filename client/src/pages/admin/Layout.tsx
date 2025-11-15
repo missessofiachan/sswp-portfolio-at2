@@ -1,5 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
 import IndexBanner from '@client/components/ui/IndexBanner';
+import { NavLink, Outlet } from 'react-router-dom';
 import { AdminBannerProvider, useAdminBanner } from './AdminBannerContext';
 import * as s from './layout.css';
 
@@ -24,6 +24,9 @@ export default function AdminLayout() {
             </NavLink>
             <NavLink to="/admin/orders" className={cls}>
               Orders
+            </NavLink>
+            <NavLink to="/admin/audit-logs" className={cls}>
+              Audit Logs
             </NavLink>
           </nav>
         </aside>

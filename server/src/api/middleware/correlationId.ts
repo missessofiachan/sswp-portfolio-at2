@@ -5,8 +5,8 @@
  * tracing across services, logs, and error reports.
  */
 
-import type { Request, Response, NextFunction } from 'express';
 import { randomBytes } from 'crypto';
+import type { NextFunction, Request, Response } from 'express';
 
 /**
  * Header name for correlation ID

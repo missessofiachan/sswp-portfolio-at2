@@ -1,5 +1,5 @@
 // schema -> 400 on bad payload
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import type Joi from 'joi';
 
 /**

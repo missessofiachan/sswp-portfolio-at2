@@ -1,3 +1,8 @@
+/**
+ * Public authentication API client responsible for login and registration
+ * flows. Wraps axiosInstance to keep request typing and response parsing
+ * consistent within the frontend.
+ */
 import { axiosInstance } from '@client/lib/axios';
 export type LoginRequest = { email: string; password: string };
 // Server returns { data: { token, user } } for /auth/login

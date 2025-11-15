@@ -71,7 +71,11 @@ MAINTENANCE_SECRET=your-maintenance-secret
 
 **client/.env:**
 ```env
-VITE_API_BASE_URL=http://localhost:3001
+# Preferred: explicitly point to your API origin (includes /api/v1 path)
+VITE_API_URL=http://localhost:4000/api/v1
+
+# Legacy fallback supported by older docs (optional)
+# VITE_API_BASE_URL=http://localhost:4000/api/v1
 ```
 
 ### 4. Firebase Setup
@@ -93,7 +97,7 @@ yarn dev
 
 # Or run them separately:
 yarn dev:client  # Frontend on http://localhost:5173
-yarn dev:server  # Backend on http://localhost:3001
+yarn dev:server  # Backend on http://localhost:4000
 ```
 
 ## Available Scripts

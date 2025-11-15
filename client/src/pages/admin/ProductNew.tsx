@@ -1,5 +1,5 @@
-import ProductCreate from '@client/pages/ProductCreate';
 import { card } from '@client/app/ui.css';
+import ProductCreate from '@client/pages/ProductCreate';
 
 export default function AdminProductNew() {
   return (

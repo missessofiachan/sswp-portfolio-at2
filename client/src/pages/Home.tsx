@@ -1,7 +1,7 @@
-import type { JSX } from 'react';
-import { motion } from 'framer-motion';
 import { sprinkles } from '@client/app/sprinkles.css';
 import { vars } from '@client/app/theme.css';
+import { motion } from 'framer-motion';
+import type { JSX } from 'react';
 
 /**
  * Home page component.

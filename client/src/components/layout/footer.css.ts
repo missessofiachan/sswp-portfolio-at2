@@ -1,6 +1,6 @@
-import { style } from '@vanilla-extract/css';
-import { vars } from '@client/app/theme.css';
 import { sprinkles } from '@client/app/sprinkles.css';
+import { vars } from '@client/app/theme.css';
+import { style } from '@vanilla-extract/css';
 
 export const bar = style([
   {
@@ -38,5 +38,18 @@ export const right = style([
     display: 'flex',
     alignItems: 'center',
     gap: vars.space.md,
+    flexWrap: 'wrap',
   },
 ]);
+
+export const links = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.45rem',
+  flexWrap: 'wrap',
+});
+
+export const separator = style({
+  color: vars.color.textMuted,
+  fontSize: '0.8rem',
+});

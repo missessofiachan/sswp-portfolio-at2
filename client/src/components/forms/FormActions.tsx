@@ -2,8 +2,8 @@
  * Standardized form action buttons component
  */
 
-import { type ReactNode } from 'react';
-import { actions, btnPrimary, btnOutline } from '@client/app/ui.css';
+import { actions, btnOutline, btnPrimary } from '@client/app/ui.css';
+import type { ReactNode } from 'react';
 
 export interface FormActionsProps {
   submitLabel?: string;

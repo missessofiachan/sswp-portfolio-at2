@@ -3,8 +3,8 @@
  * More targeted than the global AppErrorBoundary.
  */
 
+import { btnPrimary, card } from '@client/app/ui.css';
 import React, { Component, type ReactNode } from 'react';
-import { card, btnPrimary } from '@client/app/ui.css';
 
 export interface FeatureErrorBoundaryProps {
   children: ReactNode;

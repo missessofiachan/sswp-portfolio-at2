@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+import { createProduct, uploadImages } from '@client/api/clients/products.api';
+import { actions, btnOutline, btnPrimary, card, field, input, label } from '@client/app/ui.css';
+import ErrorAlert from '@client/components/ui/ErrorAlert';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createProduct, uploadImages } from '@client/api/clients/products.api';
-import ErrorAlert from '@client/components/ui/ErrorAlert';
-import { card, field, input, label, actions, btnPrimary, btnOutline } from '@client/app/ui.css';
 
 const Schema = z.object({
   name: z.string().min(2),

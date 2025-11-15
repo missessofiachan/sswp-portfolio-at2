@@ -1,4 +1,8 @@
-import React from 'react';
+/**
+ * Simple error alert component for form-level validation and Firestore index
+ * warnings.
+ */
+import type React from 'react';
 
 interface ErrorAlertProps {
   message: string;

@@ -1,9 +1,13 @@
-import type { Request, Response, NextFunction } from 'express';
+/**
+ * Central logging utilities built on top of Winston providing structured file
+ * output, console formatting for development, and HTTP request middleware.
+ */
+import type { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { createLogger, format, transports } from 'winston';
-import { loadEnv } from '../config/env';
 import { getCorrelationId } from '../api/middleware/correlationId';
+import { loadEnv } from '../config/env';
 
 type LogLevel = 'info' | 'error' | 'warn' | 'debug';
 

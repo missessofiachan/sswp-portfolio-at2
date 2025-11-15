@@ -1,5 +1,5 @@
-import { style } from '@vanilla-extract/css';
 import { vars } from '@client/app/theme.css';
+import { style } from '@vanilla-extract/css';
 
 export const container = style({
   position: 'fixed',

@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+import { deleteProduct, listProductsPaged } from '@client/api/clients/products.api';
 import {
-  card,
   btnOutline,
   btnPrimary,
+  card,
   input as inputField,
   photoFrame,
   sepiaPhoto,
 } from '@client/app/ui.css';
-import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
-import { listProductsPaged, deleteProduct } from '@client/api/clients/products.api';
+import { PLACEHOLDER_SRC, resolveImageUrl } from '@client/lib/images';
+import { useEffect, useState } from 'react';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);

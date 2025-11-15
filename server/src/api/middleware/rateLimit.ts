@@ -3,7 +3,7 @@
  * Uses in-memory store for simplicity (use Redis for production with multiple servers).
  */
 
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { logRateLimitHit } from '../../utils/securityLogger';
 import { getCorrelationId } from './correlationId';
 

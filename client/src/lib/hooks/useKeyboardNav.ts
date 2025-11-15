@@ -1,7 +1,6 @@
 /**
- * Hook for implementing keyboard navigation patterns
+ * Hook that wires arrow-key navigation semantics for menu/list containers.
  */
-
 import { useEffect, useRef } from 'react';
 
 export interface KeyboardNavOptions {

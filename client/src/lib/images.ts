@@ -1,3 +1,7 @@
+/**
+ * Image URL resolution helpers for normalizing relative asset paths against
+ * the configured API base and providing a placeholder fallback.
+ */
 // Image URL resolution helpers
 // Ensures relative URLs (like "/api/v1/files/.." or "/uploads/..") are made absolute
 // using VITE_API_URL when provided, otherwise falls back to current window origin.

@@ -1,8 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -57,28 +55,29 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      "coverage",
-      ".next",
-      ".cache",
-      "*.min.js",
-      "*.min.css",
-      "package-lock.json",
-      "yarn.lock",
-      "client/dist",
-      "client/build",
-      "server/dist",
-      "docs/jsdoc",
-      "tsconfig*.json",
-      ".vscode/tasks.json"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/coverage",
+      "!**/.next",
+      "!**/.cache",
+      "!**/*.min.js",
+      "!**/*.min.css",
+      "!**/package-lock.json",
+      "!**/yarn.lock",
+      "!**/client/dist",
+      "!**/client/build",
+      "!**/server/dist",
+      "!**/docs/jsdoc",
+      "!**/tsconfig*.json",
+      "!**/.vscode/tasks.json"
     ]
   },
   "overrides": [
     {
-      "include": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
       "linter": {
         "rules": {
           "suspicious": {
@@ -88,7 +87,7 @@
       }
     },
     {
-      "include": ["server/**/*.ts"],
+      "includes": ["**/server/**/*.ts"],
       "linter": {
         "rules": {
           "style": {

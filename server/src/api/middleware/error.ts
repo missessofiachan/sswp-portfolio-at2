@@ -1,12 +1,8 @@
 /**
  * Centralized error handler middleware for Express.
- *
- * @param err - The error thrown in a route or middleware.
- * @param _req - The Express request object (unused).
- * @param res - The Express response object.
- * @param _next - The next middleware function (unused).
+
  */
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { monitoring } from '../../utils/monitoring';
 import { getCorrelationId } from './correlationId';
 

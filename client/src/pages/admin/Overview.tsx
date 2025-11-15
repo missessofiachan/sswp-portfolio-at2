@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { card, btnOutline } from '@client/app/ui.css';
 import { getProductStats, getProductsTimeseries } from '@client/api/clients/products.api';
+import { btnOutline, card } from '@client/app/ui.css';
+import MetricsPanel from '@client/components/admin/MetricsPanel';
+import SystemHealthPanel from '@client/components/admin/SystemHealthPanel';
 import MiniArea from '@client/components/charts/MiniArea';
+import { useEffect, useState } from 'react';
 
 export default function AdminOverview() {
   const [stats, setStats] = useState<{ count: number; avgPrice: number } | null>(null);
@@ -26,6 +28,8 @@ export default function AdminOverview() {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
+      <MetricsPanel />
+      <SystemHealthPanel />
       <div className={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Overview</h2>

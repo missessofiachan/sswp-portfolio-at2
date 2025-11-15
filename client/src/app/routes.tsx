@@ -1,42 +1,57 @@
-import type { RouteObject } from 'react-router-dom';
-import { Outlet } from 'react-router-dom';
+/**
+ * Central React Router configuration defining the public shell layout along
+ * with all marketing, account, checkout, and admin routes. Exports a typed
+ * `RouteObject[]` consumed by `createBrowserRouter`.
+ */
 
-import Navbar from '@client/components/layout/Navbar';
 import Footer from '@client/components/layout/Footer';
-import { containerClass } from './theme.css';
-
-// ProductCreate is now embedded in Admin; keep legacy route redirected
-import ProductEdit from '@client/pages/ProductEdit';
-import Unauthorized from '@client/pages/Unauthorized';
-import ProductCreate from '@client/pages/ProductCreate';
-import { Checkout } from '@client/pages/Checkout';
+import Navbar from '@client/components/layout/Navbar';
+import ScrollToTop from '@client/components/ScrollToTop';
 import { RequireAuth } from '@client/features/auth/RequireAuth';
 import About from '@client/pages/About';
+import Accessibility from '@client/pages/Accessibility';
+import AuditLogs from '@client/pages/admin/AuditLogs';
 import AdminLayout from '@client/pages/admin/Layout';
+import AdminOrders from '@client/pages/admin/Orders';
 import AdminOverview from '@client/pages/admin/Overview';
 import AdminProductNew from '@client/pages/admin/ProductNew';
 import AdminProducts from '@client/pages/admin/Products';
 import AdminUsers from '@client/pages/admin/Users';
-import AdminOrders from '@client/pages/admin/Orders';
+import { Checkout } from '@client/pages/Checkout';
 import Contact from '@client/pages/Contact';
+import Favorites from '@client/pages/Favorites';
 import Home from '@client/pages/Home';
 import Login from '@client/pages/Login';
 import NotFound from '@client/pages/NotFound';
-import Products from '@client/pages/Products';
-import ProductShow from '@client/pages/ProductShow';
-import Register from '@client/pages/Register';
-import { Orders } from '@client/pages/Orders';
 import OrderDetail from '@client/pages/OrderDetail';
+import { Orders } from '@client/pages/Orders';
+import PrivacyPolicy from '@client/pages/PrivacyPolicy';
+import ProductCreate from '@client/pages/ProductCreate';
+// ProductCreate is now embedded in Admin; keep legacy route redirected
+import ProductEdit from '@client/pages/ProductEdit';
+import ProductShow from '@client/pages/ProductShow';
+import Products from '@client/pages/Products';
+import Register from '@client/pages/Register';
+import TermsOfService from '@client/pages/TermsOfService';
+import Unauthorized from '@client/pages/Unauthorized';
+import type { RouteObject } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import { mainContent, shellLayout, skipLink } from './routes.css';
+import { containerClass } from './theme.css';
 
 function Shell() {
   return (
-    <>
+    <div className={shellLayout}>
+      <ScrollToTop />
+      <a href="#main-content" className={skipLink}>
+        Skip to main content
+      </a>
       <Navbar />
-      <main className={containerClass.className}>
+      <main id="main-content" className={`${containerClass.className} ${mainContent}`}>
         <Outlet />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 
@@ -102,8 +117,11 @@ export const routes: RouteObject[] = [
       { index: true, element: <Home />, errorElement: <NotFound /> },
       { path: 'about', element: <About />, errorElement: <NotFound /> },
       { path: 'contact', element: <Contact />, errorElement: <NotFound /> },
+      { path: 'accessibility', element: <Accessibility />, errorElement: <NotFound /> },
       { path: 'register', element: <Register />, errorElement: <NotFound /> },
       { path: 'login', element: <Login />, errorElement: <NotFound /> },
+      { path: 'privacy-policy', element: <PrivacyPolicy />, errorElement: <NotFound /> },
+      { path: 'terms-of-service', element: <TermsOfService />, errorElement: <NotFound /> },
       { path: 'unauthorized', element: <Unauthorized />, errorElement: <NotFound /> },
       { path: 'products', element: <Products />, errorElement: <NotFound /> },
       { path: 'products/:id', element: <ProductShow />, errorElement: <NotFound /> },
@@ -113,6 +131,15 @@ export const routes: RouteObject[] = [
         element: (
           <RequireAuth>
             <Orders />
+          </RequireAuth>
+        ),
+        errorElement: <NotFound />,
+      },
+      {
+        path: 'favorites',
+        element: (
+          <RequireAuth>
+            <Favorites />
           </RequireAuth>
         ),
         errorElement: <NotFound />,
@@ -160,6 +187,7 @@ export const routes: RouteObject[] = [
           { path: 'products', element: <AdminProducts />, errorElement: <NotFound /> },
           { path: 'products/new', element: <AdminProductNew />, errorElement: <NotFound /> },
           { path: 'orders', element: <AdminOrders />, errorElement: <NotFound /> },
+          { path: 'audit-logs', element: <AuditLogs />, errorElement: <NotFound /> },
         ],
       },
     ],

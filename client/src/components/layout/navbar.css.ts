@@ -1,6 +1,6 @@
-import { style } from '@vanilla-extract/css';
-import { vars } from '@client/app/theme.css';
 import { sprinkles } from '@client/app/sprinkles.css';
+import { vars } from '@client/app/theme.css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 export const bar = style([
   {
@@ -32,11 +32,29 @@ export const inner = style([
 
 export const brand = style([
   {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
     fontFamily: vars.font.heading,
     fontWeight: 700,
     fontSize: '1.2rem',
     color: vars.color.text,
     letterSpacing: '-0.02em',
+    transition: 'color 150ms ease',
+    textDecoration: 'none',
+    selectors: {
+      '&:hover': {
+        color: vars.color.accent,
+      },
+      '&:focus-visible': {
+        color: vars.color.accent,
+        outline: 'none',
+        boxShadow: `0 0 0 3px ${vars.color.focus}`,
+        borderRadius: vars.radius.md,
+        paddingInline: '0.25rem',
+        marginInline: '-0.25rem',
+      },
+    },
   },
 ]);
 
@@ -50,13 +68,18 @@ export const links = style([
 
 export const link = style([
   {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
     color: vars.color.textMuted,
     fontWeight: 500,
     position: 'relative',
     transition: 'color 150ms ease',
+    textDecoration: 'none',
     selectors: {
       '&:hover': {
-        color: vars.color.text,
+        color: vars.color.accent,
+        textDecoration: 'none',
       },
     },
   },
@@ -65,21 +88,51 @@ export const link = style([
 export const linkActive = style([
   link,
   {
-    color: vars.color.text,
+    color: vars.color.warning,
+    fontWeight: 600,
+    textDecoration: 'none',
     selectors: {
-      '&::after': {
-        content: '',
-        position: 'absolute',
-        left: 0,
-        bottom: -6,
-        width: '100%',
-        height: '2px',
-        borderRadius: vars.radius.pill,
-        background: `linear-gradient(90deg, ${vars.color.accent}, ${vars.color.accentMuted})`,
+      '&:hover': {
+        color: vars.color.warning,
+        textDecoration: 'none',
       },
     },
   },
 ]);
+
+globalStyle(`${link}, ${linkActive}`, {
+  textDecoration: 'none !important',
+});
+
+globalStyle(`${link}:hover, ${linkActive}:hover`, {
+  textDecoration: 'none !important',
+});
+
+globalStyle(`${link} svg`, {
+  color: vars.color.textMuted,
+  transition: 'color 150ms ease',
+});
+
+globalStyle(`${link}:hover svg`, {
+  color: vars.color.accent,
+});
+
+globalStyle(`${linkActive} svg`, {
+  color: vars.color.warning,
+});
+
+globalStyle(`${brand} svg`, {
+  color: vars.color.text,
+  transition: 'color 150ms ease',
+});
+
+globalStyle(`${brand}:hover svg`, {
+  color: vars.color.accent,
+});
+
+globalStyle(`${brand}:focus-visible svg`, {
+  color: vars.color.accent,
+});
 
 export const cartBadge = style({
   position: 'absolute',
@@ -194,4 +247,9 @@ export const cartButton = style({
   position: 'relative',
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'transparent',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
 });

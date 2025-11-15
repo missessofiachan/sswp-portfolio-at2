@@ -1,6 +1,9 @@
 {
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
     "dev:client": "yarn workspace client dev",
     "dev:server": "yarn workspace server dev",
@@ -15,10 +18,11 @@
     "build": "yarn workspaces foreach -A run build",
     "clean": "yarn workspaces foreach -A run clean && rm -rf node_modules",
     "docs": "jsdoc -c jsdoc.conf.json",
-    "docs:serve": "jsdoc -c jsdoc.conf.json && http-server docs/jsdoc -p 8080"
+    "docs:serve": "jsdoc -c jsdoc.conf.json && http-server docs/jsdoc -p 8080",
+    "update:dependencies": "yarn upgrade-interactive --latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.3.5",
     "concurrently": "^9.1.2",
     "typescript": "^5.9.3"
   }

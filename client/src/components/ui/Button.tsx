@@ -1,5 +1,9 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+/**
+ * Design-system button component with Radix Slot support and variant styling.
+ */
+
 import { Slot } from '@radix-ui/react-slot';
+import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { buttonVariants } from './button.css';
 
 type ButtonVariant = keyof typeof buttonVariants;

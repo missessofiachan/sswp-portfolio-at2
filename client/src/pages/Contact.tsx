@@ -1,7 +1,7 @@
-import type { FormEvent } from 'react';
-import * as s from './contact.css';
 import { input as inputClass } from '@client/app/ui.css';
 import { Button } from '@client/components/ui/Button';
+import type { FormEvent } from 'react';
+import * as s from './contact.css';
 
 const CHANNELS = [
   {

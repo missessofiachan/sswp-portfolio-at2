@@ -1,11 +1,19 @@
+/**
+ * Frontend bootstrapper that creates the React root, wires global providers
+ * (routing, auth, React Query, theming, toasts), and mounts the application
+ * into the DOM. Keeps startup side effects isolated in one module.
+ */
+
+import { AuthProvider } from '@client/features/auth/AuthProvider';
+import { queryClient } from '@client/lib/query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '@client/features/auth/AuthProvider';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import AppErrorBoundary from './AppErrorBoundary';
 import { routes } from './app/routes';
-import { ToastContainer } from './components/ui/ToastContainer';
 import { applyTheme, readStoredTheme } from './app/theme';
+import { ToastContainer } from './components/ui/ToastContainer';
 
 // Create the router once and reuse it.
 const router = createBrowserRouter(routes);
@@ -57,12 +65,14 @@ function bootstrap(): void {
   (window as any).__APP_BOOT = Date.now();
   root.render(
     <React.StrictMode>
-      <AppErrorBoundary>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-        <ToastContainer />
-      </AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppErrorBoundary>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+          <ToastContainer />
+        </AppErrorBoundary>
+      </QueryClientProvider>
     </React.StrictMode>
   );
 }

@@ -1,16 +1,16 @@
-import { useEffect, useRef, useId } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { useAtom, useAtomValue } from 'jotai';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { btnOutline, btnPrimary } from '../../app/ui.css';
 import {
   cartItemsAtom,
   cartSummaryAtom,
-  isCartOpenAtom,
   clearCartAtom,
+  isCartOpenAtom,
   removeFromCartAtom,
   updateCartItemQuantityAtom,
 } from '../../features/cart/cartAtoms';
-import { btnOutline, btnPrimary } from '../../app/ui.css';
 import * as s from './cart.css';
 
 export function Cart() {

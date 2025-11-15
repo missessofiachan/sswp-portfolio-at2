@@ -8,17 +8,17 @@
  * @module pages/Checkout
  */
 
-import { useState } from 'react';
-import { useAuth } from '../features/auth/AuthProvider';
-import { useNavigate } from 'react-router-dom';
-import { useAtom, useAtomValue } from 'jotai';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAtom, useAtomValue } from 'jotai';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { cartItemsAtom, cartSummaryAtom, clearCartAtom } from '../features/cart/cartAtoms';
 import { ordersApi } from '../api/clients/orders.api';
+import { useAuth } from '../features/auth/AuthProvider';
+import { cartItemsAtom, cartSummaryAtom, clearCartAtom } from '../features/cart/cartAtoms';
 import { showToast } from '../lib/toast';
-import { PaymentMethod, type CreateOrderInput } from '../types/orders';
+import { type CreateOrderInput, PaymentMethod } from '../types/orders';
 
 // Shipping address validation schema
 const shippingAddressSchema = z.object({

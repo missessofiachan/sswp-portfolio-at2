@@ -1,3 +1,7 @@
+/**
+ * Theme helper utilities for persisting user preference and toggling Vanilla
+ * Extract theme classes on the document root.
+ */
 import { darkThemeClass, lightThemeClass } from './theme.css';
 
 export type ThemeMode = 'light' | 'dark';

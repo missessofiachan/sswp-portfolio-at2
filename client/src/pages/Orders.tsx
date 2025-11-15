@@ -8,12 +8,12 @@
  * @module pages/Orders
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
 import ErrorAlert from '../components/ui/ErrorAlert';
 import { showToast } from '../lib/toast';
-import { ORDER_STATUS_INFO, PAYMENT_METHOD_INFO, OrderStatus, type Order } from '../types/orders';
+import { ORDER_STATUS_INFO, type Order, OrderStatus, PAYMENT_METHOD_INFO } from '../types/orders';
 
 /**
  * Orders page component

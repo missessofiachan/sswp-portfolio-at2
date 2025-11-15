@@ -1,16 +1,28 @@
-import { Link, NavLink } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import type { FocusEvent } from 'react';
-import * as s from './navbar.css';
-import ThemeToggle from './ThemeToggle';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAuth } from '@client/features/auth/AuthProvider';
 import {
-  cartTotalCountAtom,
   cartItemsAtom,
   cartSummaryAtom,
+  cartTotalCountAtom,
   isCartOpenAtom,
 } from '@client/features/cart/cartAtoms';
-import { useAuth } from '@client/features/auth/AuthProvider';
+import { useAtomValue, useSetAtom } from 'jotai';
+import type { FocusEvent } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  MdAdminPanelSettings,
+  MdContactMail,
+  MdFavorite,
+  MdInfo,
+  MdLogin,
+  MdLogout,
+  MdPersonAdd,
+  MdReceiptLong,
+  MdShoppingBag,
+  MdStorefront,
+} from 'react-icons/md';
+import { Link, NavLink } from 'react-router-dom';
+import * as s from './navbar.css';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Navbar component that renders the top-level site navigation.
@@ -75,40 +87,53 @@ export default function Navbar() {
     <nav className={s.bar}>
       <div className={s.inner}>
         <Link className={s.brand} to="/">
-          Sofia's Shop
+          <MdShoppingBag size={22} aria-hidden="true" />
+          <span>Sofia's Shop</span>
         </Link>
         <span className={s.links}>
           <NavLink to="/products" className={getLinkClassName}>
-            Products
+            <MdStorefront size={18} aria-hidden="true" />
+            <span>Products</span>
           </NavLink>
           <NavLink to="/about" className={getLinkClassName}>
-            About
+            <MdInfo size={18} aria-hidden="true" />
+            <span>About</span>
           </NavLink>
           <NavLink to="/contact" className={getLinkClassName}>
-            Contact
+            <MdContactMail size={18} aria-hidden="true" />
+            <span>Contact</span>
           </NavLink>
           {!token && (
             <>
               <NavLink to="/register" className={getLinkClassName}>
-                Register
+                <MdPersonAdd size={18} aria-hidden="true" />
+                <span>Register</span>
               </NavLink>
               <NavLink to="/login" className={getLinkClassName}>
-                Login
+                <MdLogin size={18} aria-hidden="true" />
+                <span>Login</span>
               </NavLink>
             </>
           )}
           {token && (
             <>
               <NavLink to="/orders" className={getLinkClassName}>
-                My Orders
+                <MdReceiptLong size={18} aria-hidden="true" />
+                <span>My Orders</span>
+              </NavLink>
+              <NavLink to="/favorites" className={getLinkClassName}>
+                <MdFavorite size={18} aria-hidden="true" />
+                <span>Favorites</span>
               </NavLink>
               {isAdmin && (
                 <NavLink to="/admin" className={getLinkClassName}>
-                  Admin
+                  <MdAdminPanelSettings size={18} aria-hidden="true" />
+                  <span>Admin</span>
                 </NavLink>
               )}
               <button className={s.link} onClick={logout}>
-                Logout
+                <MdLogout size={18} aria-hidden="true" />
+                <span>Logout</span>
               </button>
             </>
           )}

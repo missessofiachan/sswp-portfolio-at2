@@ -1,21 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { listProductsPaged } from '@client/api/clients/products.api';
-import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
 import {
-  card,
-  btnPrimary,
   btnOutline,
+  btnPrimary,
+  card,
   input as inputField,
   photoFrame,
   sepiaPhoto,
 } from '@client/app/ui.css';
+import FavoriteButton from '@client/components/ui/FavoriteButton';
+import Loading from '@client/components/ui/Loading';
 import { useAuth } from '@client/features/auth/AuthProvider';
-import { useSetAtom } from 'jotai';
 import { addToCartAtom, isCartOpenAtom } from '@client/features/cart/cartAtoms';
-import type { Product } from '@client/types/product';
-import { ProductSkeleton } from '@client/components/ui/Skeleton';
 import { useDebounce } from '@client/lib/hooks/useDebounce';
+import { PLACEHOLDER_SRC, resolveImageUrl } from '@client/lib/images';
+import type { Product } from '@client/types/product';
+import { useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * Products component
@@ -38,6 +39,7 @@ export default function Products() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [requestId, setRequestId] = useState(0);
+  const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const { isAdmin } = useAuth();
 
   const pageCount = Math.max(1, Math.ceil(total / (pageSize || 1)));
@@ -45,12 +47,18 @@ export default function Products() {
   const isError = status === 'error';
   const hasProducts = items.length > 0;
 
+  // Ensure spinner shows for at least 2 seconds to prevent flashing
+  const shouldShowSpinner =
+    isLoading ||
+    (isError && loadingStartTime && Date.now() - loadingStartTime < 2000 && !hasProducts);
+
   useEffect(() => {
     let cancelled = false;
 
     async function fetchProducts() {
       setStatus('loading');
       setErrorMessage(null);
+      setLoadingStartTime(Date.now());
       const [field, dir] = sort.split('-') as [string, 'asc' | 'desc'];
 
       try {
@@ -95,12 +103,17 @@ export default function Products() {
   const handleRetry = () => setRequestId((id) => id + 1);
 
   const gridContent = (() => {
-    if (isLoading && !hasProducts) {
-      // Show skeleton loaders while loading initial data
-      return Array.from({ length: pageSize }).map((_, i) => <ProductSkeleton key={i} />);
+    if (shouldShowSpinner) {
+      // Show spinner while loading data (initial load or subsequent requests)
+      const loadingMessage = !hasProducts ? 'Loading products...' : 'Updating products...';
+      return (
+        <div style={{ gridColumn: '1 / -1' }}>
+          <Loading message={loadingMessage} size="lg" />
+        </div>
+      );
     }
 
-    if (isError && !hasProducts) {
+    if (isError && !hasProducts && !shouldShowSpinner) {
       return (
         <div
           style={{
@@ -156,7 +169,10 @@ export default function Products() {
         null;
 
       return (
-        <article key={product.id} className={card}>
+        <article key={product.id} className={card} style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 12, right: 12 }}>
+            <FavoriteButton productId={product.id} />
+          </div>
           {primaryImage && (
             <Link to={`/products/${product.id}`} style={{ display: 'block', marginBottom: 12 }}>
               <img

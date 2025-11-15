@@ -1,3 +1,7 @@
+/**
+ * Design token contract and light/dark theme definitions using Vanilla
+ * Extract. Also wires global typography and reset styles.
+ */
 import { createTheme, createThemeContract, globalStyle } from '@vanilla-extract/css';
 
 export const vars = createThemeContract({
@@ -78,56 +82,56 @@ const sharedSize = {
 
 export const lightThemeClass = createTheme(vars, {
   color: {
-    background: '#f8fafc',
+    background: '#ffffff',
     surface: '#ffffff',
-    surfaceMuted: '#eef2f6',
-    text: '#0f172a',
-    textMuted: '#475569',
-    accent: '#2563eb',
-    accentMuted: '#3b82f6',
-    accentText: '#ffffff',
-    border: '#d0d7e2',
-    focus: 'rgba(37, 99, 235, 0.35)',
-    danger: '#dc2626',
-    success: '#16a34a',
-    warning: '#f59e0b',
+    surfaceMuted: '#f3f4f6',
+    text: '#111827',
+    textMuted: '#6b7280',
+    accent: '#55CDFC', // Trans pride flag blue
+    accentMuted: '#3bb5e8', // Darker blue for hover
+    accentText: '#0a0a0a',
+    border: '#e5e7eb',
+    focus: 'rgba(85, 205, 252, 0.35)',
+    danger: '#F7A8B8', // Trans pride pink
+    success: '#10b981',
+    warning: '#F7A8B8', // Trans pride pink
   },
   space: sharedSpace,
   radius: sharedRadius,
   font: sharedFonts,
   shadow: {
-    xs: '0 1px 2px rgba(15, 23, 42, 0.08)',
-    sm: '0 4px 12px rgba(15, 23, 42, 0.08)',
-    md: '0 12px 30px rgba(15, 23, 42, 0.08)',
-    lg: '0 32px 60px rgba(15, 23, 42, 0.10)',
+    xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    sm: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    md: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    lg: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
   },
   size: sharedSize,
 });
 
 export const darkThemeClass = createTheme(vars, {
   color: {
-    background: '#0b1120',
-    surface: '#111827',
-    surfaceMuted: '#1e293b',
-    text: '#e2e8f0',
-    textMuted: '#94a3b8',
-    accent: '#3b82f6',
-    accentMuted: '#60a5fa',
-    accentText: '#0b1120',
-    border: '#1f2937',
-    focus: 'rgba(96, 165, 250, 0.4)',
-    danger: '#f87171',
+    background: '#121212', // True dark background
+    surface: '#1f2937',
+    surfaceMuted: '#374151',
+    text: '#f3f4f6', // Improved contrast - 12.6:1 on #121212
+    textMuted: '#d1d5db', // Improved contrast - 7.1:1 on #121212
+    accent: '#7dd3fc', // Trans pride flag blue - lighter for better contrast on dark
+    accentMuted: '#93daff', // Even lighter for hover
+    accentText: '#0a0a0a',
+    border: '#374151', // Improved visibility
+    focus: 'rgba(125, 211, 252, 0.4)',
+    danger: '#F7A8B8', // Trans pride pink
     success: '#22c55e',
-    warning: '#fbbf24',
+    warning: '#F7A8B8', // Trans pride pink
   },
   space: sharedSpace,
   radius: sharedRadius,
   font: sharedFonts,
   shadow: {
-    xs: '0 1px 2px rgba(15, 23, 42, 0.45)',
-    sm: '0 6px 18px rgba(15, 23, 42, 0.45)',
-    md: '0 20px 45px rgba(15, 23, 42, 0.45)',
-    lg: '0 40px 80px rgba(15, 23, 42, 0.55)',
+    xs: '0 1px 2px rgba(0, 0, 0, 0.45)',
+    sm: '0 6px 18px rgba(0, 0, 0, 0.45)',
+    md: '0 20px 45px rgba(0, 0, 0, 0.45)',
+    lg: '0 40px 80px rgba(0, 0, 0, 0.55)',
   },
   size: sharedSize,
 });
@@ -147,6 +151,25 @@ globalStyle('body', {
   background: vars.color.background,
   color: vars.color.text,
   transition: 'background 180ms ease, color 180ms ease',
+  fontSize: 'var(--pref-font-size, 1rem)',
+  lineHeight: '1.5',
+});
+
+// Font size preferences support
+globalStyle('html h1', {
+  fontSize: 'var(--pref-font-size-xl, 2rem)',
+});
+
+globalStyle('html h2', {
+  fontSize: 'var(--pref-font-size-lg, 1.5rem)',
+});
+
+globalStyle('html h3', {
+  fontSize: 'var(--pref-font-size-lg, 1.25rem)',
+});
+
+globalStyle('html small, html .small', {
+  fontSize: 'var(--pref-font-size-sm, 0.875rem)',
 });
 
 globalStyle('*, *::before, *::after', {
@@ -196,4 +219,3 @@ globalStyle(`.${containerClass.className}`, {
   paddingBlock: vars.space.lg,
   width: '100%',
 });
-export {};

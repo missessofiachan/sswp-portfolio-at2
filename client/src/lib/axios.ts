@@ -1,11 +1,16 @@
+/**
+ * Shared Axios instance configuration with auth header injection, global
+ * error normalization, and toast/redirect handling for expired sessions.
+ */
 // axios instance + JWT interceptors
 
 import axios from 'axios';
 import { showToast } from './toast';
 
 // Default to relative "/api/v1" so Vite dev proxy can forward to the server.
-// You can override with VITE_API_URL (e.g., VITE_API_URL=http://localhost:4000/api/v1) for production.
-const baseURL = import.meta.env.VITE_API_URL ?? '/api/v1';
+// Allow either VITE_API_URL (preferred) or legacy VITE_API_BASE_URL override for deployments.
+const configuredApiUrl = import.meta.env.VITE_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? null;
+const baseURL = configuredApiUrl ?? '/api/v1';
 const LOGIN_ROUTE = '/login'; // Make login route configurable here
 export const axiosInstance = axios.create({ baseURL });
 

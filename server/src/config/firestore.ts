@@ -1,9 +1,13 @@
+/**
+ * Firestore bootstrap utilities wrapping Firebase Admin initialization and
+ * providing a cached database instance for the rest of the backend.
+ */
 // admin.initializeApp + getFirestore()
 
 import * as admin from 'firebase-admin';
-import { loadEnv } from './env';
 import * as fs from 'fs';
 import * as path from 'path';
+import { loadEnv } from './env';
 
 let db: FirebaseFirestore.Firestore | null = null;
 

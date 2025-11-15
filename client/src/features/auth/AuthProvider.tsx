@@ -1,6 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+/**
+ * Authentication context provider and hook powering client-side auth state.
+ */
+
 import { login as apiLogin } from '@client/api/clients/auth.api';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 type User = { id: string; role: 'user' | 'admin' } | null;
 

@@ -1,3 +1,7 @@
+/**
+ * Centralized environment loader that validates all required configuration
+ * via Zod before exposing strongly typed values to the rest of the server.
+ */
 // load/validate env (zod/joi)
 import 'dotenv/config';
 import { z } from 'zod';
@@ -25,10 +29,6 @@ import { z } from 'zod';
  * Duration string controlling JWT token lifetime (for example "15m" or "1h").
  * @default '15m'
  *
- * @property {'firestore' | 'memory'} DATA_STORE
- * Selects the data store implementation. Use 'firestore' for production (default) or 'memory' for local/demo.
- * @default 'firestore'
- *
  * @property {string | undefined} CORS_ORIGIN
  * Optional allowed origin (or comma-separated list) for CORS requests.
  *
@@ -55,7 +55,6 @@ import { z } from 'zod';
  * // Option A - provide path to JSON
  * // PORT=4000
  * // JWT_SECRET=supersecretjwt
- * // DATA_STORE=firestore
  * // FIREBASE_CREDENTIALS_FILE=/path/to/serviceAccount.json
  *
  * @example
@@ -98,8 +97,6 @@ const Env = z.object({
   PORT: z.coerce.number().default(4000),
   JWT_SECRET: z.string().min(10),
   JWT_EXPIRES_IN: z.string().default('15m'),
-  // Data store selector: 'firestore' (default) or 'memory' for local/demo
-  DATA_STORE: z.enum(['firestore', 'memory']).default('firestore'),
   CORS_ORIGIN: z.string().optional(),
   UPLOAD_MAX_MB: z.coerce.number().positive('UPLOAD_MAX_MB must be positive').default(5),
   MAINTENANCE_SECRET: z.string().optional(),
@@ -148,6 +145,19 @@ const Env = z.object({
       return value;
     }, z.coerce.number().positive())
     .optional(),
+
+  /**
+   * Enable Prometheus metrics endpoint at /metrics
+   * @default false
+   */
+  METRICS_ENABLED: z
+    .preprocess((val) => {
+      if (val === undefined || val === '') return false;
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'string') return val === 'true' || val === '1';
+      return false;
+    }, z.boolean())
+    .default(false),
 });
 
 export function loadEnv() {

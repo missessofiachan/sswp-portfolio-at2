@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { card, btnOutline } from '@client/app/ui.css';
 import {
-  listUsers,
-  deleteUser,
-  promoteUser,
-  demoteUser,
   type AdminUser,
+  deleteUser,
+  demoteUser,
+  listUsers,
+  promoteUser,
 } from '@client/api/clients/admin.api';
+import { btnOutline, card } from '@client/app/ui.css';
+import { useEffect, useState } from 'react';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([]);

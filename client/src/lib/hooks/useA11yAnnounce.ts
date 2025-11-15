@@ -1,18 +1,16 @@
 /**
- * Hook for making live announcements to screen readers
- * Uses ARIA live regions to announce dynamic content changes
+ * Accessibility helper hook for emitting screen-reader live announcements.
  */
-
 import React, { useEffect, useRef } from 'react';
 
 type PolitenessLevel = 'polite' | 'assertive';
 
-let liveRegion: HTMLDivElement | null = null;
+const liveRegion: HTMLDivElement | null = null;
 
 function getOrCreateLiveRegion(politeness: PolitenessLevel): HTMLDivElement {
   const id = `a11y-live-region-${politeness}`;
   let region = document.getElementById(id) as HTMLDivElement | null;
-  
+
   if (!region) {
     region = document.createElement('div');
     region.id = id;
@@ -26,17 +24,17 @@ function getOrCreateLiveRegion(politeness: PolitenessLevel): HTMLDivElement {
     region.style.overflow = 'hidden';
     document.body.appendChild(region);
   }
-  
+
   return region;
 }
 
 /**
  * Hook to announce messages to screen readers
- * 
+ *
  * @example
  * ```tsx
  * const announce = useA11yAnnounce();
- * 
+ *
  * function handleSubmit() {
  *   // ... submit logic
  *   announce('Form submitted successfully', 'polite');
@@ -56,14 +54,14 @@ export function useA11yAnnounce() {
 
   return (message: string, politeness: PolitenessLevel = 'polite') => {
     const region = getOrCreateLiveRegion(politeness);
-    
+
     // Clear existing content
     region.textContent = '';
-    
+
     // Small delay to ensure screen readers pick up the change
     timeoutRef.current = setTimeout(() => {
       region.textContent = message;
-      
+
       // Clear after 5 seconds to avoid stale announcements
       timeoutRef.current = setTimeout(() => {
         region.textContent = '';
@@ -76,18 +74,13 @@ export function useA11yAnnounce() {
  * Component for creating a visually hidden but screen reader accessible element
  */
 export function VisuallyHidden({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        position: 'absolute',
-        left: '-10000px',
-        width: '1px',
-        height: '1px',
-        overflow: 'hidden',
-      }}
-    >
-      {children}
-    </span>
-  );
-}
+  const style: React.CSSProperties = {
+    position: 'absolute',
+    left: '-10000px',
+    width: '1px',
+    height: '1px',
+    overflow: 'hidden',
+  };
 
+  return React.createElement('span', { style }, children);
+}

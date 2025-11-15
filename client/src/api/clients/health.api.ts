@@ -1,3 +1,7 @@
+/**
+ * Lightweight client for the public health check endpoint used by the
+ * marketing and dashboard experiences to surface API/database availability.
+ */
 import { axiosInstance } from '@client/lib/axios';
 
 export type HealthResponse = {

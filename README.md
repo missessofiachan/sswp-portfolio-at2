@@ -9,14 +9,16 @@ A production-grade full-stack TypeScript e-commerce platform built with **React 
 ### Frontend Technologies
 
 - **React 19** with **TypeScript** - Type-safe UI development
-- **Vite** - Lightning-fast build tool and dev server
+- **Vite 7** - Lightning-fast build tool and dev server
 - **React Router 7** - Client-side routing with nested layouts
 - **React Hook Form** - Performant form handling
-- **Zod** - Runtime type validation
+- **Zod 4** - Runtime type validation
+- **TanStack React Query 5** - Server state management and data fetching
 - **Jotai** - Atomic state management for cart
 - **Axios** - HTTP client with JWT interceptors
 - **Vanilla Extract** - Type-safe CSS-in-TypeScript styling
 - **Framer Motion** - Smooth animations and transitions
+- **date-fns** - Date formatting and manipulation utilities
 - **Vitest + Testing Library** - Modern testing framework
 
 ### Backend Technologies
@@ -28,6 +30,7 @@ A production-grade full-stack TypeScript e-commerce platform built with **React 
 - **Cloudinary** - Cloud-based image storage and optimization
 - **Joi + Zod** - Request validation schemas
 - **Winston** - Advanced logging and monitoring
+- **prom-client** - Prometheus metrics collection
 - **Helmet** - Security headers middleware
 - **Morgan** - HTTP request logging
 - **express-fileupload** - Multipart file upload handling
@@ -35,7 +38,7 @@ A production-grade full-stack TypeScript e-commerce platform built with **React 
 
 ### Development Tools
 
-- **Biome** - Fast linter and formatter (Prettier/ESLint alternative)
+- **Biome 2.3** - Fast linter and formatter (Prettier/ESLint alternative)
 - **TypeScript 5.9** - Static type checking
 - **Yarn Workspaces** - Monorepo dependency management
 - **Concurrently** - Parallel script execution
@@ -64,6 +67,7 @@ sswp-portfolio-at2/
 │  │  │  ├─ Orders.tsx        # User order history
 │  │  │  ├─ OrderDetail.tsx   # Order details page
 │  │  │  ├─ Checkout.tsx      # Checkout flow
+│  │  │  ├─ Favorites.tsx     # User favorites page
 │  │  │  ├─ Login.tsx         # Login page
 │  │  │  ├─ Register.tsx      # Registration page
 │  │  │  ├─ About.tsx         # About page
@@ -73,7 +77,8 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ Overview.tsx   # Admin stats dashboard
 │  │  │  │  ├─ Products.tsx   # Product management
 │  │  │  │  ├─ Orders.tsx     # Order management
-│  │  │  │  └─ Users.tsx      # User management
+│  │  │  │  ├─ Users.tsx      # User management
+│  │  │  │  └─ AuditLogs.tsx  # Audit logs viewer
 │  │  │  ├─ NotFound.tsx      # 404 page
 │  │  │  └─ Unauthorized.tsx  # 403 page
 │  │  │
@@ -97,6 +102,7 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ Modal.tsx          # Modal dialog
 │  │  │  │  ├─ ImageUploader.tsx  # Image upload component
 │  │  │  │  ├─ ErrorAlert.tsx     # Error display
+│  │  │  │  ├─ FavoriteButton.tsx # Favorite toggle button
 │  │  │  │  ├─ Skeleton.tsx       # Loading skeletons
 │  │  │  │  ├─ ToastContainer.tsx # Toast notifications
 │  │  │  │  └─ VirtualList.tsx    # Virtualized lists
@@ -114,15 +120,23 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ products.api.ts    # Product endpoints
 │  │  │  │  ├─ orders.api.ts      # Order endpoints
 │  │  │  │  ├─ admin.api.ts       # Admin endpoints
+│  │  │  │  ├─ favorites.api.ts   # Favorites endpoints
 │  │  │  │  └─ health.api.ts      # Health check
 │  │  │  └─ dto/                  # Data transfer objects
 │  │  │
 │  │  ├─ lib/              # Utility libraries
 │  │  │  ├─ axios.ts              # Configured axios instance
-│  │  │  ├─ query.ts              # React Query setup
+│  │  │  ├─ query.ts              # TanStack React Query setup
 │  │  │  ├─ toast.ts              # Toast notifications
 │  │  │  ├─ images.ts             # Image utilities
 │  │  │  └─ hooks/                # Custom React hooks
+│  │  │     ├─ useResourceQuery.ts # Generic CRUD query hooks
+│  │  │     ├─ useQueryState.tsx  # Standardized query state handling
+│  │  │     ├─ useFavorites.ts    # Favorites management hook
+│  │  │     ├─ useAuditLogs.ts    # Audit logs query hook
+│  │  │     ├─ useActivityFeed.ts # Activity feed hook
+│  │  │     ├─ useSystemHealth.ts # System health monitoring
+│  │  │     └─ useSystemMetrics.ts # Prometheus metrics queries
 │  │  │
 │  │  └─ test/             # Test setup and utilities
 │
@@ -134,6 +148,9 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ products.routes.ts # Product CRUD routes
 │  │  │  │  ├─ orders.routes.ts   # Order management routes
 │  │  │  │  ├─ admin.routes.ts    # Admin-only routes
+│  │  │  │  ├─ favorites.routes.ts # Favorites management routes
+│  │  │  │  ├─ activityFeed.routes.ts # Consolidated activity feed
+│  │  │  │  ├─ metrics.routes.ts   # Prometheus metrics endpoint
 │  │  │  │  ├─ uploads.routes.ts  # File upload routes
 │  │  │  │  ├─ health.routes.ts   # Health check endpoint
 │  │  │  │  └─ maintenance.routes.ts # Maintenance tasks
@@ -142,7 +159,10 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ auth.controller.ts
 │  │  │  │  ├─ products.controller.ts
 │  │  │  │  ├─ order.controller.ts
-│  │  │  │  └─ admin.controller.ts
+│  │  │  │  ├─ admin.controller.ts
+│  │  │  │  ├─ favorites.controller.ts
+│  │  │  │  ├─ auditLogs.controller.ts
+│  │  │  │  └─ activityFeed.controller.ts
 │  │  │  │
 │  │  │  ├─ middleware/    # Express middleware
 │  │  │  │  ├─ auth.ts            # JWT authentication
@@ -151,6 +171,7 @@ sswp-portfolio-at2/
 │  │  │  │  ├─ error.ts           # Error handling
 │  │  │  │  ├─ rateLimit.ts       # Rate limiting
 │  │  │  │  ├─ correlationId.ts   # Request tracing
+│  │  │  │  ├─ metrics.ts         # Prometheus metrics collection
 │  │  │  │  └─ maintenanceAuth.ts # Maintenance mode
 │  │  │  │
 │  │  │  └─ validators/    # Validation schemas
@@ -165,7 +186,12 @@ sswp-portfolio-at2/
 │  │  │  ├─ cloudinary.service.ts # Image upload service
 │  │  │  ├─ email.service.ts      # Email notifications
 │  │  │  ├─ tokenRevocation.service.ts # Token blacklist
-│  │  │  ├─ order.events.ts       # Order event handlers
+│  │  │  ├─ favorites.service.ts  # Favorites management
+│  │  │  ├─ auditLogs.service.ts  # Audit logging service
+│  │  │  ├─ activityFeed.service.ts # Consolidated activity feed
+│  │  │  ├─ metrics.service.ts    # Prometheus metrics
+│  │  │  ├─ order.events.ts        # Order event handlers
+│  │  │  ├─ orderAudit.service.ts # Order audit logging
 │  │  │  └─ email/                # Email providers
 │  │  │     ├─ EmailProvider.interface.ts
 │  │  │     ├─ ConsoleEmailProvider.ts
@@ -173,14 +199,14 @@ sswp-portfolio-at2/
 │  │  │
 │  │  ├─ data/             # Data access layer
 │  │  │  ├─ ports/         # Repository interfaces
+│  │  │  │  ├─ favorites.repo.ts
+│  │  │  │  └─ auditLogs.repo.ts
 │  │  │  ├─ firestore/     # Firestore implementations
 │  │  │  │  ├─ FirestoreUserRepository.ts
 │  │  │  │  ├─ FirestoreProductRepository.ts
-│  │  │  │  └─ FirestoreOrderRepository.ts
-│  │  │  ├─ memory/        # In-memory implementations
-│  │  │  │  ├─ users.repo.mem.ts
-│  │  │  │  ├─ products.repo.mem.ts
-│  │  │  │  └─ orders.repo.mem.ts
+│  │  │  │  ├─ FirestoreOrderRepository.ts
+│  │  │  │  ├─ favorites.repo.fs.ts
+│  │  │  │  └─ auditLogs.repo.fs.ts
 │  │  │  └─ adapters/      # Data adapters
 │  │  │
 │  │  ├─ domain/           # Domain models and types
@@ -212,10 +238,7 @@ sswp-portfolio-at2/
 │  ├─ ARCHITECTURE.md     # System architecture
 │  └─ HELP_CHAT.md        # Help chat documentation
 │
-└─ scripts/               # Utility scripts
-   ├─ seed.ts            # Database seeding
-   └─ healthcheck.ts     # Health check script
-```
+
 
 ---
 
@@ -226,10 +249,12 @@ sswp-portfolio-at2/
 #### User Authentication
 - **User Registration** - Create new user accounts with email/password
 - **User Login** - JWT-based authentication with secure tokens
+- **User Logout** - Manual logout endpoint with token revocation and audit logging
 - **Password Reset Flow** - Request and reset password via email
   - Token-based password reset with expiration
   - Rate-limited reset requests (prevents abuse)
   - Email notifications for password changes
+  - Automatic token revocation on password reset
 - **Token Revocation** - Logout functionality with token blacklist
 - **Auto-Token Refresh** - Seamless token renewal on expiration
 - **Remember Me** - Persistent login sessions
@@ -254,6 +279,8 @@ sswp-portfolio-at2/
   - Admin endpoints: Custom limits
 - **Request Correlation IDs** - Request tracing for debugging
 - **Security Logging** - Audit trail for security events
+- **Token Revocation Logging** - Audit logs for token revocations (logout, password reset)
+- **Security Event Monitoring** - Forwarding security events to monitoring service (Sentry-ready)
 
 ---
 
@@ -281,6 +308,13 @@ sswp-portfolio-at2/
 - **Image Management** - Upload and manage product images
 - **Stock Alerts** - Low stock notifications
 - **Product Time Series** - Historical product data
+
+#### Product Favorites
+- **Favorite Products** - Save products to favorites list
+- **Favorites Page** - View all favorited products
+- **Favorite Button** - Quick toggle favorite status
+- **Favorites API** - RESTful endpoints for managing favorites
+- **Favorites Persistence** - Favorites stored in database per user
 
 ---
 
@@ -314,6 +348,7 @@ sswp-portfolio-at2/
 - **Order Statistics** - Admin view of order metrics
 - **Order Notifications** - Email confirmations (ready for SendGrid)
 - **Order Events** - Event-driven order processing
+- **Order Lifecycle Audit Trail** - Automatic logging of all order status changes
 
 #### Admin Order Management
 - **View All Orders** - Admin dashboard for all orders
@@ -350,6 +385,15 @@ sswp-portfolio-at2/
 - **Image Library** - Manage uploaded images
 - **Maintenance Mode** - Toggle site maintenance
 - **Data Cleanup** - Manual cleanup utilities
+
+#### Audit & Compliance
+- **Audit Logs** - Comprehensive audit trail of system events
+- **Audit Log Viewer** - Admin interface for viewing audit logs
+- **Audit Log Filtering** - Filter by action type, user, date range
+- **Token Revocation Tracking** - Log all token revocations (logout, password reset)
+- **Order Status Change Tracking** - Log all order status changes with actor information
+- **Security Event Logging** - Track authentication failures, suspicious activities
+- **Activity Feed** - Consolidated view of favorites, orders, and audit logs
 
 ---
 
@@ -417,8 +461,9 @@ sswp-portfolio-at2/
 - **Virtual Scrolling** - Efficient rendering of long lists
 - **Lazy Loading** - Performance-optimized component loading
 - **Connection Status** - Network connectivity indicator
-- **Form Validation** - Real-time validation feedback
+- **Form Validation** - Real-time validation feedback with React Hook Form + Zod
 - **Custom Error Pages** - 404 and 403 pages
+- **Navbar Links** - Clean navigation without underlines
 
 #### Accessibility (A11y)
 - **ARIA Labels** - Comprehensive screen reader support
@@ -429,6 +474,25 @@ sswp-portfolio-at2/
 - **Skip Links** - Skip to main content
 - **Alt Text** - Image descriptions
 - **Form Labels** - Associated labels for inputs
+
+---
+
+### 📋 Activity Feed & User Engagement
+
+#### Consolidated Activity Feed
+- **Unified Activity Feed** - Merges favorites, orders, and audit logs into one timeline
+- **User-Specific Feed** - Users see their own activities
+- **Admin Feed** - Admins can view all activities or filter by user
+- **Activity Types** - Filter by favorite, order, or audit log activities
+- **Pagination** - Cursor-based pagination for efficient loading
+- **Real-time Updates** - Activity feed reflects latest changes
+- **Chronological Sorting** - Activities sorted by timestamp (newest first)
+
+#### Activity Feed API
+- **GET /api/v1/activity-feed** - Retrieve consolidated activity feed
+- **Query Parameters** - Filter by userId, types, limit, after (cursor)
+- **Authentication Required** - Protected endpoint for authenticated users
+- **Admin Filtering** - Admins can filter by specific userId
 
 ---
 
@@ -447,7 +511,6 @@ sswp-portfolio-at2/
 #### Repository Pattern
 - **Abstraction Layer** - Swappable data stores
 - **Firestore Repositories** - Production implementations
-- **In-Memory Repositories** - Testing implementations
 - **Port/Adapter Pattern** - Clean architecture
 - **Type-safe Queries** - TypeScript query builders
 
@@ -457,6 +520,8 @@ sswp-portfolio-at2/
 - **Order Entity** - Customer orders with line items
 - **Password Reset Tokens** - Temporary reset tokens
 - **Token Revocations** - JWT blacklist
+- **Audit Logs** - Comprehensive audit trail records
+- **Favorites** - User favorite products
 - **Logs** - Application and security logs
 
 ---
@@ -479,9 +544,8 @@ sswp-portfolio-at2/
 
 #### Code Quality
 - **TypeScript** - Full type safety across stack
-- **Biome** - Fast linting and formatting
-- **ESLint Rules** - Code quality enforcement
-- **Prettier Formatting** - Consistent code style
+- **Biome** - Fast linting and formatting (replaces ESLint/Prettier)
+- **Code Formatting** - Consistent code style enforced by Biome
 - **Git Hooks** - Pre-commit quality checks (ready)
 - **Comprehensive JSDoc** - Inline documentation with examples
 - **Type Definitions** - Shared types between frontend/backend
@@ -520,11 +584,21 @@ sswp-portfolio-at2/
 #### Monitoring & Logging
 - **Winston Logger** - Structured application logging
 - **Security Logger** - Audit trail for security events
+- **Security Event Monitoring** - Forwarding security events to monitoring service (Sentry-ready)
+  - Authentication failures logged to monitoring
+  - Suspicious activities forwarded with severity levels
+  - Security events tracked with context metadata
 - **Request Logging** - HTTP request/response logs
 - **Error Tracking** - Centralized error logging
 - **Log Rotation** - Automatic log file rotation
 - **Log Levels** - Configurable log verbosity
 - **Correlation IDs** - Request tracing across services
+- **Prometheus Metrics** - `/metrics` endpoint for monitoring dashboards (enable with `METRICS_ENABLED=true`)
+  - HTTP request metrics (count, duration, error rates)
+  - Database query metrics (count, duration, slow queries)
+  - Cache metrics (hits, misses, hit rates)
+  - System metrics (memory, CPU, uptime)
+  - Custom application metrics (active connections, orders in progress)
 
 #### Performance
 - **Rate Limiting** - DDoS protection
@@ -582,6 +656,13 @@ sswp-portfolio-at2/
   - `useLocalStorage` - Persistent local storage
   - `useMediaQuery` - Responsive breakpoints
   - `useOnClickOutside` - Click outside detection
+  - `useFavorites` - Favorites management and queries
+  - `useAuditLogs` - Audit logs query with pagination
+  - `useActivityFeed` - Consolidated activity feed queries
+  - `useResourceQuery` - Generic CRUD query hooks
+  - `useQueryState` - Standardized query state handling
+  - `useSystemHealth` - System health monitoring
+  - `useSystemMetrics` - Prometheus metrics queries
 - **Form Helpers** - React Hook Form utilities
 - **API Clients** - Typed API service layer
 - **Error Handling** - Global error boundaries
@@ -647,9 +728,6 @@ NODE_ENV=development
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=15m
 
-# Database
-DATA_STORE=firestore  # Options: firestore | memory
-
 # CORS
 CORS_ORIGIN=http://localhost:5173
 
@@ -679,6 +757,9 @@ CLOUDINARY_UPLOAD_FOLDER=portfolio-assets
 
 # Optional: Maintenance Mode
 # MAINTENANCE_SECRET=change-me-in-production
+
+# Optional: Prometheus Metrics
+METRICS_ENABLED=false  # Set to true to enable /metrics endpoint
 ```
 
 **Important Notes:**
@@ -872,15 +953,7 @@ The application includes an intelligent help chat widget powered by pattern-matc
 - **Keyboard Support**: Full keyboard navigation (Enter to send, Escape to close)
 - **Accessibility**: ARIA labels and screen reader support
 
-### Supported Topics
-- Product information and browsing help
-- Return and refund policy questions
-- Contact and support information
-- Order tracking inquiries
-- Product category explanations
-- General inquiries with fallback to human support
 
-See [HELP_CHAT.md](./docs/HELP_CHAT.md) for detailed implementation documentation.
 
 ---
 
@@ -935,20 +1008,7 @@ The documentation includes:
 - **Security considerations**
 - **Type definitions** and interfaces
 
-### Project Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
-
-- **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide
-- **[YARN_SETUP.md](./YARN_SETUP.md)** - Yarn workspace setup instructions
-- **[TESTING.md](./TESTING.md)** - Complete testing guide and best practices
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Developer quick reference
-- **[ACCESSIBILITY.md](./ACCESSIBILITY.md)** - Accessibility guidelines and A11y features
-- **[API_REFERENCE.md](./docs/API_REFERENCE.md)** - Complete API endpoint documentation
-- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture and design patterns
-- **[ASSESSMENT.md](./docs/ASSESSMENT.md)** - Assessment criteria and answers
-- **[HELP_CHAT.md](./docs/HELP_CHAT.md)** - AI help chat implementation details
-- **[screenshots/](./docs/screenshots/)** - Application screenshots and evidence
 
 ### Code Documentation Standards
 
@@ -1094,7 +1154,6 @@ JWT_SECRET=<generate-secure-random-string-min-32-chars>
 CORS_ORIGIN=https://your-frontend-domain.com
 
 # Database
-DATA_STORE=firestore
 FIREBASE_PROJECT_ID=your-project
 FIREBASE_CLIENT_EMAIL=your-service-account@...
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
@@ -1107,6 +1166,9 @@ UPLOAD_MAX_MB=10
 # Logging
 LOG_LEVEL=info
 LOG_TO_FILE=true
+
+# Monitoring & Metrics
+METRICS_ENABLED=true              # Enable Prometheus metrics endpoint at /metrics
 
 # Email (if using SendGrid)
 SENDGRID_API_KEY=your-sendgrid-key
@@ -1138,7 +1200,10 @@ EMAIL_FROM=noreply@yourdomain.com
 - ✅ Configure log aggregation
 - ✅ Set up uptime monitoring
 - ✅ Enable health check endpoint (`/health`)
+- ✅ Enable Prometheus metrics endpoint (`/metrics`) - Set `METRICS_ENABLED=true`
 - ✅ Configure alerts for critical errors
+- ✅ Review audit logs for security events
+- ✅ Monitor security event forwarding to monitoring service
 
 #### Database
 - ✅ Review Firestore security rules
@@ -1160,6 +1225,7 @@ This application follows industry best practices and clean architecture principl
 - **Port/Adapter Pattern** - Swappable implementations
 - **Event-Driven Architecture** - Order event handlers
 - **Provider Pattern** - React context for state management
+- **TanStack React Query** - Server state management with caching, refetching, and optimistic updates
 
 ### Code Organization
 - **Feature-based Structure** - Organized by business domain
@@ -1170,17 +1236,6 @@ This application follows industry best practices and clean architecture principl
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed diagrams and explanations.
 
----
-
-## 🤝 Contributing
-
-This is a portfolio/assessment project. If you'd like to use it as a starting point:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ### Code Standards
 - Follow the existing code style (enforced by Biome)
@@ -1189,50 +1244,10 @@ This is a portfolio/assessment project. If you'd like to use it as a starting po
 - Update documentation as needed
 - Ensure TypeScript compiles without errors
 
----
-
-## 👩‍💻 Author
-
-**Sofia**  
-Diploma of IT – Advanced Programming Portfolio Project
-
-This full-stack application demonstrates advanced web development skills including:
-- Modern React development with TypeScript
-- RESTful API design and implementation
-- NoSQL database design and optimization
-- Authentication and authorization systems
-- Cloud services integration
-- Production deployment practices
-- Comprehensive testing strategies
-- Accessibility best practices
-- Security-first development
-
----
 
 ## 📝 License
 
 MIT License - free to use and adapt for educational purposes.
-
----
-
-## 🙏 Acknowledgments
-
-- **React Team** - For the amazing React framework
-- **Vite** - For blazing-fast development experience
-- **Firebase** - For scalable NoSQL database
-- **Cloudinary** - For reliable image hosting
-- **Biome** - For fast, reliable code tooling
-- **Open Source Community** - For countless amazing libraries
-
----
-
-## 📞 Support
-
-For questions, issues, or feedback:
-
-- **Email**: hello@sofias.shop
-- **Phone**: +61-3-9876-5432
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/sswp-portfolio-at2/issues)
 
 ---
 

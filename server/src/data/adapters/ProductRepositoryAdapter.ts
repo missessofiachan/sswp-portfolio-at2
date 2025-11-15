@@ -8,8 +8,8 @@
  * @module data/adapters/ProductRepositoryAdapter
  */
 
-import { ProductRepository, ProductForOrder } from '../ports/ProductRepository';
-import { ProductsRepo } from '../ports/products.repo';
+import type { ProductForOrder, ProductRepository } from '../ports/ProductRepository';
+import type { ProductsRepo } from '../ports/products.repo';
 
 /**
  * Adapter that implements ProductRepository using ProductsRepo

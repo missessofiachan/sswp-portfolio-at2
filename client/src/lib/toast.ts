@@ -1,19 +1,45 @@
+/**
+ * Lightweight toast pub/sub utility that allows any component to dispatch
+ * messages and subscribe via `useToast`, decoupled from the visual container.
+ */
 import { useEffect } from 'react';
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
-interface ToastOptions {
-  type?: ToastType;
+export interface ToastOptions {
+  type?: ToastVariant;
   duration?: number; // ms
+  title?: string;
+  requestId?: string;
 }
 
-let listeners: ((msg: string, opts: ToastOptions) => void)[] = [];
+export interface ToastMessage {
+  id: number;
+  message: string;
+  variant: ToastVariant;
+  duration: number;
+  title?: string;
+  requestId?: string;
+}
+
+type ToastListener = (toast: ToastMessage) => void;
+
+let listeners: ToastListener[] = [];
 
 export function showToast(message: string, opts: ToastOptions = {}) {
-  listeners.forEach((cb) => cb(message, opts));
+  const toast: ToastMessage = {
+    id: Date.now() + Math.random(),
+    message,
+    variant: opts.type ?? 'info',
+    duration: opts.duration ?? 4000,
+    title: opts.title,
+    requestId: opts.requestId,
+  };
+
+  listeners.forEach((cb) => cb(toast));
 }
 
-export function useToast(callback: (msg: string, opts: ToastOptions) => void) {
+export function useToast(callback: ToastListener) {
   useEffect(() => {
     listeners.push(callback);
     return () => {

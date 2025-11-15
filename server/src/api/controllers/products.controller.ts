@@ -1,7 +1,12 @@
+import { deleteAssetsByUrls } from '@server/services/integrations';
+import { auditLogsService } from '@server/services/monitoring';
+import { productsService } from '@server/services/products';
 import type { Request, Response } from 'express';
-import { productsService } from '../../services/products.service';
 import type { Product } from '../../domain/product';
-import { deleteAssetsByUrls } from '../../services/cloudinary.service';
+
+function getActor(req: Request) {
+  return (req as any).user as { id?: string; email?: string } | undefined;
+}
 
 /**
  * Controller action to list products and send them as a JSON response.
@@ -75,6 +80,18 @@ export async function getById(req: Request, res: Response): Promise<void> {
 export async function create(req: Request, res: Response): Promise<void> {
   const data = await productsService.create(req.body);
   res.status(201).json({ data });
+  const actor = getActor(req);
+  auditLogsService
+    .log({
+      action: 'product.create',
+      summary: `Created product ${data.id}`,
+      actorId: actor?.id,
+      actorEmail: actor?.email,
+      targetId: data.id,
+      targetType: 'product',
+      metadata: { name: data.name },
+    })
+    .catch(() => undefined);
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
@@ -82,15 +99,27 @@ export async function update(req: Request, res: Response): Promise<void> {
   // If images are changing, compute removed files and clean them up
   const patch = req.body as Partial<Product>;
   let removed: string[] = [];
-  if (patch && Object.prototype.hasOwnProperty.call(patch, 'images')) {
+  if (patch && Object.hasOwn(patch, 'images')) {
     const before = await productsService.getById(id);
-    const prev = Array.isArray(before?.images) ? before!.images! : [];
-    const next = Array.isArray(patch.images) ? patch.images : prev;
-    removed = prev.filter((u) => !next.includes(u));
+    const prev: string[] = Array.isArray(before?.images) ? before!.images! : [];
+    const next: string[] = Array.isArray(patch.images) ? patch.images : prev;
+    removed = prev.filter((url) => !next.includes(url));
   }
   const data = await productsService.update(id, patch);
   if (removed.length) await deleteAssetsByUrls(removed);
   res.json({ data });
+  const actor = getActor(req);
+  auditLogsService
+    .log({
+      action: 'product.update',
+      summary: `Updated product ${id}`,
+      actorId: actor?.id,
+      actorEmail: actor?.email,
+      targetId: id,
+      targetType: 'product',
+      metadata: { updatedFields: Object.keys(patch ?? {}) },
+    })
+    .catch(() => undefined);
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
@@ -101,6 +130,18 @@ export async function remove(req: Request, res: Response): Promise<void> {
   const images = Array.isArray(existing?.images) ? existing!.images! : [];
   if (images.length) await deleteAssetsByUrls(images);
   res.status(204).send();
+  const actor = getActor(req);
+  auditLogsService
+    .log({
+      action: 'product.delete',
+      summary: `Deleted product ${id}`,
+      actorId: actor?.id,
+      actorEmail: actor?.email,
+      targetId: id,
+      targetType: 'product',
+      metadata: existing ? { name: existing.name } : undefined,
+    })
+    .catch(() => undefined);
 }
 
 export async function stats(_req: Request, res: Response): Promise<void> {

@@ -12,8 +12,8 @@
  * @module pages/OrderDetail
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { ordersApi } from '../api/clients/orders.api';
 import { showToast } from '../lib/toast';
 import type { Order } from '../types/orders';

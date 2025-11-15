@@ -1,9 +1,43 @@
-import { Router, type Router as ExpressRouter } from 'express';
-import { getDb } from '../../config/firestore';
-import { tokenRevocationService } from '../../services/tokenRevocation.service';
+import { getDb } from '@server/config/firestore';
+import { tokenRevocationService } from '@server/services/auth';
+import {
+  auditLogsService,
+  getMaintenanceState,
+  setMaintenanceState,
+} from '@server/services/monitoring';
+import { type Router as ExpressRouter, Router } from 'express';
 
 // Maintenance router providing manual cleanup operations. Guarded by maintenanceGuard middleware.
 export const router: ExpressRouter = Router();
+
+function getActor(req: any): { id?: string; email?: string } | undefined {
+  return req?.user;
+}
+
+router.get('/state', async (req, res) => {
+  const state = await getMaintenanceState();
+  res.json({ data: state });
+});
+
+router.post('/state', async (req, res) => {
+  const { enabled } = req.body ?? {};
+  if (typeof enabled !== 'boolean') {
+    res.status(400).json({ error: { message: 'enabled must be a boolean' } });
+    return;
+  }
+  const actor = getActor(req);
+  const state = await setMaintenanceState(enabled, actor);
+  auditLogsService
+    .log({
+      action: 'maintenance.toggle',
+      summary: `Maintenance mode ${enabled ? 'enabled' : 'disabled'}`,
+      actorId: actor?.id,
+      actorEmail: actor?.email,
+      metadata: { enabled },
+    })
+    .catch(() => undefined);
+  res.json({ data: state });
+});
 
 /**
  * POST /cleanup - Clean up expired records
@@ -40,7 +74,9 @@ router.post('/cleanup', async (_req, res) => {
 
     if (!resetsSnap.empty) {
       const batch = db.batch();
-      resetsSnap.forEach((d) => batch.delete(d.ref));
+      for (const doc of resetsSnap.docs) {
+        batch.delete(doc.ref);
+      }
       await batch.commit();
       results.passwordResets = resetsSnap.size;
     }
@@ -60,7 +96,9 @@ router.post('/cleanup', async (_req, res) => {
 
       if (!logsSnap.empty) {
         const batch = db.batch();
-        logsSnap.forEach((d) => batch.delete(d.ref));
+        for (const doc of logsSnap.docs) {
+          batch.delete(doc.ref);
+        }
         await batch.commit();
         results.logs = logsSnap.size;
       }

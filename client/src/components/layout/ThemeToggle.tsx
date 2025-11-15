@@ -1,6 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import * as Toggle from '@radix-ui/react-toggle';
+/**
+ * Radix toggle control for switching between light and dark themes.
+ */
+
 import { applyTheme, persistTheme, readStoredTheme, type ThemeMode } from '@client/app/theme';
+import * as Toggle from '@radix-ui/react-toggle';
+import { useEffect, useMemo, useState } from 'react';
 import { icon, toggle } from './themeToggle.css';
 
 /**

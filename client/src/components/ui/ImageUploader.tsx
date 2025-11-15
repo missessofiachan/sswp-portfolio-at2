@@ -2,9 +2,9 @@
  * Advanced image uploader with drag-and-drop, preview, and progress tracking
  */
 
-import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { uploadImages } from '@client/api/clients/products.api';
-import { card, btnPrimary, btnOutline } from '@client/app/ui.css';
+import { btnOutline, btnPrimary, card } from '@client/app/ui.css';
+import { type ChangeEvent, type DragEvent, useRef, useState } from 'react';
 
 export interface ImageUploaderProps {
   onUploadComplete: (urls: string[]) => void;

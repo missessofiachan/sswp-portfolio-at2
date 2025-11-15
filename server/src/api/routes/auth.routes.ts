@@ -1,10 +1,13 @@
-import { Router, type Router as ExpressRouter } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import {
   login,
+  logout,
   register,
   requestPasswordReset,
   resetPassword,
 } from '../controllers/auth.controller';
+import { requireAuth } from '../middleware/auth';
+import { authRateLimit } from '../middleware/rateLimit';
 import { validate } from '../middleware/validate';
 import {
   loginSchema,
@@ -12,7 +15,6 @@ import {
   requestResetSchema,
   resetPasswordSchema,
 } from '../validators/auth.schema';
-import { authRateLimit } from '../middleware/rateLimit';
 /**
  * Express router that groups authentication-related endpoints.
  *
@@ -35,3 +37,4 @@ router.post('/register', authRateLimit, validate(registerSchema), register);
 router.post('/login', authRateLimit, validate(loginSchema), login);
 router.post('/password/request', authRateLimit, validate(requestResetSchema), requestPasswordReset);
 router.post('/password/reset', authRateLimit, validate(resetPasswordSchema), resetPassword);
+router.post('/logout', requireAuth, logout);

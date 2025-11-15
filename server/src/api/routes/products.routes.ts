@@ -1,9 +1,9 @@
-import { Router, type Router as ExpressRouter } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
+import { getDb } from '../../config/firestore';
 import * as ctrl from '../controllers/products.controller';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { productCreateSchema, productUpdateSchema } from '../validators/products.schema';
-import { getDb } from '../../config/firestore';
 export const router: ExpressRouter = Router();
 
 router.get('/admin/stats', requireAuth, requireRole('admin'), ctrl.stats);

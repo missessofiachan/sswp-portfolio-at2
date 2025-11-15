@@ -1,14 +1,14 @@
-import { Router, type Router as ExpressRouter } from 'express';
-import { requireAuth } from '../middleware/auth';
-import type { UploadedFile } from 'express-fileupload';
-import path from 'path';
-import { uploadImageBuffer } from '../../services/cloudinary.service';
-import { loadEnv } from '../../config/env';
+import { loadEnv } from '@server/config/env';
+import { uploadImageBuffer } from '@server/services/integrations';
 import {
-  validateImageContent,
   sanitizeFilename,
   validateFileSize,
-} from '../../utils/fileValidation';
+  validateImageContent,
+} from '@server/utils/fileValidation';
+import { type Router as ExpressRouter, Router } from 'express';
+import type { UploadedFile } from 'express-fileupload';
+import path from 'path';
+import { requireAuth } from '../middleware/auth';
 import { expensiveOperationRateLimit } from '../middleware/rateLimit';
 
 export const router: ExpressRouter = Router();
@@ -117,11 +117,9 @@ router.post('/', expensiveOperationRateLimit, requireAuth, async (req, res) => {
       // 3. Validate file content (magic numbers)
       const buffer = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data as any);
       if (!validateImageContent(buffer)) {
-        return res
-          .status(400)
-          .json({
-            error: { message: 'Invalid file content. File may be corrupted or not a valid image.' },
-          });
+        return res.status(400).json({
+          error: { message: 'Invalid file content. File may be corrupted or not a valid image.' },
+        });
       }
 
       // 4. Sanitize filename before upload

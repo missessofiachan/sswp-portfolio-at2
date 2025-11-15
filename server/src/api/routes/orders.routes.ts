@@ -8,21 +8,18 @@
  * @module api/routes/orders
  */
 
+import { OrderService } from '@server/services/orders';
 import { Router } from 'express';
-import { OrderController } from '../controllers/order.controller';
-import { OrderService } from '../../services/order.service';
 import { FirestoreOrderRepository } from '../../data/firestore/FirestoreOrderRepository';
-import { InMemoryOrderRepository } from '../../data/memory/orders.repo.mem';
-import { memProductsRepo } from '../../data/memory/products.repo.mem';
-import { loadEnv } from '../../config/env';
+import { OrderController } from '../controllers/order.controller';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validateBody, validateParams, validateQuery } from '../middleware/validation';
 import {
   createOrderSchema,
-  updateOrderSchema,
+  orderIdSchema,
   orderQuerySchema,
   orderStatsQuerySchema,
-  orderIdSchema,
+  updateOrderSchema,
 } from '../validators/order.validators';
 
 /**
@@ -34,11 +31,7 @@ export function createOrderRoutes(): Router {
   const router = Router();
 
   // Initialize dependencies
-  const { DATA_STORE } = loadEnv();
-  const orderRepository =
-    DATA_STORE === 'memory'
-      ? new InMemoryOrderRepository(memProductsRepo)
-      : new FirestoreOrderRepository();
+  const orderRepository = new FirestoreOrderRepository();
   const orderService = new OrderService(orderRepository);
   const orderController = new OrderController(orderService);
 

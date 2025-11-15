@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import ProductCreate from '@client/pages/ProductCreate';
-import { getProductStats, listProducts, deleteProduct } from '@client/api/clients/products.api';
-import { listUsers, deleteUser, type AdminUser } from '@client/api/clients/admin.api';
-import { card, btnOutline, btnPrimary, photoFrame, sepiaPhoto } from '@client/app/ui.css';
-import { resolveImageUrl, PLACEHOLDER_SRC } from '@client/lib/images';
+import { type AdminUser, deleteUser, listUsers } from '@client/api/clients/admin.api';
+import { deleteProduct, getProductStats, listProducts } from '@client/api/clients/products.api';
+import { btnOutline, btnPrimary, card, photoFrame, sepiaPhoto } from '@client/app/ui.css';
 import ErrorAlert from '@client/components/ui/ErrorAlert';
+import { PLACEHOLDER_SRC, resolveImageUrl } from '@client/lib/images';
+import ProductCreate from '@client/pages/ProductCreate';
+import { useEffect, useState } from 'react';
 
 /**
  * Admin Dashboard

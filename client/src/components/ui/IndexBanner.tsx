@@ -1,3 +1,6 @@
+/**
+ * Banner component prompting the user to create a missing Firestore index.
+ */
 import React from 'react';
 
 type Props = {

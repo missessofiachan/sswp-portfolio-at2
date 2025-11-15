@@ -1,10 +1,10 @@
 // JWT verification and role guard middleware
 
-import type { Request, Response, NextFunction } from 'express';
+import { loadEnv } from '@server/config/env';
+import { tokenRevocationService } from '@server/services/auth';
+import { logSuspiciousActivity } from '@server/utils/securityLogger';
+import type { NextFunction, Request, Response } from 'express';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
-import { loadEnv } from '../../config/env';
-import { tokenRevocationService } from '../../services/tokenRevocation.service';
-import { logSuspiciousActivity } from '../../utils/securityLogger';
 import { getCorrelationId } from './correlationId';
 
 const env = loadEnv();

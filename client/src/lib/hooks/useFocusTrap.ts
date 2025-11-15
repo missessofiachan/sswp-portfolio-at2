@@ -1,7 +1,6 @@
 /**
- * Hook for trapping focus within a container (useful for modals, dialogs)
+ * Hook that traps tab focus inside a container while active (modals/dialogs).
  */
-
 import { useEffect, useRef } from 'react';
 
 const FOCUSABLE_ELEMENTS = [

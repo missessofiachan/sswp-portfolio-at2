@@ -2,16 +2,16 @@
  * Accessible modal/dialog component with focus trapping and ARIA attributes
  */
 
-import { useEffect, type ReactNode } from 'react';
-import { useFocusTrap } from '../../lib/hooks/useFocusTrap';
+import { type ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../../lib/hooks/useFocusTrap';
 import {
-  modalOverlay,
-  modalContent,
-  modalHeader,
-  modalBody,
-  modalFooter,
   closeButton,
+  modalBody,
+  modalContent,
+  modalFooter,
+  modalHeader,
+  modalOverlay,
 } from './Modal.css';
 
 export interface ModalProps {

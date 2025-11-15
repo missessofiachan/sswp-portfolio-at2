@@ -1,6 +1,10 @@
-import { style, styleVariants } from '@vanilla-extract/css';
+/**
+ * Button component style variants built with Vanilla Extract and sprinkles.
+ */
+
 import { sprinkles } from '@client/app/sprinkles.css';
 import { vars } from '@client/app/theme.css';
+import { style, styleVariants } from '@vanilla-extract/css';
 
 const base = style([
   sprinkles({

@@ -2,12 +2,14 @@
  * Form components barrel export
  */
 
+export { FormActions, type FormActionsProps } from './FormActions';
 export {
   FormField,
-  FormTextarea,
-  FormSelect,
   type FormFieldProps,
-  type FormTextareaProps,
+  FormSelect,
   type FormSelectProps,
+  FormTextarea,
+  type FormTextareaProps,
 } from './FormField';
-export { FormActions, type FormActionsProps } from './FormActions';
+export { SelectField, type SelectFieldProps } from './SelectField';
+export { TextField, type TextFieldProps } from './TextField';

@@ -1,3 +1,8 @@
+/**
+ * Rich product/catalog API client used across the storefront and admin
+ * surfaces. Encapsulates listing, CRUD, stats, timeseries, and asset upload
+ * operations while preserving strong typing for request/response shapes.
+ */
 import { axiosInstance } from '@client/lib/axios';
 import type { Product, ProductListParams, ProductListResponse } from '@client/types/product';
 

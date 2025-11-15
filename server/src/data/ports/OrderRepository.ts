@@ -8,12 +8,12 @@
  * @module data/ports/OrderRepository
  */
 
-import {
-  Order,
+import type {
   CreateOrderInput,
-  UpdateOrderInput,
+  Order,
   OrderStats,
   OrderStatus,
+  UpdateOrderInput,
 } from '../../domain/orders';
 
 /**

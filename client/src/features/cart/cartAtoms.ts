@@ -10,9 +10,9 @@
 
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { showToast } from '../../lib/toast';
 import type { CartItem } from '../../types/orders';
 import type { Product } from '../../types/product';
-import { showToast } from '../../lib/toast';
 
 /**
  * Cart items stored in localStorage

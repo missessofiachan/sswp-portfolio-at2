@@ -1,6 +1,6 @@
-import { style } from '@vanilla-extract/css';
 import { sprinkles } from '@client/app/sprinkles.css';
 import { vars } from '@client/app/theme.css';
+import { style } from '@vanilla-extract/css';
 
 export const wrap = style([
   {

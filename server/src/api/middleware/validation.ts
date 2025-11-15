@@ -8,8 +8,8 @@
  * @module api/middleware/validation
  */
 
-import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
+import type { NextFunction, Request, Response } from 'express';
+import type Joi from 'joi';
 
 /**
  * Request part to validate

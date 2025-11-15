@@ -3,7 +3,7 @@
  * Uses a windowing technique to only render visible items.
  */
 
-import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react';
 
 export interface VirtualListProps<T> {
   items: T[];

@@ -3,60 +3,126 @@
  * Works seamlessly with react-hook-form.
  */
 
-import { forwardRef, type ComponentPropsWithoutRef } from 'react';
-import { field as fieldClass, label as labelClass, input as inputClass } from '@client/app/ui.css';
+import {
+  type ComponentPropsWithoutRef,
+  forwardRef,
+  type ReactNode,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  control,
+  controlWithAffix,
+  controlWithSuffix,
+  controlWrapper,
+  error as errorClass,
+  field,
+  hint as hintClass,
+  label as labelClass,
+  message as messageClass,
+  messageRow,
+  prefix as prefixClass,
+  required as requiredClass,
+  suffix as suffixClass,
+  toggleButton,
+} from './FormField.css';
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ');
+}
+
+function toId(label: string, provided?: string) {
+  if (provided) return provided;
+  return `field-${label.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`;
+}
 
 export interface FormFieldProps extends ComponentPropsWithoutRef<'input'> {
   label: string;
   error?: string;
   hint?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  requiredIndicator?: boolean;
+  showPasswordToggle?: boolean;
 }
 
-/**
- * FormField component - Input with label and error display
- *
- * @example
- * ```tsx
- * const { register, formState: { errors } } = useForm();
- *
- * <FormField
- *   label="Email"
- *   type="email"
- *   error={errors.email?.message}
- *   {...register('email')}
- * />
- * ```
- */
 export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
-  ({ label, error, hint, id, ...props }, ref) => {
-    const inputId = id || `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  (
+    {
+      label,
+      error,
+      hint,
+      id,
+      prefix,
+      suffix,
+      requiredIndicator,
+      showPasswordToggle,
+      type,
+      ...props
+    },
+    ref
+  ) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const inputId = useMemo(() => toId(label, id), [label, id]);
+
+    const isPasswordField = showPasswordToggle && type === 'password';
+    const inputType = isPasswordField ? (showPassword ? 'text' : 'password') : type;
+
+    const hasPrefix = Boolean(prefix);
+    const hasSuffix = Boolean(suffix) || isPasswordField;
+
+    const describedBy = [
+      error ? `${inputId}-error` : null,
+      hint && !error ? `${inputId}-hint` : null,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
-      <div className={fieldClass}>
+      <div className={field}>
         <label className={labelClass} htmlFor={inputId}>
-          {label}
+          <span>{label}</span>
+          {(requiredIndicator || props.required) && <span className={requiredClass}>*</span>}
         </label>
-        <input
-          id={inputId}
-          className={inputClass}
-          ref={ref}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-          {...props}
-        />
-        {hint && !error && (
-          <small id={`${inputId}-hint`} style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            {hint}
-          </small>
-        )}
-        {error && (
-          <small
-            id={`${inputId}-error`}
-            style={{ color: 'crimson', display: 'block', marginTop: '0.25rem' }}
-          >
-            {error}
-          </small>
-        )}
+        <div className={controlWrapper}>
+          {hasPrefix && <span className={prefixClass}>{prefix}</span>}
+          <input
+            id={inputId}
+            ref={ref}
+            type={inputType}
+            className={cx(control, hasPrefix && controlWithAffix, hasSuffix && controlWithSuffix)}
+            data-error={error ? 'true' : 'false'}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={describedBy || undefined}
+            {...props}
+          />
+          {(hasSuffix || isPasswordField) && (
+            <span className={suffixClass}>
+              {suffix}
+              {isPasswordField && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className={toggleButton}
+                  aria-label={`${showPassword ? 'Hide' : 'Show'} password`}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              )}
+            </span>
+          )}
+        </div>
+        <div className={messageRow}>
+          {error ? (
+            <span id={`${inputId}-error`} className={cx(messageClass, errorClass)}>
+              {error}
+            </span>
+          ) : hint ? (
+            <span id={`${inputId}-hint`} className={cx(messageClass, hintClass)}>
+              {hint}
+            </span>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -68,41 +134,47 @@ export interface FormTextareaProps extends ComponentPropsWithoutRef<'textarea'> 
   label: string;
   error?: string;
   hint?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  requiredIndicator?: boolean;
 }
 
-/**
- * FormTextarea component - Textarea with label and error display
- */
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
-  ({ label, error, hint, id, ...props }, ref) => {
-    const textareaId = id || `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  ({ label, error, hint, id, requiredIndicator, ...props }, ref) => {
+    const textareaId = useMemo(() => toId(label, id), [label, id]);
+    const describedBy = [
+      error ? `${textareaId}-error` : null,
+      hint && !error ? `${textareaId}-hint` : null,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
-      <div className={fieldClass}>
+      <div className={field}>
         <label className={labelClass} htmlFor={textareaId}>
-          {label}
+          <span>{label}</span>
+          {(requiredIndicator || props.required) && <span className={requiredClass}>*</span>}
         </label>
         <textarea
           id={textareaId}
-          className={inputClass}
           ref={ref}
+          className={control}
+          data-error={error ? 'true' : 'false'}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${textareaId}-error` : hint ? `${textareaId}-hint` : undefined}
+          aria-describedby={describedBy || undefined}
           {...props}
         />
-        {hint && !error && (
-          <small id={`${textareaId}-hint`} style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            {hint}
-          </small>
-        )}
-        {error && (
-          <small
-            id={`${textareaId}-error`}
-            style={{ color: 'crimson', display: 'block', marginTop: '0.25rem' }}
-          >
-            {error}
-          </small>
-        )}
+        <div className={messageRow}>
+          {error ? (
+            <span id={`${textareaId}-error`} className={cx(messageClass, errorClass)}>
+              {error}
+            </span>
+          ) : hint ? (
+            <span id={`${textareaId}-hint`} className={cx(messageClass, hintClass)}>
+              {hint}
+            </span>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -110,52 +182,70 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
 
 FormTextarea.displayName = 'FormTextarea';
 
+export interface FormSelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
 export interface FormSelectProps extends ComponentPropsWithoutRef<'select'> {
   label: string;
   error?: string;
   hint?: string;
-  options: Array<{ value: string; label: string }>;
+  options: FormSelectOption[];
+  placeholder?: string;
+  requiredIndicator?: boolean;
 }
 
-/**
- * FormSelect component - Select dropdown with label and error display
- */
 export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
-  ({ label, error, hint, options, id, ...props }, ref) => {
-    const selectId = id || `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  ({ label, error, hint, options, placeholder, id, requiredIndicator, ...props }, ref) => {
+    const selectId = useMemo(() => toId(label, id), [label, id]);
+    const describedBy = [
+      error ? `${selectId}-error` : null,
+      hint && !error ? `${selectId}-hint` : null,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
-      <div className={fieldClass}>
+      <div className={field}>
         <label className={labelClass} htmlFor={selectId}>
-          {label}
+          <span>{label}</span>
+          {(requiredIndicator || props.required) && <span className={requiredClass}>*</span>}
         </label>
-        <select
-          id={selectId}
-          className={inputClass}
-          ref={ref}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}
-          {...props}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {hint && !error && (
-          <small id={`${selectId}-hint`} style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            {hint}
-          </small>
-        )}
-        {error && (
-          <small
-            id={`${selectId}-error`}
-            style={{ color: 'crimson', display: 'block', marginTop: '0.25rem' }}
+        <div className={controlWrapper}>
+          <select
+            id={selectId}
+            ref={ref}
+            className={control}
+            data-error={error ? 'true' : 'false'}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={describedBy || undefined}
+            {...props}
           >
-            {error}
-          </small>
-        )}
+            {placeholder && (
+              <option value="" disabled>
+                {placeholder}
+              </option>
+            )}
+            {options.map((option) => (
+              <option key={option.value} value={option.value} disabled={option.disabled}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={messageRow}>
+          {error ? (
+            <span id={`${selectId}-error`} className={cx(messageClass, errorClass)}>
+              {error}
+            </span>
+          ) : hint ? (
+            <span id={`${selectId}-hint`} className={cx(messageClass, hintClass)}>
+              {hint}
+            </span>
+          ) : null}
+        </div>
       </div>
     );
   }

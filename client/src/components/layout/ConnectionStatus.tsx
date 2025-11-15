@@ -1,6 +1,6 @@
+import { getHealth, type HealthResponse } from '@client/api/clients/health.api';
 import { useEffect, useMemo, useState } from 'react';
 import * as s from './status.css';
-import { getHealth, type HealthResponse } from '@client/api/clients/health.api';
 
 type State = {
   loading: boolean;
