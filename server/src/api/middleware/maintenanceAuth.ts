@@ -8,11 +8,7 @@ const { MAINTENANCE_SECRET } = loadEnv();
  * Maintenance guard: if MAINTENANCE_SECRET is set, require matching header `x-maint-secret`.
  * Otherwise fall back to admin authentication (JWT + role=admin).
  */
-export async function maintenanceGuard(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function maintenanceGuard(req: Request, res: Response, next: NextFunction): Promise<void> {
   const secret = process.env.MAINTENANCE_SECRET ?? MAINTENANCE_SECRET;
   if (secret) {
     const header = req.header('x-maint-secret');
@@ -24,9 +20,10 @@ export async function maintenanceGuard(
     return;
   }
   // Fallback: ensure admin auth
-  await requireAuth(req, res, (err?: any) => {
-    if (err) return; // requireAuth already responded
-    return requireRole('admin')(req, res, next);
+  await requireAuth(req, res, () => {
+    if (!res.headersSent) {
+      requireRole('admin')(req, res, next);
+    }
   });
 }
 
